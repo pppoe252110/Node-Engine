@@ -20,6 +20,9 @@
         },
         {
             "m_Id": "fb0db0c27bcb414d8e9ecfea11232ed8"
+        },
+        {
+            "m_Id": "a4203bf15499418c9c8648f84d1a598d"
         }
     ],
     "m_Keywords": [],
@@ -1936,6 +1939,34 @@
 
 {
     "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector2ShaderProperty",
+    "m_ObjectId": "a4203bf15499418c9c8648f84d1a598d",
+    "m_Guid": {
+        "m_GuidSerialized": "b8c5e421-f0cf-4305-9ac8-ddc8224e5201"
+    },
+    "m_Name": "OutlineSize",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "OutlineSize",
+    "m_DefaultReferenceName": "_OutlineSize",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_Value": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
+    "m_SGVersion": 1,
     "m_Type": "UnityEditor.ShaderGraph.CustomFunctionNode",
     "m_ObjectId": "a4cf4631afc841b2984c0a818afcc2da",
     "m_Group": {
@@ -2107,6 +2138,9 @@
         },
         {
             "m_Id": "fb0db0c27bcb414d8e9ecfea11232ed8"
+        },
+        {
+            "m_Id": "a4203bf15499418c9c8648f84d1a598d"
         }
     ]
 }

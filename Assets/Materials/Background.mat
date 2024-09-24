@@ -102,7 +102,7 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _GridScale: 0.035
-    - _GridScaleOffset: 1.0382743
+    - _GridScaleOffset: 0.47597936
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
@@ -127,13 +127,14 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Color1: {r: 0.3679245, g: 0.3679245, b: 0.3679245, a: 1}
-    - _Color2: {r: 0.22561409, g: 0.2289434, b: 0.24528301, a: 1}
+    - _Color1: {r: 0.15294118, g: 0.15294118, b: 0.15294118, a: 1}
+    - _Color2: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GridOffset: {r: -267.84705, g: -74.736244, b: 0, a: 0}
+    - _GridOffset: {r: 100.53583, g: 129.01923, b: 0, a: 0}
     - _GridScaleOffset: {r: 0, g: 0, b: 0, a: 0}
     - _GridSize: {r: 4, g: 4, b: 0, a: 0}
     - _Offset: {r: -0, g: -0, b: 0, a: 0}
+    - _OutlineSize: {r: 1, g: 1, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
