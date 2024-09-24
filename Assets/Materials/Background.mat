@@ -102,7 +102,7 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _GridScale: 0.035
-    - _GridScaleOffset: 0.47597936
+    - _GridScaleOffset: 1
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
@@ -130,7 +130,7 @@ Material:
     - _Color1: {r: 0.15294118, g: 0.15294118, b: 0.15294118, a: 1}
     - _Color2: {r: 0.13333334, g: 0.13333334, b: 0.13333334, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GridOffset: {r: 100.53583, g: 129.01923, b: 0, a: 0}
+    - _GridOffset: {r: -0, g: -0, b: 0, a: 0}
     - _GridScaleOffset: {r: 0, g: 0, b: 0, a: 0}
     - _GridSize: {r: 4, g: 4, b: 0, a: 0}
     - _Offset: {r: -0, g: -0, b: 0, a: 0}
