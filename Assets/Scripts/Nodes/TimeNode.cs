@@ -8,13 +8,13 @@ public class TimeNode : NodeBase
     private ConnectorValueFloat _deltaTime = new(0);
     private ConnectorValueFloat _scaledTime = new(0);
 
-    [NodeValue("DeltaTime", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("DeltaTime", typeof(float), KnownColor.LawnGreen, NodeValueAttribute.Connections.Multiple)]
     public void DeltaTime(ConnectorValueFloat valueFloat)
     {
         valueFloat.SetValue(Time.deltaTime);
     }
 
-    [NodeValue("ScaledTime", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("ScaledTime", typeof(float), KnownColor.LawnGreen, NodeValueAttribute.Connections.Multiple)]
     public void ScaledTime(ConnectorValueFloat valueFloat)
     {
         valueFloat.SetValue(Time.deltaTime);

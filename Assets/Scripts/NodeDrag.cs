@@ -2,10 +2,11 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler
+public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerClickHandler
 {
     public UnityEvent<PointerEventData, GameObject> OnBeginDragCallback;
     public UnityEvent<PointerEventData> OnStopDragCallback;
+    public UnityEvent<PointerEventData, GameObject> OnClickCallback;
 
     private RectTransform _rectTransform;
     private bool _canDrag = false;
@@ -42,5 +43,10 @@ public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
     public void OnEndDrag(PointerEventData eventData)
     {
         OnStopDragCallback?.Invoke(eventData);
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        OnClickCallback?.Invoke(eventData, eventData.pointerPressRaycast.gameObject);
     }
 }

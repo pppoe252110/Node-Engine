@@ -1,15 +1,17 @@
 using System;
 using UnityEngine;
 
-public class NodesAttributesManager
-{
-
-}
-
 [AttributeUsage(AttributeTargets.Method)]
 public class NodeValueAttribute : Attribute
 {
+    public enum Connections
+    {
+        Single,
+        Multiple
+    }
+    
     public string attributeName;
+    public  Connections connections;
     public Color attributeColor
     {
         get
@@ -18,13 +20,15 @@ public class NodeValueAttribute : Attribute
             return new Color32(c.R, c.G, c.B, c.A);
         }
     }
+
     private System.Drawing.KnownColor knownColor;
     public Type type;
 
-    public NodeValueAttribute(string attributeName, Type type, System.Drawing.KnownColor attributeColor)
+    public NodeValueAttribute(string attributeName, Type type, System.Drawing.KnownColor attributeColor, Connections connections = Connections.Single)
     {
         this.attributeName = attributeName;
         this.type = type;
         this.knownColor = attributeColor;
+        this.connections = connections;
     }
 }

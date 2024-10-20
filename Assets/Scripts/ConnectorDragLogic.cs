@@ -19,6 +19,7 @@ public class ConnectorDragLogic : MonoBehaviour
     {
         _nodeDrag.OnBeginDragCallback.AddListener(OnNodeDrag);
         _nodeDrag.OnStopDragCallback.AddListener(OnNodeStopDrag);
+        _nodeDrag.OnClickCallback.AddListener(OnNodeClick);
     }
 
 
@@ -26,6 +27,7 @@ public class ConnectorDragLogic : MonoBehaviour
     {
         _nodeDrag.OnBeginDragCallback.RemoveListener(OnNodeDrag);
         _nodeDrag.OnStopDragCallback.RemoveListener(OnNodeStopDrag);
+        _nodeDrag.OnClickCallback.RemoveListener(OnNodeClick);
     }
 
     private void Update()
@@ -39,11 +41,30 @@ public class ConnectorDragLogic : MonoBehaviour
         }
     }
 
+    private void OnNodeClick(PointerEventData eventData, GameObject go)
+    {
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            if (go.transform.parent.TryGetComponent(out Connector clickConnector))
+            {
+                if (clickConnector.ConnectionsCount > 0)
+                    foreach (var dragConnections in clickConnector.Connections)
+                    {
+                        LineRenderersController.Remove(clickConnector, dragConnections);
+                        dragConnections.Connections.Remove(clickConnector);
+                        dragConnections.UpdateFilled();
+                    }
+                clickConnector.Connections.Clear();
+                clickConnector.UpdateFilled();
+            }
+        }
+    }
+
     private void OnNodeDrag(PointerEventData eventData, GameObject go)
     {
         if (eventData.button != PointerEventData.InputButton.Left)
             return;
-        if(go.transform.parent.TryGetComponent(out _dragConnector))
+        if (go.transform.parent.TryGetComponent(out _dragConnector))
         {
             _dragLineRenderer = Instantiate(_lineRendererPrefab, transform);
             _dragLineRenderer.material.SetColor("_Color1", _dragConnector.Color);
@@ -53,31 +74,42 @@ public class ConnectorDragLogic : MonoBehaviour
                 _dragLineRenderer.rectTransform.InverseTransformPoint(Input.mousePosition) };
         }
     }
-    
+
     private void OnNodeStopDrag(PointerEventData eventData)
     {
-        if (eventData.button == PointerEventData.InputButton.Left)
-        {
-            foreach (var item in eventData.hovered)
+        if (_dragConnector != null)
+            if (eventData.button == PointerEventData.InputButton.Left)
             {
-                if(item.TryGetComponent(out Connector connector))
+                foreach (var item in eventData.hovered)
                 {
-                    if (_dragConnector.Node != connector.Node)
+                    if (item.TryGetComponent(out Connector connector))
                     {
-                        if(_dragConnector.ValueType == connector.ValueType || connector.ValueType == typeof(object))
+                        if (_dragConnector.Node != connector.Node)
                         {
-                            LineRenderersController.Add(_dragConnector, connector, _dragLineRenderer);
-                            _dragLineRenderer = null;
-                            _dragConnector.SetConnectorFilled(true);
-                            connector.SetConnectorFilled(true);
-                            return;
+                            if ((connector.ConnectionsType == NodeValueAttribute.Connections.Single && connector.ConnectionsCount <= 0) || connector.ConnectionsType != NodeValueAttribute.Connections.Single)
+                            {
+                                {
+                                    if (_dragConnector.ValueType == connector.ValueType || connector.ValueType == typeof(object))
+                                    {
+                                        LineRenderersController.Add(_dragConnector, connector, _dragLineRenderer);
+                                        _dragLineRenderer = null;
+
+                                        _dragConnector.AddConnection(connector);
+                                        _dragConnector.UpdateFilled();
+
+                                        connector.AddConnection(_dragConnector);
+                                        connector.UpdateFilled();
+
+                                        return;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if(_dragLineRenderer)
+        if (_dragLineRenderer)
             Destroy(_dragLineRenderer.gameObject);
     }
 }

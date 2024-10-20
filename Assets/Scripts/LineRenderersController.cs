@@ -1,6 +1,7 @@
 using Radishmouse;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class LineRenderersController : MonoBehaviour
 {
@@ -29,11 +30,19 @@ public class LineRenderersController : MonoBehaviour
 
     public static void Add(Connector connectorA, Connector connectorB, UILineRenderer lineRenderer)
     {
-        lineRenderer.transform.parent = instance.transform;
+        lineRenderer.transform.SetParent(instance.transform);
         lineRenderer.material = new Material(lineRenderer.material);
         lineRenderer.material.SetColor("_Color1", connectorA.Color);
         lineRenderer.material.SetColor("_Color2", connectorB.Color);
         instance.connectors.Add((connectorA, connectorB, lineRenderer));
+    }
+
+    public static bool Remove(Connector connectorA, Connector connectorB)
+    {
+        var item = instance.connectors.FirstOrDefault(s => (s.Item1 == connectorA && s.Item2 == connectorB) || (s.Item1 == connectorB && s.Item2 == connectorA));
+        Debug.Log(item);
+        Destroy(item.Item3);
+        return instance.connectors.Remove(item);
     }
 
     private void UpdateLineRenderers()
