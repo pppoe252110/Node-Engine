@@ -2,6 +2,20 @@ using UnityEngine;
 
 public class UIZoomPan : MonoBehaviour
 {
+    public static UIZoomPan Instance
+    {
+        get
+        {
+            if (instance == null)
+                instance = FindFirstObjectByType<UIZoomPan>();
+
+            return instance;
+        }
+    }
+    private static UIZoomPan instance;
+
+    public static RectTransform NodesParent => Instance._nodesParent;
+    
     [Header("Zoom")]
     [SerializeField] private float _zoomSpeed = 0.1f;
     [SerializeField] private float _minZoom = 0.1f;
@@ -10,6 +24,7 @@ public class UIZoomPan : MonoBehaviour
     [Header("Properties")]
     [SerializeField] private Material _mat;
 
+    [SerializeField] private RectTransform _nodesParent;
     private RectTransform _rectTransform;
 
     private Vector2 _lastMousePos;

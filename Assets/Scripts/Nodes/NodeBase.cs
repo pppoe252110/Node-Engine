@@ -1,96 +1,41 @@
-using Radishmouse;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
-public abstract class NodeBase : MonoBehaviour
+[Serializable]
+public abstract class NodeBase : ICloneable
 {
-    [SerializeField] private string nodeName = "Basic";
+    public string NodeName => _nodeName;
+    public Sprite NodeSprite => _nodeIcon;
+    private bool isInPlaymode => Application.isPlaying;
 
-    [Header("Connectors")]
-    [SerializeField] private Connector _rightConnectorPrefab;
-    [SerializeField] private Connector _leftConnectorPrefab;
-    [SerializeField] private RectTransform _rightConnectorsParent;
-    [SerializeField] private RectTransform _leftConnectorsParent;
-    [Header("Properties")]
-    [SerializeField] private Image _image;
-    [SerializeField] private TextMeshProUGUI _nodeName;
+    [SerializeField] private string _nodeName = "Basic";
+    [SerializeField] private Sprite _nodeIcon;
 
+    [ShowIf("isInPlaymode")]
     public List<NodeFieldBase> inputFields = new();
+    [ShowIf("isInPlaymode")]
     public List<NodeFieldBase> outputFields = new();
 
     private int _guid = 0;
 
-    private void Awake()
-    {
-        Initialize();
-    }
-
-    private void Reset()
-    {
-        if (TryGetComponent(out NodeBase nb))
-        {
-            _rightConnectorPrefab = nb._rightConnectorPrefab;
-            _leftConnectorPrefab = nb._leftConnectorPrefab;
-
-            _rightConnectorsParent = nb._rightConnectorsParent;
-            _leftConnectorsParent = nb._leftConnectorsParent;
-
-            _image = nb._image;
-            _nodeName = nb._nodeName;
-        }
-    }
-
     public abstract void Setup();
 
-    private void Initialize()
+    public void Initialize(NodeLogic nodeLogic, int guid)
     {
-        if(_guid == 0)
-            _guid = gameObject.GetInstanceID();
-
-        _nodeName.text = nodeName;
+        _guid = guid;
 
         Setup();
-
-        GenerateInputConnectors();
-        GenerateOutputConnectors();
-
-        _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, 57 + (Mathf.Max(inputFields.Count, outputFields.Count)) * 25);
-        _image.material = new Material(_image.material);
-        RecalculateMaterial();
     }
 
-    private void GenerateInputConnectors()
+    internal void SetName(string name)
     {
-        foreach(NodeFieldBase field in inputFields)
-        {
-            var connector = Instantiate(_leftConnectorPrefab, _leftConnectorsParent);
-            ProceedField(field, connector);
-        }
-    }
-    
-    private void GenerateOutputConnectors()
-    {
-        foreach(NodeFieldBase field in outputFields)
-        {
-            var connector = Instantiate(_rightConnectorPrefab, _rightConnectorsParent);
-            ProceedField(field, connector);
-        }
+        _nodeName = name;
     }
 
-    private void ProceedField(NodeFieldBase field, Connector connector)
+    public object Clone()
     {
-        var attribute = field.GetAttribute();
-        connector.SetNode(this);
-        connector.SetData(attribute);
-
-    }
-
-    private void RecalculateMaterial()
-    {
-        _image.material.SetFloat("_ScaleRatio", _image.rectTransform.rect.width / _image.rectTransform.rect.height);
+        return MemberwiseClone();
     }
 }

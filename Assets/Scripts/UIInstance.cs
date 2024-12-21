@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIInstance : MonoBehaviour
 {
@@ -20,6 +21,18 @@ public class UIInstance : MonoBehaviour
     [SerializeField]private Canvas _nodesCanvas;
     [SerializeField]private float _nodesCanvasSize = 1f;
 
+    public static Vector2 GetMousePosition(Vector2 vec)
+    {
+        Vector2 referenceResolution = NodesCanvas.GetComponent<CanvasScaler>().referenceResolution;
+        Vector2 currentResolution = new Vector2(Screen.width, Screen.height);
+
+        float widthRatio = currentResolution.x / referenceResolution.x;
+        float heightRatio = currentResolution.y / referenceResolution.y;
+
+        float ratio = Mathf.Lerp(heightRatio, widthRatio, NodesCanvas.GetComponent<CanvasScaler>().matchWidthOrHeight);
+
+        return vec / ratio;
+    }
 
     private static UIInstance instance
     {

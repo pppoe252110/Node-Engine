@@ -6,7 +6,7 @@ public class ToStringNode : NodeBase
     private ConnectorValueString _output;
     private ConnectorValueObject _input;
 
-    [NodeValue("Input", typeof(object), KnownColor.DarkSlateBlue, NodeValueAttribute.Connections.Multiple)]
+    [NodeValue("Input", typeof(object), KnownColor.DarkSlateBlue, NodeValueAttribute.Connections.Single)]
     public void Input(ConnectorValueObject valueFloat)
     {
         _input.SetValue(valueFloat.GetValue());
