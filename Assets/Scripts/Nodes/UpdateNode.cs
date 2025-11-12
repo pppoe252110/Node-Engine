@@ -5,7 +5,7 @@ using UnityEngine;
 public class UpdateNode : NodeBase
 {
     [NodeValue("Update", typeof(void), KnownColor.BlueViolet)]
-    public void UpdateVoid(ConnectorVoid value)
+    public void UpdateVoid(ConnectorValueVoid value)
     {
         // Trigger only; no value
     }
@@ -14,7 +14,7 @@ public class UpdateNode : NodeBase
     {
         outputFields = new()
         {
-            new NodeField<ConnectorVoid>(false).SetFunc(UpdateVoid).ProvideDefaultValue(new ConnectorVoid(default))
+            new NodeField<ConnectorValueVoid>(false).SetFunc(UpdateVoid).ProvideDefaultValue(new ConnectorValueVoid(default))
         };
     }
 }

@@ -1,0 +1,19 @@
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "VariableDatabase", menuName = "ScriptableObjects/VariableDatabase", order = 2)]
+public class VariableDatabase : ScriptableObject
+{
+    [SerializeField] private VariableUIEntry[] _entries;
+
+    public VariableUIEntry[] Entries => _entries;
+
+    // Get the prefab for a type
+    public VariableUIElement GetPrefabForType(VariableType type)
+    {
+        foreach (var entry in _entries)
+        {
+            if (entry.Type == type) return entry.Prefab;
+        }
+        return null;
+    }
+}

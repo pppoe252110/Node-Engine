@@ -71,7 +71,6 @@ public class Connector : MonoBehaviour
     {
         if (connectors.Contains(this))
             return;
-        Debug.LogError(Node);
 
         foreach (var item in _connections)
         {

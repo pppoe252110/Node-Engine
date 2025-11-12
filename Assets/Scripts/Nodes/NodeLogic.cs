@@ -1,29 +1,33 @@
-using Sirenix.OdinInspector;
-using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class NodeLogic : SerializedMonoBehaviour
+public class NodeLogic : MonoBehaviour
 {
     public NodeBase Node => _node;
     [SerializeField] private NodeBase _node;
+
     [Header("Connectors")]
     [SerializeField] private Connector _rightConnectorPrefab;
     [SerializeField] private Connector _leftConnectorPrefab;
     [SerializeField] private RectTransform _rightConnectorsParent;
     [SerializeField] private RectTransform _leftConnectorsParent;
+
     [Header("Properties")]
     [SerializeField] private Image _image;
     [SerializeField] private Image _nodeIcon;
     [SerializeField] private TextMeshProUGUI _nodeName;
 
+    [Header("Variable UI")]
+    [SerializeField] private Dictionary<VariableType, VariableNodeUI> _variablePrefabs = new(); // Changed from GameObject to VariableNodeUI
+    private List<InputFieldVariableUI> _spawnedVariables = new(); // Track spawned UI for value access
+
     public void SetNodeBase(NodeBase nodeBase)
     {
 
         _node = nodeBase.Clone() as NodeBase;
-        _node.Initialize(this, gameObject.GetInstanceID());
+        _node.Initialize(this, gameObject.GetEntityId());
 
         _nodeName.text = _node.NodeName;
         _nodeIcon.sprite = _node.NodeSprite;
@@ -31,9 +35,15 @@ public class NodeLogic : SerializedMonoBehaviour
 
         gameObject.name = Node.NodeName;
 
-        GenerateInputConnectors();
+        if (_node is VariableNode varNode && varNode.VariableDatabase != null)
+        {
+            SpawnVariableUI(varNode);
+        }
+        else
+        {
+            GenerateInputConnectors();
+        }
         GenerateOutputConnectors();
-
 
         _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, 57 + (Mathf.Max(_node.inputFields.Count, _node.outputFields.Count)) * 25);
         _image.material = new Material(_image.material);
@@ -41,6 +51,21 @@ public class NodeLogic : SerializedMonoBehaviour
         RecalculateMaterial();
 
         NodeLogicProcessor.Instance.AddNode(this);
+    }
+
+    private void SpawnVariableUI(VariableNode varNode)
+    {
+        var prefab = varNode.VariableDatabase.GetPrefabForType(varNode.VariableType);
+        if (prefab == null) return;
+        // Spawn the UI element
+        var uiElement = Instantiate(prefab, _leftConnectorsParent);
+        uiElement.Initialize(varNode.VariableDatabase, varNode.VariableType);
+        // Set the reference in VariableNode
+        varNode.UIElement = uiElement;
+        // Adjust node height (optional, based on UI size)
+        var boxHeight = 30f; // Adjust based on your prefab
+        _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x,
+            Mathf.Max(_image.rectTransform.sizeDelta.y, boxHeight + 20f));
     }
 
     private void GenerateInputConnectors()

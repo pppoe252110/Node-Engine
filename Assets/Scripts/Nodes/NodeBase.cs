@@ -1,29 +1,23 @@
-using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
-[Serializable]
-public abstract class NodeBase : ICloneable
+[System.Serializable]
+public abstract class NodeBase : INode, ICloneable
 {
     public string NodeName => _nodeName;
     public Sprite NodeSprite => _nodeIcon;
-    private bool isInPlaymode => Application.isPlaying;
 
     [SerializeField] private string _nodeName = "Basic";
     [SerializeField] private Sprite _nodeIcon;
 
-    [ShowIf("isInPlaymode")]
     public List<NodeFieldBase> inputFields = new();
-    [ShowIf("isInPlaymode")]
     public List<Connector> inputConnectors = new();
 
-    [ShowIf("isInPlaymode")]
     public List<NodeFieldBase> outputFields = new();
-    [ShowIf("isInPlaymode")]
     public List<Connector> outputConnectors = new();
 
+    [System.NonSerialized]
     private int _guid = 0;
 
     private static HashSet<NodeBase> _processingNodes = new HashSet<NodeBase>();
@@ -33,7 +27,6 @@ public abstract class NodeBase : ICloneable
     public void Initialize(NodeLogic nodeLogic, int guid)
     {
         _guid = guid;
-
         Setup();
     }
 
@@ -41,51 +34,68 @@ public abstract class NodeBase : ICloneable
     {
         _nodeName = name;
     }
-
+    internal void SetIcon(Sprite icon)
+    {
+        _nodeIcon = icon;
+    }
 
     public virtual void Process(List<Connector> fromConnectors = null)
     {
-        if (_processingNodes.Contains(this)) return;  // Prevent infinite recursion in cycles
-
+        if (fromConnectors == null) fromConnectors = new List<Connector>();
+        // Cycle detection: Skip if already processing this node
+        if (_processingNodes.Contains(this)) return;
         _processingNodes.Add(this);
-
-        if (fromConnectors == null)
-            fromConnectors = new List<Connector>();
-
-        // Process inputs first to set local variables
-        for (int i = 0; i < inputConnectors.Count; i++)
+        try
         {
-            if (!fromConnectors.Contains(inputConnectors[i]))
+            // Process inputs first (upstream dependencies)
+            foreach (var connector in inputConnectors)
             {
-                inputConnectors[i].Field.ProceedValue();
-                inputConnectors[i].Process(fromConnectors);
+                if (!fromConnectors.Contains(connector))
+                {
+                    connector.Field.ProceedValue();
+                    fromConnectors.Add(connector);
+                    // Recurse to connected upstream nodes (though inputs are usually from outputs of others, this ensures full traversal)
+                    foreach (var connected in connector.Connections)
+                    {
+                        connected.Node.Process(fromConnectors);
+                    }
+                }
+            }
+
+            // Process outputs (downstream)
+            foreach (var connector in outputConnectors)
+            {
+                if (!fromConnectors.Contains(connector) && connector.ConnectionsCount > 0)
+                {
+                    connector.Field.ProceedValue();
+                    fromConnectors.Add(connector);
+                    // Recurse to connected downstream nodes (this builds the "tree" branches)
+                    foreach (var connected in connector.Connections)
+                    {
+                        connected.Node.Process(fromConnectors);
+                    }
+                }
+            }
+            // Execute self (if applicable)
+            if (this is ExecutableNode executableNode)
+            {
+                executableNode.Execute();
             }
         }
-        // Process only outputs that have connections
-        for (int i = 0; i < outputConnectors.Count; i++)
+        finally
         {
-            if (!fromConnectors.Contains(outputConnectors[i]) && outputConnectors[i].ConnectionsCount > 0)
-            {
-                outputConnectors[i].Field.ProceedValue();
-                outputConnectors[i].Process(fromConnectors);
-            }
+            _processingNodes.Remove(this);  // Always remove after processing
         }
-        if (this is ExecutableNode executableNode)
-        {
-            executableNode.Execute();
-        }
-        _processingNodes.Remove(this);  // Remove after processing
     }
-
 
     public object Clone()
     {
         var clone = MemberwiseClone() as NodeBase;
 
-        clone.inputFields = new();
-        clone.inputConnectors = new();
-        clone.outputFields = new();
-        clone.outputConnectors = new();
+        clone.inputFields = new List<NodeFieldBase>();
+        clone.inputConnectors = new List<Connector>();
+        clone.outputFields = new List<NodeFieldBase>();
+        clone.outputConnectors = new List<Connector>();
 
         return clone;
     }

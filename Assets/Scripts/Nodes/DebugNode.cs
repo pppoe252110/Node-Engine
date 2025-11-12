@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DebugNode : ExecutableNode
 {
-    private ConnectorVoid _log;
+    private ConnectorValueVoid _log;
     private ConnectorValueString _logText;
 
     public override void Execute()
@@ -13,7 +13,7 @@ public class DebugNode : ExecutableNode
     }
 
     [NodeValue("Event", typeof(void), KnownColor.BlueViolet)]
-    public void Log(ConnectorVoid value)
+    public void Log(ConnectorValueVoid value)
     {
         _log = value;
     }
@@ -28,7 +28,7 @@ public class DebugNode : ExecutableNode
     {
         inputFields = new()
         {
-            new NodeField<ConnectorVoid>(true).SetFunc(Log).ProvideDefaultValue(new ConnectorVoid(null)),
+            new NodeField<ConnectorValueVoid>(true).SetFunc(Log).ProvideDefaultValue(new ConnectorValueVoid(null)),
             new NodeField<ConnectorValueString>(true).SetFunc(LogString).ProvideDefaultValue(new ConnectorValueString(""))
         };
     }

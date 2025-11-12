@@ -54,7 +54,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
             connectedNode.Process();
 
             var connectedValue = connectedConnector.Field.GetObjectValue() as IConnectorValue;
-            if (connectedValue != null && typeof(T) != typeof(ConnectorVoid))
+            if (connectedValue != null && typeof(T) != typeof(ConnectorValueVoid))
             {
                 var innerValue = connectedValue.GetInnerValue();
                 if (currentValue is ConnectorValueBase<object> objBase)

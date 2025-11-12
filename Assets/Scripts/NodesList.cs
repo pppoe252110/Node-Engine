@@ -27,18 +27,23 @@ public class NodesList : MonoBehaviour
 
     public void SpawnNodes()
     {
-        for (int i = 0; i < _nodesDatabase.nodes.Length; i++)
+        var nodes = _nodesDatabase.GetNodes();
+
+        for (int i = 0; i < nodes.Length; i++)
         {
+            Debug.Log(nodes[i].GetType());
             var item = Instantiate(_nodesListItem, _nodesListParent);
             var a = i;
             item.SetUp(this, a);
-            item.SetNodeName(_nodesDatabase.nodes[i].NodeName);
+            item.SetNodeName(nodes[i].NodeName);
         }
     }
 
     internal void SpawnNode(int id)
     {
-        var targetNode = _nodesDatabase.nodes[id];
+        var nodes = _nodesDatabase.GetNodes();
+
+        var targetNode = nodes[id];
 
         var node = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
         node.transform.position = _nodesListView.position;
