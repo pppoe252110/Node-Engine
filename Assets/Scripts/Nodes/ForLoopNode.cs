@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
 
@@ -8,6 +7,9 @@ public class ForLoopNode : ExecutableNode
     private ConnectorValueInt _count;
     private ConnectorValueVoid _body, _end;
     private ConnectorValueInt _index;
+
+    // Store references to the actual NodeField objects
+    private NodeField<ConnectorValueVoid> _bodyField, _endField;
 
     [NodeValue("Execute", typeof(void), KnownColor.BlueViolet)]
     public void ExecuteInput(ConnectorValueVoid execute) => _execute = execute;
@@ -29,52 +31,37 @@ public class ForLoopNode : ExecutableNode
         int loopCount = _count?.GetValue() ?? 0;
         Debug.Log($"ForLoopNode: Starting loop with count {loopCount}");
 
-        // Process input values first to ensure we have the latest count
-        if (_count != null)
-        {
-            _count.ProceedValue();
-        }
-
         for (int i = 0; i < loopCount; i++)
         {
             Debug.Log($"ForLoopNode: Iteration {i}");
 
-            // Set the current index value and trigger updates
+            // Set the current index value
             _index?.SetValue(i);
 
-            // Process the index output to ensure downstream nodes get the value
-            if (_index != null)
+            // Trigger body execution - propagate through the body field
+            if (_bodyField != null)
             {
-                _index.ProceedValue();
-            }
-
-            // Trigger the body execution and process connected nodes
-            _body?.ValueUpdated?.Invoke(_body);
-
-            // If body is connected to other nodes, process them
-            if (_body != null && this is NodeBase nodeBase)
-            {
-                // This will process the entire execution chain for this iteration
-                var connectors = new List<Connector>();
-                foreach (var connector in nodeBase.outputConnectors)
-                {
-                    if (connector.Field.GetAttribute().attributeName == "Body")
-                    {
-                        connector.Process(connectors);
-                        break;
-                    }
-                }
+                Debug.Log($"ForLoopNode: Triggering body for iteration {i}");
+                _bodyField.ProceedValue();
             }
         }
 
         Debug.Log($"ForLoopNode: Loop completed");
 
-        // Trigger the end execution after loop completes
-        _end?.ValueUpdated?.Invoke(_end);
+        // Trigger end execution
+        if (_endField != null)
+        {
+            Debug.Log($"ForLoopNode: Triggering end");
+            _endField.ProceedValue();
+        }
     }
 
     public override void Setup()
     {
+        // Create the fields and store references
+        _bodyField = new NodeField<ConnectorValueVoid>(false).SetFunc(Body).ProvideDefaultValue(new ConnectorValueVoid(null));
+        _endField = new NodeField<ConnectorValueVoid>(false).SetFunc(End).ProvideDefaultValue(new ConnectorValueVoid(null));
+
         inputFields = new()
         {
             new NodeField<ConnectorValueVoid>(true).SetFunc(ExecuteInput).ProvideDefaultValue(new ConnectorValueVoid(null)),
@@ -82,9 +69,9 @@ public class ForLoopNode : ExecutableNode
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueVoid>(false).SetFunc(Body).ProvideDefaultValue(new ConnectorValueVoid(null)),
+            _bodyField,
             new NodeField<ConnectorValueInt>(false).SetFunc(Index).ProvideDefaultValue(new ConnectorValueInt(0)),
-            new NodeField<ConnectorValueVoid>(false).SetFunc(End).ProvideDefaultValue(new ConnectorValueVoid(null))
+            _endField
         };
     }
 }

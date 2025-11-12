@@ -6,7 +6,6 @@ public class ConnectorValueBase<T> : IConnectorValue
     public delegate void Invoke(T value);
     public Invoke ValueUpdated;
 
-    // Add the interface event
     event System.Action<object> IConnectorValue.ValueUpdated
     {
         add { ValueUpdated += (v) => value(v); }
@@ -15,11 +14,13 @@ public class ConnectorValueBase<T> : IConnectorValue
 
     public ConnectorValueBase(T value)
     {
-        SetValue(value);
+        _value = value; // Don't trigger event in constructor
     }
 
     public virtual void SetValue(T value)
     {
+        if (Equals(_value, value)) return; // Don't trigger if value didn't change
+
         _value = value;
         ValueUpdated?.Invoke(value);
     }
@@ -31,6 +32,8 @@ public class ConnectorValueBase<T> : IConnectorValue
 
     public virtual void ProceedValue()
     {
+        // Trigger update to propagate the current value
+        ValueUpdated?.Invoke(_value);
     }
 
     public object GetInnerValue()

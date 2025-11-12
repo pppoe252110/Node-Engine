@@ -1,28 +1,38 @@
-using System;
 using System.Drawing;
 using UnityEngine;
 
 public class VariableNode : NodeBase
 {
-    [SerializeField] private VariableType _variableType; // Set in editor
-
+    [SerializeField] private VariableType _variableType;
     public VariableType VariableType => _variableType;
-
-    // Reference to the spawned UI element (set by NodeLogic)
     public VariableUIElement UIElement { get; set; }
+
+    // Add this field to store the output value
+    private ConnectorValueObject _outputValue;
 
     public override void Setup()
     {
-        // No input fields/connectors—input is via spawned UI
         outputFields = new()
         {
             new VariableNodeField(_variableType).SetFunc(Output).ProvideDefaultValue(new ConnectorValueObject(null))
         };
     }
 
-    [NodeValue("Value", typeof(object), KnownColor.Gray)]  // Type is overridden by VariableNodeField.GetValueType()
+    [NodeValue("Value", typeof(object), KnownColor.Gray)]
     public void Output(ConnectorValueObject value)
     {
-        value.SetValue(UIElement?.GetValue());
+        _outputValue = value; // Store reference
+        UpdateOutputValue(); // Set initial value
+    }
+
+    // Add this method to update the output value
+    public void UpdateOutputValue()
+    {
+        if (_outputValue != null && UIElement != null)
+        {
+            var val = UIElement.GetValue();
+            Debug.Log($"VariableNode: Setting output value to {val} (type: {val?.GetType()})");
+            _outputValue.SetValue(val);
+        }
     }
 }

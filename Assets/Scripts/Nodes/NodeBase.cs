@@ -13,12 +13,14 @@ public abstract class NodeBase : INode, ICloneable
 
     public List<NodeFieldBase> inputFields = new();
     public List<Connector> inputConnectors = new();
-
     public List<NodeFieldBase> outputFields = new();
     public List<Connector> outputConnectors = new();
 
     [System.NonSerialized]
     private int _guid = 0;
+
+    // Add processing tracking
+    public bool IsProcessing { get; set; }
 
     private static HashSet<NodeBase> _processingNodes = new HashSet<NodeBase>();
 
@@ -34,6 +36,7 @@ public abstract class NodeBase : INode, ICloneable
     {
         _nodeName = name;
     }
+
     internal void SetIcon(Sprite icon)
     {
         _nodeIcon = icon;
@@ -42,19 +45,27 @@ public abstract class NodeBase : INode, ICloneable
     public virtual void Process(List<Connector> fromConnectors = null)
     {
         if (fromConnectors == null) fromConnectors = new List<Connector>();
+
         // Cycle detection: Skip if already processing this node
-        if (_processingNodes.Contains(this)) return;
+        if (_processingNodes.Contains(this) || IsProcessing)
+        {
+            return;
+        }
+
         _processingNodes.Add(this);
+        IsProcessing = true;
+
         try
         {
-            // Process inputs first (upstream dependencies)
+            // Process inputs: Update data values from connected outputs (passive propagation)
             foreach (var connector in inputConnectors)
             {
-                if (!fromConnectors.Contains(connector))
+                if (!fromConnectors.Contains(connector) && connector.ValueType != typeof(void))  // Only data inputs
                 {
                     connector.Field.ProceedValue();
                     fromConnectors.Add(connector);
-                    // Recurse to connected upstream nodes (though inputs are usually from outputs of others, this ensures full traversal)
+
+                    // Recurse to connected upstream nodes for value updates
                     foreach (var connected in connector.Connections)
                     {
                         connected.Node.Process(fromConnectors);
@@ -62,41 +73,40 @@ public abstract class NodeBase : INode, ICloneable
                 }
             }
 
-            // Process outputs (downstream)
+            // Process data outputs to ensure they have current values
             foreach (var connector in outputConnectors)
             {
-                if (!fromConnectors.Contains(connector) && connector.ConnectionsCount > 0)
+                if (connector.ValueType != typeof(void))  // Data outputs
                 {
                     connector.Field.ProceedValue();
-                    fromConnectors.Add(connector);
-                    // Recurse to connected downstream nodes (this builds the "tree" branches)
-                    foreach (var connected in connector.Connections)
-                    {
-                        connected.Node.Process(fromConnectors);
-                    }
                 }
             }
-            // Execute self (if applicable)
-            if (this is ExecutableNode executableNode)
+
+            // Skip ALL void event propagation for ExecutableNode to prevent re-triggering execution or extra calls
+            if (this is ExecutableNode) return;
+
+            // Propagate void events from outputs (fire downstream)
+            foreach (var connector in outputConnectors)
             {
-                executableNode.Execute();
+                if (connector.ValueType == typeof(void))
+                {
+                    connector.Field.ProceedValue();
+                }
             }
         }
         finally
         {
-            _processingNodes.Remove(this);  // Always remove after processing
+            _processingNodes.Remove(this);
+            IsProcessing = false;
         }
     }
-
     public object Clone()
     {
         var clone = MemberwiseClone() as NodeBase;
-
         clone.inputFields = new List<NodeFieldBase>();
         clone.inputConnectors = new List<Connector>();
         clone.outputFields = new List<NodeFieldBase>();
         clone.outputConnectors = new List<Connector>();
-
         return clone;
     }
 }
