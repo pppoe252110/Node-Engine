@@ -3,29 +3,31 @@ using UnityEngine;
 
 public class ToStringNode : NodeBase
 {
-    private ConnectorValueString _output;
     private ConnectorValueObject _input;
+    private ConnectorValueString _output;
 
-    [NodeValue("Input", typeof(object), KnownColor.DarkSlateBlue, NodeValueAttribute.Connections.Single)]
-    public void Input(ConnectorValueObject valueFloat)
+    [NodeValue("Input", typeof(object), KnownColor.DarkSlateBlue)]
+    public void Input(ConnectorValueObject value)
     {
-        _input.SetValue(valueFloat.GetValue());
+        _input = value;
     }
 
     [NodeValue("Output", typeof(string), KnownColor.PaleVioletRed)]
-    public void Output(ConnectorValueString valueFloat)
+    public void Output(ConnectorValueString value)
     {
-        _output.SetValue(_input.GetValue().ToString());
+        var inputValue = _input?.GetValue() ?? "null";
+        value.SetValue(inputValue.ToString());
     }
+
     public override void Setup()
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueObject>().SetFunc(Input).ProvideDefaultValue(_input),
+            new NodeField<ConnectorValueObject>(true).SetFunc(Input).ProvideDefaultValue(new ConnectorValueObject(null)),
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueString>().SetFunc(Output).ProvideDefaultValue(_output),
+            new NodeField<ConnectorValueString>(false).SetFunc(Output).ProvideDefaultValue(new ConnectorValueString("")),
         };
     }
 }

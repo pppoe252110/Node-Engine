@@ -1,30 +1,35 @@
+using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
 
-public class DebugNode : NodeBase
+public class DebugNode : ExecutableNode
 {
     private ConnectorVoid _log;
-    private ConnectorValueFloat _logText;
+    private ConnectorValueString _logText;
+
+    public override void Execute()
+    {
+        Debug.LogError(_logText.GetValue());
+    }
 
     [NodeValue("Event", typeof(void), KnownColor.BlueViolet)]
-    public void Log(ConnectorVoid valueVoid)
+    public void Log(ConnectorVoid value)
     {
-        Debug.Log(_logText.GetValue());
+        _log = value;
     }
-    
+
     [NodeValue("LogString", typeof(string), KnownColor.PaleVioletRed)]
-    public void LogString(ConnectorValueFloat valueVoid)
+    public void LogString(ConnectorValueString value)
     {
-        Debug.Log(valueVoid);
+        _logText = value;
     }
 
     public override void Setup()
     {
         inputFields = new()
         {
-            new NodeField<ConnectorVoid>().SetFunc(Log).ProvideDefaultValue(_log),
-            new NodeField<ConnectorValueFloat>().SetFunc(LogString).ProvideDefaultValue(_logText)
+            new NodeField<ConnectorVoid>(true).SetFunc(Log).ProvideDefaultValue(new ConnectorVoid(null)),
+            new NodeField<ConnectorValueString>(true).SetFunc(LogString).ProvideDefaultValue(new ConnectorValueString(""))
         };
     }
-
 }

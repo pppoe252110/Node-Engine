@@ -9,9 +9,9 @@ using static UnityEngine.Rendering.DebugUI;
 public class Connector : MonoBehaviour
 {
     public NodeBase Node => _node;
+    public NodeFieldBase Field => _field;
     public Type ValueType => _valueAttribute.type;
     public Color Color => _valueAttribute.attributeColor;
-    public Connections ConnectionsType => _valueAttribute.connections;
     public Vector3 DragPoint => _connectorImage.rectTransform.position;
     public Vector3 AnchoredPositionPoint => _connectorImage.rectTransform.position;
 
@@ -33,6 +33,7 @@ public class Connector : MonoBehaviour
     [SerializeField] private Image _connectorImage;
     [SerializeField] private Image _connectorImageFill;
     private NodeBase _node;
+    private NodeFieldBase _field;
 
     private NodeValueAttribute _valueAttribute;
     [SerializeField] private List<Connector> _connections = new();
@@ -64,5 +65,24 @@ public class Connector : MonoBehaviour
     internal void UpdateFilled()
     {
         SetConnectorFilled(_connections.Count > 0);
+    }
+
+    internal void Process(List<Connector> connectors)
+    {
+        if (connectors.Contains(this))
+            return;
+        Debug.LogError(Node);
+
+        foreach (var item in _connections)
+        {
+            connectors.Add(item);
+            item.Node.Process(connectors);
+        }
+    }
+
+    internal void SetField(NodeFieldBase field)
+    {
+        _field = field;
+        _field.Connector = this;
     }
 }

@@ -1,4 +1,5 @@
-﻿public class ConnectorValueBase<T> : IConnectorValue
+﻿[System.Serializable]
+public class ConnectorValueBase<T> : IConnectorValue
 {
     private T _value;
 
@@ -21,4 +22,12 @@
         return _value;
     }
 
+    public virtual void ProceedValue()
+    {
+    }
+
+    public object GetInnerValue()
+    {
+        return _value;
+    }
 }

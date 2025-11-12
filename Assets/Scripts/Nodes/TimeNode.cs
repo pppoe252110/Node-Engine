@@ -5,27 +5,29 @@ using System.Drawing;
 
 public class TimeNode : NodeBase
 {
-    private ConnectorValueFloat _deltaTime = new(0);
-    private ConnectorValueFloat _scaledTime = new(0);
-
-    [NodeValue("DeltaTime", typeof(float), KnownColor.LawnGreen, NodeValueAttribute.Connections.Multiple)]
-    public void DeltaTime(ConnectorValueFloat valueFloat)
+    [NodeValue("DeltaTime", typeof(float), KnownColor.LawnGreen)]
+    public void DeltaTime(ConnectorValueFloat value)
     {
-        valueFloat.SetValue(Time.deltaTime);
+        value.SetValue(UnityEngine.Time.deltaTime);
     }
 
-    [NodeValue("ScaledTime", typeof(float), KnownColor.LawnGreen, NodeValueAttribute.Connections.Multiple)]
-    public void ScaledTime(ConnectorValueFloat valueFloat)
+    [NodeValue("Time", typeof(float), KnownColor.LawnGreen)]
+    public void Time(ConnectorValueFloat value)
     {
-        valueFloat.SetValue(Time.deltaTime);
+        value.SetValue(UnityEngine.Time.time);
     }
 
     public override void Setup()
     {
         outputFields = new()
         {
-            new NodeField<ConnectorValueFloat>().SetFunc(DeltaTime).ProvideDefaultValue(_deltaTime),
-            new NodeField<ConnectorValueFloat>().SetFunc(ScaledTime).ProvideDefaultValue(_scaledTime)
+            new NodeField<ConnectorValueFloat>(false).SetFunc(DeltaTime).ProvideDefaultValue(new ConnectorValueFloat(0)),
+            new NodeField<ConnectorValueFloat>(false).SetFunc(Time).ProvideDefaultValue(new ConnectorValueFloat(0))
         };
+    }
+
+    public override void Process(List<Connector> fromConnectors = null)
+    {
+        base.Process(fromConnectors);
     }
 }

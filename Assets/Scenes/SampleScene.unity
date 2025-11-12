@@ -783,6 +783,7 @@ GameObject:
   m_Component:
   - component: {fileID: 742557162}
   - component: {fileID: 742557163}
+  - component: {fileID: 742557164}
   m_Layer: 0
   m_Name: NodeEngine
   m_TagString: Untagged
@@ -823,6 +824,18 @@ MonoBehaviour:
   _nodesListParent: {fileID: 1196396711}
   _nodesListItem: {fileID: 1293711094400406869, guid: ee66206b18228d8468f6cae990bee9b3, type: 3}
   _nodesDatabase: {fileID: 11400000, guid: ead416cb3a8d0ee42b068ab20013e6eb, type: 2}
+--- !u!114 &742557164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742557161}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2523678ca50b0c5469fd4ee0a08980e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0

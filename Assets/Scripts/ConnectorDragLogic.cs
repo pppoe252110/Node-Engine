@@ -86,22 +86,20 @@ public class ConnectorDragLogic : MonoBehaviour
                     {
                         if (_dragConnector.Node != connector.Node)
                         {
-                            if ((connector.ConnectionsType == NodeValueAttribute.Connections.Single && connector.ConnectionsCount <= 0) || connector.ConnectionsType != NodeValueAttribute.Connections.Single)
+                            if (connector.ConnectionsCount <= 0)
                             {
+                                if (_dragConnector.ValueType == connector.ValueType || connector.ValueType == typeof(object))
                                 {
-                                    if (_dragConnector.ValueType == connector.ValueType || connector.ValueType == typeof(object))
-                                    {
-                                        LineRenderersController.Add(_dragConnector, connector, _dragLineRenderer);
-                                        _dragLineRenderer = null;
+                                    LineRenderersController.Add(_dragConnector, connector, _dragLineRenderer);
+                                    _dragLineRenderer = null;
 
-                                        _dragConnector.AddConnection(connector);
-                                        _dragConnector.UpdateFilled();
+                                    _dragConnector.AddConnection(connector);
+                                    _dragConnector.UpdateFilled();
 
-                                        connector.AddConnection(_dragConnector);
-                                        connector.UpdateFilled();
+                                    connector.AddConnection(_dragConnector);
+                                    connector.UpdateFilled();
 
-                                        return;
-                                    }
+                                    return;
                                 }
                             }
                         }

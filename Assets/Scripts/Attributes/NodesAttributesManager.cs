@@ -4,14 +4,7 @@ using UnityEngine;
 [AttributeUsage(AttributeTargets.Method)]
 public class NodeValueAttribute : Attribute
 {
-    public enum Connections
-    {
-        Single,
-        Multiple
-    }
-    
     public string attributeName;
-    public  Connections connections;
     public Color attributeColor
     {
         get
@@ -24,11 +17,10 @@ public class NodeValueAttribute : Attribute
     private System.Drawing.KnownColor knownColor;
     public Type type;
 
-    public NodeValueAttribute(string attributeName, Type type, System.Drawing.KnownColor attributeColor, Connections connections = Connections.Single)
+    public NodeValueAttribute(string attributeName, Type type, System.Drawing.KnownColor attributeColor)
     {
         this.attributeName = attributeName;
         this.type = type;
         this.knownColor = attributeColor;
-        this.connections = connections;
     }
 }
