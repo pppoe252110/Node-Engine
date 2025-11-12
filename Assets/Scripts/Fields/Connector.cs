@@ -10,7 +10,7 @@ public class Connector : MonoBehaviour
 {
     public NodeBase Node => _node;
     public NodeFieldBase Field => _field;
-    public Type ValueType => _valueAttribute.type;
+    public Type ValueType => Field is VariableNodeField ? ((VariableNodeField)Field).GetValueType() : _valueAttribute.type;
     public Color Color => _valueAttribute.attributeColor;
     public Vector3 DragPoint => _connectorImage.rectTransform.position;
     public Vector3 AnchoredPositionPoint => _connectorImage.rectTransform.position;

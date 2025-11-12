@@ -5,6 +5,7 @@ public class SerializableNode
 {
     public string nodeName;
     public string nodeType;
+    public VariableType variableType;
     public Sprite nodeIcon;
 
     public NodeBase CreateInstance()
@@ -12,7 +13,15 @@ public class SerializableNode
         var type = System.Type.GetType(nodeType);
         if (type != null)
         {
-            return System.Activator.CreateInstance(type) as NodeBase;
+            var instance = System.Activator.CreateInstance(type) as NodeBase;
+
+            if (instance is VariableNode varNode)
+            {
+                // Set the type (use reflection or direct cast)
+                var field = typeof(VariableNode).GetField("_variableType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                field?.SetValue(varNode, variableType);
+            }
+            return instance;
         }
         return null;
     }

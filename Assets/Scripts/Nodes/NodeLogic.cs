@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,6 +7,8 @@ using UnityEngine.UI;
 public class NodeLogic : MonoBehaviour
 {
     public NodeBase Node => _node;
+    public VariableDatabase VariableDatabase { get; set; }
+
     [SerializeField] private NodeBase _node;
 
     [Header("Connectors")]
@@ -19,13 +22,8 @@ public class NodeLogic : MonoBehaviour
     [SerializeField] private Image _nodeIcon;
     [SerializeField] private TextMeshProUGUI _nodeName;
 
-    [Header("Variable UI")]
-    [SerializeField] private Dictionary<VariableType, VariableNodeUI> _variablePrefabs = new(); // Changed from GameObject to VariableNodeUI
-    private List<InputFieldVariableUI> _spawnedVariables = new(); // Track spawned UI for value access
-
     public void SetNodeBase(NodeBase nodeBase)
     {
-
         _node = nodeBase.Clone() as NodeBase;
         _node.Initialize(this, gameObject.GetEntityId());
 
@@ -35,7 +33,7 @@ public class NodeLogic : MonoBehaviour
 
         gameObject.name = Node.NodeName;
 
-        if (_node is VariableNode varNode && varNode.VariableDatabase != null)
+        if (_node is VariableNode varNode && VariableDatabase != null)
         {
             SpawnVariableUI(varNode);
         }
@@ -53,17 +51,59 @@ public class NodeLogic : MonoBehaviour
         NodeLogicProcessor.Instance.AddNode(this);
     }
 
+    // Add this method to your existing NodeLogic class if not already there
+    public void DeleteNode()
+    {
+        // Remove all connections first
+        RemoveAllConnections();
+
+        // Remove from processor
+        NodeLogicProcessor.Instance?.RemoveNode(this);
+
+        // Destroy the game object
+        Destroy(gameObject);
+    }
+
+    private void RemoveAllConnections()
+    {
+        // Remove input connections
+        foreach (var connector in _node.inputConnectors)
+        {
+            foreach (var connectedConnector in connector.Connections.ToArray())
+            {
+                LineRenderersController.Remove(connector, connectedConnector);
+                connectedConnector.Connections.Remove(connector);
+                connectedConnector.UpdateFilled();
+            }
+            connector.Connections.Clear();
+            connector.UpdateFilled();
+        }
+
+        // Remove output connections  
+        foreach (var connector in _node.outputConnectors)
+        {
+            foreach (var connectedConnector in connector.Connections.ToArray())
+            {
+                LineRenderersController.Remove(connector, connectedConnector);
+                connectedConnector.Connections.Remove(connector);
+                connectedConnector.UpdateFilled();
+            }
+            connector.Connections.Clear();
+            connector.UpdateFilled();
+        }
+    }
+
+    // Rest of your existing methods...
     private void SpawnVariableUI(VariableNode varNode)
     {
-        var prefab = varNode.VariableDatabase.GetPrefabForType(varNode.VariableType);
+        var prefab = VariableDatabase.GetPrefabForType(varNode.VariableType);
         if (prefab == null) return;
-        // Spawn the UI element
+
         var uiElement = Instantiate(prefab, _leftConnectorsParent);
-        uiElement.Initialize(varNode.VariableDatabase, varNode.VariableType);
-        // Set the reference in VariableNode
+        uiElement.Initialize(VariableDatabase, varNode.VariableType);
         varNode.UIElement = uiElement;
-        // Adjust node height (optional, based on UI size)
-        var boxHeight = 30f; // Adjust based on your prefab
+
+        var boxHeight = 30f;
         _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x,
             Mathf.Max(_image.rectTransform.sizeDelta.y, boxHeight + 20f));
     }
@@ -74,18 +114,17 @@ public class NodeLogic : MonoBehaviour
         {
             var connector = Instantiate(_leftConnectorPrefab, _leftConnectorsParent);
             ProceedField(field, connector);
-
-            Node.inputConnectors.Add(connector);
+            _node.inputConnectors.Add(connector);
         }
     }
+
     private void GenerateOutputConnectors()
     {
         foreach (NodeFieldBase field in _node.outputFields)
         {
             var connector = Instantiate(_rightConnectorPrefab, _rightConnectorsParent);
             ProceedField(field, connector);
-
-            Node.outputConnectors.Add(connector);
+            _node.outputConnectors.Add(connector);
         }
     }
 
@@ -102,9 +141,8 @@ public class NodeLogic : MonoBehaviour
         _image.material.SetFloat("_ScaleRatio", _image.rectTransform.rect.width / _image.rectTransform.rect.height);
     }
 
-
     internal void Process()
     {
-        Node.Process();
+        _node.Process();
     }
 }

@@ -1,10 +1,16 @@
+using System.Collections.Generic;
 using System.Drawing;
+using UnityEngine;
 
 public class ForLoopNode : ExecutableNode
 {
-    private ConnectorValueInt _count;  // Assume you add ConnectorValueInt
+    private ConnectorValueVoid _execute;
+    private ConnectorValueInt _count;
     private ConnectorValueVoid _body, _end;
     private ConnectorValueInt _index;
+
+    [NodeValue("Execute", typeof(void), KnownColor.BlueViolet)]
+    public void ExecuteInput(ConnectorValueVoid execute) => _execute = execute;
 
     [NodeValue("Count", typeof(int), KnownColor.Purple)]
     public void Count(ConnectorValueInt count) => _count = count;
@@ -20,11 +26,50 @@ public class ForLoopNode : ExecutableNode
 
     public override void Execute()
     {
-        for (int i = 0; i < _count.GetValue(); i++)
+        int loopCount = _count?.GetValue() ?? 0;
+        Debug.Log($"ForLoopNode: Starting loop with count {loopCount}");
+
+        // Process input values first to ensure we have the latest count
+        if (_count != null)
         {
-            _index.SetValue(i);
-            _body?.ValueUpdated?.Invoke(_body);  // Trigger body
+            _count.ProceedValue();
         }
+
+        for (int i = 0; i < loopCount; i++)
+        {
+            Debug.Log($"ForLoopNode: Iteration {i}");
+
+            // Set the current index value and trigger updates
+            _index?.SetValue(i);
+
+            // Process the index output to ensure downstream nodes get the value
+            if (_index != null)
+            {
+                _index.ProceedValue();
+            }
+
+            // Trigger the body execution and process connected nodes
+            _body?.ValueUpdated?.Invoke(_body);
+
+            // If body is connected to other nodes, process them
+            if (_body != null && this is NodeBase nodeBase)
+            {
+                // This will process the entire execution chain for this iteration
+                var connectors = new List<Connector>();
+                foreach (var connector in nodeBase.outputConnectors)
+                {
+                    if (connector.Field.GetAttribute().attributeName == "Body")
+                    {
+                        connector.Process(connectors);
+                        break;
+                    }
+                }
+            }
+        }
+
+        Debug.Log($"ForLoopNode: Loop completed");
+
+        // Trigger the end execution after loop completes
         _end?.ValueUpdated?.Invoke(_end);
     }
 
@@ -32,6 +77,7 @@ public class ForLoopNode : ExecutableNode
     {
         inputFields = new()
         {
+            new NodeField<ConnectorValueVoid>(true).SetFunc(ExecuteInput).ProvideDefaultValue(new ConnectorValueVoid(null)),
             new NodeField<ConnectorValueInt>(true).SetFunc(Count).ProvideDefaultValue(new ConnectorValueInt(0))
         };
         outputFields = new()

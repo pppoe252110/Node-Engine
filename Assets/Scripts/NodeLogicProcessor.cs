@@ -8,7 +8,7 @@ public class NodeLogicProcessor : MonoBehaviour
     {
         get
         {
-            if(instance == null)
+            if (instance == null)
                 instance = FindFirstObjectByType<NodeLogicProcessor>();
             return instance;
         }
@@ -17,11 +17,12 @@ public class NodeLogicProcessor : MonoBehaviour
 
     public List<NodeLogic> nodes => _nodes;
 
-    private List<NodeLogic> _nodes = new ();
+    private List<NodeLogic> _nodes = new();
 
     public void AddNode(NodeLogic node)
     {
-        _nodes.Add(node);
+        if (!_nodes.Contains(node))
+            _nodes.Add(node);
     }
 
     public void RemoveNode(NodeLogic node)
@@ -31,7 +32,7 @@ public class NodeLogicProcessor : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyUp(KeyCode.E)) 
+        if (Input.GetKeyUp(KeyCode.E))
             Process();
     }
 

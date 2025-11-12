@@ -116,6 +116,7 @@ GameObject:
   - component: {fileID: 9049453108590102222}
   - component: {fileID: 2621976240982863169}
   - component: {fileID: 1799866906948828045}
+  - component: {fileID: 2028984173989267109}
   m_Layer: 0
   m_Name: Node
   m_TagString: Untagged
@@ -232,54 +233,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e104db5209f8fa645a345f773bb8d944, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serializationData:
-    SerializedFormat: 2
-    SerializedBytes: 
-    ReferencedUnityObjects:
-    - {fileID: 21300000, guid: 7e03df8074dc4fc4d92d0a006349ffbf, type: 3}
-    SerializedBytesString: 
-    Prefab: {fileID: 0}
-    PrefabModificationsReferencedUnityObjects: []
-    PrefabModifications: []
-    SerializationNodes:
-    - Name: _node
-      Entry: 7
-      Data: 0|DebugNode, Assembly-CSharp
-    - Name: _nodeName
-      Entry: 1
-      Data: Debug
-    - Name: _nodeIcon
-      Entry: 10
-      Data: 0
-    - Name: inputFields
-      Entry: 7
-      Data: 1|System.Collections.Generic.List`1[[NodeFieldBase, Assembly-CSharp]],
-        mscorlib
-    - Name: 
-      Entry: 12
-      Data: 0
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: outputFields
-      Entry: 7
-      Data: 2|System.Collections.Generic.List`1[[NodeFieldBase, Assembly-CSharp]],
-        mscorlib
-    - Name: 
-      Entry: 12
-      Data: 0
-    - Name: 
-      Entry: 13
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
   _rightConnectorPrefab: {fileID: 2548461084981960448, guid: 4cc3a768abfbf9240a4b7bac530b8c40, type: 3}
   _leftConnectorPrefab: {fileID: 2487793888308749303, guid: d0d8c4f4fc7af284aba64a6615b2168a, type: 3}
   _rightConnectorsParent: {fileID: 1989612166734013065}
@@ -287,6 +240,18 @@ MonoBehaviour:
   _image: {fileID: 8590004688524277348}
   _nodeIcon: {fileID: 2157151724413625442}
   _nodeName: {fileID: 3869312446641288361}
+--- !u!114 &2028984173989267109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4940753074841547606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 733629eae5a2df94797e79d1c1134303, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NodeContextMenu
 --- !u!1 &5344738666673001493
 GameObject:
   m_ObjectHideFlags: 0
@@ -575,7 +540,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 8, y: -20}
-  m_SizeDelta: {x: 110, y: 16}
+  m_SizeDelta: {x: 110, y: 24}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3180721737089442207
 CanvasRenderer:
@@ -635,9 +600,9 @@ MonoBehaviour:
   m_fontSize: 16
   m_fontSizeBase: 16
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 4
+  m_fontSizeMax: 16
   m_fontStyle: 1
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 512

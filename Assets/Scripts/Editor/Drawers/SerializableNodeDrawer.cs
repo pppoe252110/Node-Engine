@@ -105,6 +105,15 @@ public class SerializableNodeDrawer : PropertyDrawer
             DrawTypeDropdown(typeFieldRect, nodeTypeProp);
             currentY += LINE_HEIGHT + 2f;
 
+            // Specific to VariableNode: VariableType dropdown
+            if (nodeTypeProp.stringValue.Contains("VariableNode"))
+            {
+                var variableTypeRect = new Rect(fieldStartX, currentY, fieldWidth, LINE_HEIGHT);  // Renamed for clarity
+                var variableTypeProp = property.FindPropertyRelative("variableType");
+                variableTypeProp.enumValueIndex = EditorGUI.Popup(variableTypeRect, "Variable Type", variableTypeProp.enumValueIndex, variableTypeProp.enumDisplayNames);
+                currentY += LINE_HEIGHT + 2f;
+            }
+
             // Icon field
             var iconFieldRect = new Rect(fieldStartX, currentY, fieldWidth, LINE_HEIGHT);
             EditorGUI.PropertyField(iconFieldRect, nodeIconProp, new GUIContent("Icon"));

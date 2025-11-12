@@ -6,6 +6,13 @@ public class ConnectorValueBase<T> : IConnectorValue
     public delegate void Invoke(T value);
     public Invoke ValueUpdated;
 
+    // Add the interface event
+    event System.Action<object> IConnectorValue.ValueUpdated
+    {
+        add { ValueUpdated += (v) => value(v); }
+        remove { ValueUpdated -= (v) => value(v); }
+    }
+
     public ConnectorValueBase(T value)
     {
         SetValue(value);

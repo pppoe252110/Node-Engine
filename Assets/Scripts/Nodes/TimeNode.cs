@@ -6,13 +6,13 @@ using System.Drawing;
 public class TimeNode : NodeBase
 {
     [NodeValue("DeltaTime", typeof(float), KnownColor.LawnGreen)]
-    public void DeltaTime(ConnectorValueFloat value)
+    public void DeltaTime(ConnectorValueSingle value)
     {
         value.SetValue(UnityEngine.Time.deltaTime);
     }
 
     [NodeValue("Time", typeof(float), KnownColor.LawnGreen)]
-    public void Time(ConnectorValueFloat value)
+    public void Time(ConnectorValueSingle value)
     {
         value.SetValue(UnityEngine.Time.time);
     }
@@ -21,8 +21,8 @@ public class TimeNode : NodeBase
     {
         outputFields = new()
         {
-            new NodeField<ConnectorValueFloat>(false).SetFunc(DeltaTime).ProvideDefaultValue(new ConnectorValueFloat(0)),
-            new NodeField<ConnectorValueFloat>(false).SetFunc(Time).ProvideDefaultValue(new ConnectorValueFloat(0))
+            new NodeField<ConnectorValueSingle>(false).SetFunc(DeltaTime).ProvideDefaultValue(new ConnectorValueSingle(0)),
+            new NodeField<ConnectorValueSingle>(false).SetFunc(Time).ProvideDefaultValue(new ConnectorValueSingle(0))
         };
     }
 

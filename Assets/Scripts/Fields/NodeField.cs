@@ -69,6 +69,18 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
                     {
                         setMethod.Invoke(currentValue, new object[] { innerValue });
                     }
+                    else
+                    {
+                        // Fallback: try to set the value directly
+                        try
+                        {
+                            currentValue.GetType().GetProperty("Value")?.SetValue(currentValue, innerValue);
+                        }
+                        catch
+                        {
+                            Debug.LogWarning($"Could not set value of type {typeof(T)} from {innerValue.GetType()}");
+                        }
+                    }
                 }
             }
         }

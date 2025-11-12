@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VariableData
   _entries:
   - Type: 0
-    Prefab: {fileID: 0}
+    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - Type: 1
-    Prefab: {fileID: 0}
+    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - Type: 2
-    Prefab: {fileID: 0}
+    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - Type: 3
-    Prefab: {fileID: 0}
+    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}

@@ -6,10 +6,10 @@ public class DebugNode : ExecutableNode
 {
     private ConnectorValueVoid _log;
     private ConnectorValueString _logText;
-
     public override void Execute()
     {
-        Debug.LogError(_logText.GetValue());
+        string text = _logText?.GetValue() ?? "null";
+        Debug.LogError($"Debug: {text}");
     }
 
     [NodeValue("Event", typeof(void), KnownColor.BlueViolet)]

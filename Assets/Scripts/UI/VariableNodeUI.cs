@@ -26,7 +26,7 @@ public class VariableNodeUI : MonoBehaviour
         switch (_type)
         {
             case VariableType.Int:
-            case VariableType.Float:
+            case VariableType.Single:
             case VariableType.String:
                 // Spawn 1 field
                 _inputFields = new TMP_InputField[1];
@@ -53,7 +53,7 @@ public class VariableNodeUI : MonoBehaviour
         switch (_type)
         {
             case VariableType.Int: _value = 0; _inputFields[0].text = "0"; break;
-            case VariableType.Float: _value = 0f; _inputFields[0].text = "0"; break;
+            case VariableType.Single: _value = 0f; _inputFields[0].text = "0"; break;
             case VariableType.String: _value = ""; _inputFields[0].text = ""; break;
             case VariableType.Vector3: _value = Vector3.zero; UpdateVectorUI(); break;
         }
@@ -64,7 +64,7 @@ public class VariableNodeUI : MonoBehaviour
         switch (_type)
         {
             case VariableType.Int: if (int.TryParse(value, out int i)) _value = i; break;
-            case VariableType.Float: if (float.TryParse(value, out float f)) _value = f; break;
+            case VariableType.Single: if (float.TryParse(value, out float f)) _value = f; break;
             case VariableType.String: _value = value; break;
         }
     }
