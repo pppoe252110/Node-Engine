@@ -4,7 +4,18 @@ using UnityEngine;
 public class VariableNode : NodeBase
 {
     [SerializeField] private VariableType _variableType;
-    public VariableType VariableType => _variableType;
+    public VariableType VariableType
+    {
+        get
+        {
+            return _variableType;
+        }
+        set
+        {
+            _variableType = value;
+        }
+    }
+
     public VariableUIElement UIElement { get; set; }
 
     // Add this field to store the output value

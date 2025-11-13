@@ -77,37 +77,33 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private void OnNodeStopDrag(PointerEventData eventData)
     {
-        if (_dragConnector != null)
-            if (eventData.button == PointerEventData.InputButton.Left)
+        if (_dragConnector == null || eventData.button != PointerEventData.InputButton.Left) return;
+        foreach (var item in eventData.hovered)
+        {
+            if (item.TryGetComponent(out Connector connector))
             {
-                foreach (var item in eventData.hovered)
+                if (_dragConnector.Node == connector.Node) continue; // Prevent self-connection
+                if (connector.ConnectionsCount > 0) continue; // Only allow one connection per input
+                                                              // Strict type check
+                if (!IsCompatibleType(_dragConnector.ValueType, connector.ValueType))
                 {
-                    if (item.TryGetComponent(out Connector connector))
-                    {
-                        if (_dragConnector.Node != connector.Node)
-                        {
-                            if (connector.ConnectionsCount <= 0)
-                            {
-                                if (_dragConnector.ValueType == connector.ValueType || connector.ValueType == typeof(object))
-                                {
-                                    LineRenderersController.Add(_dragConnector, connector, _dragLineRenderer);
-                                    _dragLineRenderer = null;
-
-                                    _dragConnector.AddConnection(connector);
-                                    _dragConnector.UpdateFilled();
-
-                                    connector.AddConnection(_dragConnector);
-                                    connector.UpdateFilled();
-
-                                    return;
-                                }
-                            }
-                        }
-                    }
+                    Debug.LogWarning($"Incompatible types: {_dragConnector.ValueType} to {connector.ValueType}");
+                    continue;
                 }
+                // Create connection
+                LineRenderersController.Add(_dragConnector, connector, _dragLineRenderer);
+                _dragLineRenderer = null;
+                _dragConnector.AddConnection(connector);
+                _dragConnector.UpdateFilled();
+                connector.AddConnection(_dragConnector);
+                connector.UpdateFilled();
+                return;
             }
-
-        if (_dragLineRenderer)
-            Destroy(_dragLineRenderer.gameObject);
+        }
+        if (_dragLineRenderer) Destroy(_dragLineRenderer.gameObject);
+    }
+    private bool IsCompatibleType(Type dragType, Type targetType)
+    {
+        return dragType == targetType || targetType == typeof(object);
     }
 }

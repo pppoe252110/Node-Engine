@@ -5,7 +5,7 @@ using System.Linq;
 
 public class LineRenderersController : MonoBehaviour
 {
-    private static LineRenderersController instance 
+    public static LineRenderersController instance 
     {
         get
         {
@@ -47,17 +47,19 @@ public class LineRenderersController : MonoBehaviour
 
     private void UpdateLineRenderers()
     {
+        if (connectors.Count == 0) return; // Early exit if no connectors
+
         transform.position = _inheritTransform.position;
         transform.localScale = _inheritTransform.localScale;
 
-        foreach (var item in connectors)
+        foreach (var item in connectors.ToArray()) // Use ToArray to avoid modification during iteration
         {
-            if(item.Item1==null|| item.Item2 == null)
+            if (item.Item1 == null || item.Item2 == null)
             {
                 connectors.Remove(item);
-                UpdateLineRenderers();
-                return;
+                continue;
             }
+            // Only update if positions changed (add dirty flags if needed)
             item.Item3.material.SetVector("_Point1", new Vector2(item.Item1.AnchoredPositionPoint.x / Screen.width, item.Item1.AnchoredPositionPoint.y / Screen.height));
             item.Item3.material.SetVector("_Point2", new Vector2(item.Item2.AnchoredPositionPoint.x / Screen.width, item.Item2.AnchoredPositionPoint.y / Screen.height));
             item.Item3.points = BezierFromTwoPoints.GetPoints(

@@ -12,10 +12,8 @@ public class NodeLogic : MonoBehaviour
     [SerializeField] private NodeBase _node;
 
     [Header("Connectors")]
-    [SerializeField] private Connector _rightConnectorPrefab;
-    [SerializeField] private Connector _leftConnectorPrefab;
-    [SerializeField] private RectTransform _rightConnectorsParent;
-    [SerializeField] private RectTransform _leftConnectorsParent;
+    [SerializeField] private NodeSpawner _nodeSpawner;  // New: Delegates connector spawning
+    [SerializeField] private NodeDeleter _nodeDeleter;  // New: Delegates node deletion
 
     [Header("Properties")]
     [SerializeField] private Image _image;
@@ -24,116 +22,57 @@ public class NodeLogic : MonoBehaviour
 
     public void SetNodeBase(NodeBase nodeBase)
     {
+        if (nodeBase == null)
+        {
+            Debug.LogError("NodeBase is null in SetNodeBase");
+            return;
+        }
+
         _node = nodeBase.Clone() as NodeBase;
+        if (_node == null)
+        {
+            Debug.LogError("Failed to clone NodeBase");
+            return;
+        }
+
         _node.Initialize(this, gameObject.GetEntityId());
 
         _nodeName.text = _node.NodeName;
         _nodeIcon.sprite = _node.NodeSprite;
         _nodeIcon.color = _node.NodeSprite ? Color.white : Color.clear;
 
-        gameObject.name = Node.NodeName;
-
+        // Handle VariableNode: Spawn UI and output connectors (no input connectors, as they use UI)
         if (_node is VariableNode varNode && VariableDatabase != null)
         {
-            SpawnVariableUI(varNode);
+            _nodeSpawner.SpawnVariableUI(varNode, VariableDatabase, _image);
+            // Spawn only output connectors for VariableNode
+            _nodeSpawner.GenerateOutputConnectors(_node, _node.outputFields, _node.outputConnectors);
         }
         else
         {
-            GenerateInputConnectors();
+            // For non-VariableNodes: Spawn standard input and output connectors
+            _nodeSpawner.SpawnConnectors(_node, _node.inputFields, _node.outputFields, _node.inputConnectors, _node.outputConnectors);
         }
-        GenerateOutputConnectors();
 
+        // Set node size and material (adjust for VariableNode if needed)
         _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, 57 + (Mathf.Max(_node.inputFields.Count, _node.outputFields.Count)) * 25);
         _image.material = new Material(_image.material);
 
         RecalculateMaterial();
 
-        NodeLogicProcessor.Instance.AddNode(this);
+        // Add to processor
+        NodeLogicProcessor.Instance?.AddNode(this);
     }
-
-    // Add this method to your existing NodeLogic class if not already there
     public void DeleteNode()
     {
-        // Remove all connections first
-        RemoveAllConnections();
-
-        // Remove from processor
-        NodeLogicProcessor.Instance?.RemoveNode(this);
-
-        // Destroy the game object
-        Destroy(gameObject);
-    }
-
-    private void RemoveAllConnections()
-    {
-        // Remove input connections
-        foreach (var connector in _node.inputConnectors)
+        if (_node == null)
         {
-            foreach (var connectedConnector in connector.Connections.ToArray())
-            {
-                LineRenderersController.Remove(connector, connectedConnector);
-                connectedConnector.Connections.Remove(connector);
-                connectedConnector.UpdateFilled();
-            }
-            connector.Connections.Clear();
-            connector.UpdateFilled();
+            Debug.LogWarning("Node is null in DeleteNode");
+            return;
         }
 
-        // Remove output connections  
-        foreach (var connector in _node.outputConnectors)
-        {
-            foreach (var connectedConnector in connector.Connections.ToArray())
-            {
-                LineRenderersController.Remove(connector, connectedConnector);
-                connectedConnector.Connections.Remove(connector);
-                connectedConnector.UpdateFilled();
-            }
-            connector.Connections.Clear();
-            connector.UpdateFilled();
-        }
-    }
-
-    // Rest of your existing methods...
-    private void SpawnVariableUI(VariableNode varNode)
-    {
-        var prefab = VariableDatabase.GetPrefabForType(varNode.VariableType);
-        if (prefab == null) return;
-
-        var uiElement = Instantiate(prefab, _leftConnectorsParent);
-        uiElement.Initialize(VariableDatabase, varNode.VariableType);
-        varNode.UIElement = uiElement;
-
-        var boxHeight = 30f;
-        _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x,
-            Mathf.Max(_image.rectTransform.sizeDelta.y, boxHeight + 20f));
-    }
-
-    private void GenerateInputConnectors()
-    {
-        foreach (NodeFieldBase field in _node.inputFields)
-        {
-            var connector = Instantiate(_leftConnectorPrefab, _leftConnectorsParent);
-            ProceedField(field, connector);
-            _node.inputConnectors.Add(connector);
-        }
-    }
-
-    private void GenerateOutputConnectors()
-    {
-        foreach (NodeFieldBase field in _node.outputFields)
-        {
-            var connector = Instantiate(_rightConnectorPrefab, _rightConnectorsParent);
-            ProceedField(field, connector);
-            _node.outputConnectors.Add(connector);
-        }
-    }
-
-    private void ProceedField(NodeFieldBase field, Connector connector)
-    {
-        var attribute = field.GetAttribute();
-        connector.SetField(field);
-        connector.SetNode(_node);
-        connector.SetData(attribute);
+        // Delegate deletion to NodeDeleter
+        _nodeDeleter.DeleteNode(_node, _node.inputConnectors, _node.outputConnectors, NodeLogicProcessor.Instance);
     }
 
     private void RecalculateMaterial()

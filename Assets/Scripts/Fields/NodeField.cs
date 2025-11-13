@@ -45,80 +45,73 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     public override void ProceedValue()
     {
+        if (Connector == null)
+        {
+            Debug.LogError("Connector is null in NodeField.ProceedValue()");
+            return;
+        }
+
         // For inputs: Update value from connected outputs
-        if (_isInput && Connector != null && Connector.Connections.Count > 0)
+        if (_isInput && Connector.Connections.Count > 0)
         {
             var connectedConnector = Connector.Connections.LastOrDefault();
-            var connectedNode = connectedConnector.Node;
+            if (connectedConnector == null || connectedConnector.Node == null)
+            {
+                Debug.LogWarning("Connected connector or node is null");
+                return;
+            }
 
-            // CORRECT void detection - check the actual type, not the value
+            var connectedNode = connectedConnector.Node;
             bool isVoid = connectedConnector.ValueType == typeof(void);
 
-            // Process upstream for value updates (only if data input)
             if (!isVoid)
             {
-                connectedNode.Process(); // Process FIRST to get updated values
-
-                // Now get the updated value
-                var connectedValue = connectedConnector.Field.GetObjectValue() as IConnectorValue;
-                var innerValue = connectedValue?.GetInnerValue();
-
-                if (connectedValue != null && innerValue != null)
+                connectedNode.Process(); // Process FIRST
+                var connectedValue = connectedConnector.Field?.GetObjectValue() as IConnectorValue;
+                if (connectedValue != null)
                 {
-                    if (currentValue is ConnectorValueBase<object> objBase)
+                    var innerValue = connectedValue.GetInnerValue();
+                    if (currentValue is ConnectorValueBase<object> objBase && innerValue != null)
                     {
                         objBase.SetValue(innerValue);
                     }
                     else
                     {
-                        var setMethod = currentValue.GetType().GetMethod("SetValue", new Type[] { innerValue.GetType() });
+                        var setMethod = currentValue?.GetType().GetMethod("SetValue", new Type[] { innerValue?.GetType() ?? typeof(object) });
                         if (setMethod != null)
                         {
                             setMethod.Invoke(currentValue, new object[] { innerValue });
                         }
                         else
                         {
-                            Debug.LogError($"No SetValue method found for type {innerValue.GetType()}");
+                            Debug.LogError($"No SetValue method for type {innerValue?.GetType()}");
                         }
                     }
                 }
             }
 
-            // For void inputs (events): Trigger Execute and propagate
             if (isVoid && Connector?.Node is ExecutableNode exe)
             {
-                // Update data inputs before executing
-                exe.Process();  // This will update data inputs like LogString
+                exe.Process();
                 exe.Execute();
-
-                // Propagate to connected outputs (fire downstream events)
-                //foreach (var outputConnector in exe.outputConnectors)
-                //{
-                //    if (outputConnector.ValueType == typeof(void))
-                //    {
-                //        outputConnector.Field.ProceedValue();
-                //    }
-                //}
             }
         }
 
-        // Invoke handler (for both inputs and outputs)
         CurrentValueHandler?.Invoke(currentValue);
 
-        // For outputs: Trigger connected inputs (BOTH data and void outputs need propagation)
-        if (!_isInput && Connector != null && Connector.Connections.Count > 0)
+        // For outputs: Trigger connected inputs
+        if (!_isInput && Connector.Connections.Count > 0)
         {
             foreach (var connectedConnector in Connector.Connections)
             {
-                // For data outputs: ensure connected inputs get our value
-                if (connectedConnector.ValueType != typeof(void))
+                if (connectedConnector?.Field != null)
                 {
-                    // Make sure our value is up to date first
-                    Connector.Node.Process();
+                    if (connectedConnector.ValueType != typeof(void))
+                    {
+                        Connector.Node.Process();
+                    }
+                    connectedConnector.Field.ProceedValue();
                 }
-
-                // Trigger the connected input
-                connectedConnector.Field.ProceedValue();
             }
         }
     }

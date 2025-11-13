@@ -117,6 +117,8 @@ GameObject:
   - component: {fileID: 2621976240982863169}
   - component: {fileID: 1799866906948828045}
   - component: {fileID: 2028984173989267109}
+  - component: {fileID: 8272728924584763893}
+  - component: {fileID: 2615288927408150349}
   m_Layer: 0
   m_Name: Node
   m_TagString: Untagged
@@ -233,10 +235,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e104db5209f8fa645a345f773bb8d944, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rightConnectorPrefab: {fileID: 2548461084981960448, guid: 4cc3a768abfbf9240a4b7bac530b8c40, type: 3}
-  _leftConnectorPrefab: {fileID: 2487793888308749303, guid: d0d8c4f4fc7af284aba64a6615b2168a, type: 3}
-  _rightConnectorsParent: {fileID: 1989612166734013065}
-  _leftConnectorsParent: {fileID: 3414697315577796391}
+  _nodeSpawner: {fileID: 2615288927408150349}
+  _nodeDeleter: {fileID: 8272728924584763893}
   _image: {fileID: 8590004688524277348}
   _nodeIcon: {fileID: 2157151724413625442}
   _nodeName: {fileID: 3869312446641288361}
@@ -252,6 +252,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 733629eae5a2df94797e79d1c1134303, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NodeContextMenu
+--- !u!114 &8272728924584763893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4940753074841547606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad01fd621c7e6b469c9a263d4e615e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NodeDeleter
+--- !u!114 &2615288927408150349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4940753074841547606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 030e4c0b5cf0fd04c8285d7b952bf3a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NodeSpawner
+  _rightConnectorPrefab: {fileID: 2548461084981960448, guid: 4cc3a768abfbf9240a4b7bac530b8c40, type: 3}
+  _leftConnectorPrefab: {fileID: 2487793888308749303, guid: d0d8c4f4fc7af284aba64a6615b2168a, type: 3}
+  _rightConnectorsParent: {fileID: 1989612166734013065}
+  _leftConnectorsParent: {fileID: 3414697315577796391}
 --- !u!1 &5344738666673001493
 GameObject:
   m_ObjectHideFlags: 0

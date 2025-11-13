@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Drawing;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public class ForLoopNode : ExecutableNode
 {
@@ -28,32 +30,28 @@ public class ForLoopNode : ExecutableNode
 
     public override void Execute()
     {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
         int loopCount = _count?.GetValue() ?? 0;
-        Debug.Log($"ForLoopNode: Starting loop with count {loopCount}");
 
         for (int i = 0; i < loopCount; i++)
         {
-            Debug.Log($"ForLoopNode: Iteration {i}");
-
             // Set the current index value
             _index?.SetValue(i);
-
             // Trigger body execution - propagate through the body field
             if (_bodyField != null)
             {
-                Debug.Log($"ForLoopNode: Triggering body for iteration {i}");
                 _bodyField.ProceedValue();
             }
         }
 
-        Debug.Log($"ForLoopNode: Loop completed");
-
         // Trigger end execution
         if (_endField != null)
         {
-            Debug.Log($"ForLoopNode: Triggering end");
             _endField.ProceedValue();
         }
+        stopwatch.Stop();
+        Debug.Log($"ForLoopNode: Execution completed in {stopwatch.ElapsedMilliseconds} ms");
     }
 
     public override void Setup()
