@@ -40,7 +40,7 @@ public class LineRenderersController : MonoBehaviour
     public static bool Remove(Connector connectorA, Connector connectorB)
     {
         var item = instance.connectors.FirstOrDefault(s => (s.Item1 == connectorA && s.Item2 == connectorB) || (s.Item1 == connectorB && s.Item2 == connectorA));
-        Debug.Log(item);
+
         Destroy(item.Item3);
         return instance.connectors.Remove(item);
     }

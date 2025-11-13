@@ -9,12 +9,17 @@ public class DebugNode : ExecutableNode
     public override void Execute()
     {
         string text = _logText?.GetValue() ?? "null";
-        Debug.LogError($"Debug: {text}");
+        //Debug.LogError($"Debug: {text}");
     }
 
     [NodeValue("Event", typeof(void), KnownColor.BlueViolet)]
     public void Log(ConnectorValueVoid value)
     {
+        if (ConsoleUI.Instance != null)
+        {
+            ConsoleUI.Instance.LogMessage($"[Debug] {_logText.GetValue()}");
+        }
+
         _log = value;
     }
 

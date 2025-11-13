@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -10,6 +11,9 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
     public event ValueHandlerFunc CurrentValueHandler;
     private T currentValue;
     private bool _isInput;
+
+    private delegate void SetValueDelegate(object target, object value);
+    private static readonly ConcurrentDictionary<Type, Action<object, object>> _setValueDelegateCache = new();
 
     public NodeField(bool isInput)
     {
@@ -45,21 +49,12 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     public override void ProceedValue()
     {
-        if (Connector == null)
-        {
-            Debug.LogError("Connector is null in NodeField.ProceedValue()");
-            return;
-        }
+        if (Connector == null) return;
 
-        // For inputs: Update value from connected outputs
         if (_isInput && Connector.Connections.Count > 0)
         {
-            var connectedConnector = Connector.Connections.LastOrDefault();
-            if (connectedConnector == null || connectedConnector.Node == null)
-            {
-                Debug.LogWarning("Connected connector or node is null");
-                return;
-            }
+            var connectedConnector = Connector.Connections[Connector.Connections.Count - 1]; // Faster than LastOrDefault
+            if (connectedConnector?.Node == null) return;
 
             var connectedNode = connectedConnector.Node;
             bool isVoid = connectedConnector.ValueType == typeof(void);
@@ -67,30 +62,20 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
             if (!isVoid)
             {
                 connectedNode.Process(); // Process FIRST
-                var connectedValue = connectedConnector.Field?.GetObjectValue() as IConnectorValue;
-                if (connectedValue != null)
+
+                var connectedField = connectedConnector.Field;
+                if (connectedField?.GetObjectValue() is IConnectorValue connectedValue)
                 {
                     var innerValue = connectedValue.GetInnerValue();
-                    if (currentValue is ConnectorValueBase<object> objBase && innerValue != null)
+                    if (innerValue != null)
                     {
-                        objBase.SetValue(innerValue);
-                    }
-                    else
-                    {
-                        var setMethod = currentValue?.GetType().GetMethod("SetValue", new Type[] { innerValue?.GetType() ?? typeof(object) });
-                        if (setMethod != null)
-                        {
-                            setMethod.Invoke(currentValue, new object[] { innerValue });
-                        }
-                        else
-                        {
-                            Debug.LogError($"No SetValue method for type {innerValue?.GetType()}");
-                        }
+                        // Use the fast path
+                        SetValueFast(innerValue);
                     }
                 }
             }
 
-            if (isVoid && Connector?.Node is ExecutableNode exe)
+            if (isVoid && Connector.Node is ExecutableNode exe)
             {
                 exe.Process();
                 exe.Execute();
@@ -99,20 +84,125 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
         CurrentValueHandler?.Invoke(currentValue);
 
-        // For outputs: Trigger connected inputs
         if (!_isInput && Connector.Connections.Count > 0)
         {
             foreach (var connectedConnector in Connector.Connections)
             {
-                if (connectedConnector?.Field != null)
+                var field = connectedConnector?.Field;
+                if (field != null)
                 {
                     if (connectedConnector.ValueType != typeof(void))
                     {
                         Connector.Node.Process();
                     }
-                    connectedConnector.Field.ProceedValue();
+                    field.ProceedValue();
                 }
             }
         }
+    }
+
+    private void SetValueFast(object innerValue)
+    {
+        switch (currentValue)
+        {
+            case ConnectorValueInt intConnector when innerValue is int intVal:
+                intConnector.SetValue(intVal);
+                return;
+            case ConnectorValueSingle floatConnector when innerValue is float floatVal:
+                floatConnector.SetValue(floatVal);
+                return;
+            case ConnectorValueString stringConnector when innerValue is string stringVal:
+                stringConnector.SetValue(stringVal);
+                return;
+            case ConnectorValueBool boolConnector when innerValue is bool boolVal:
+                boolConnector.SetValue(boolVal);
+                return;
+            case ConnectorValueObject objConnector:
+                objConnector.SetValue(innerValue);
+                return;
+            default:
+                // Only use cached delegates for uncommon types
+                SetValueUsingCache(currentValue, innerValue);
+                break;
+        }
+    }
+
+    private void SetValueUsingCache(object target, object value)
+    {
+        var targetType = target.GetType();
+
+        if (!_setValueDelegateCache.TryGetValue(targetType, out var setter))
+        {
+            setter = CreateOptimizedSetter(targetType);
+            _setValueDelegateCache[targetType] = setter;
+        }
+
+        setter?.Invoke(target, value);
+    }
+
+    private static Action<object, object> CreateOptimizedSetter(Type targetType)
+    {
+        // Try to find the most specific SetValue method
+        var setValueMethod = targetType.GetMethod("SetValue", BindingFlags.Public | BindingFlags.Instance);
+        if (setValueMethod == null) return null;
+
+        var parameters = setValueMethod.GetParameters();
+        if (parameters.Length != 1) return null;
+
+        var paramType = parameters[0].ParameterType;
+
+        // Create optimized delegates for common types
+        if (paramType == typeof(object))
+        {
+            return (target, value) => setValueMethod.Invoke(target, new[] { value });
+        }
+
+        // For value types, create type-specific fast paths
+        if (paramType == typeof(int))
+        {
+            var typedDelegate = (Action<IConnectorValue, int>)Delegate.CreateDelegate(
+                typeof(Action<IConnectorValue, int>), setValueMethod);
+            return (target, value) =>
+            {
+                if (value is int intVal)
+                    typedDelegate((IConnectorValue)target, intVal);
+            };
+        }
+        else if (paramType == typeof(float))
+        {
+            var typedDelegate = (Action<IConnectorValue, float>)Delegate.CreateDelegate(
+                typeof(Action<IConnectorValue, float>), setValueMethod);
+            return (target, value) =>
+            {
+                if (value is float floatVal)
+                    typedDelegate((IConnectorValue)target, floatVal);
+            };
+        }
+        else if (paramType == typeof(string))
+        {
+            var typedDelegate = (Action<IConnectorValue, string>)Delegate.CreateDelegate(
+                typeof(Action<IConnectorValue, string>), setValueMethod);
+            return (target, value) =>
+            {
+                if (value is string stringVal)
+                    typedDelegate((IConnectorValue)target, stringVal);
+            };
+        }
+        else if (paramType == typeof(bool))
+        {
+            var typedDelegate = (Action<IConnectorValue, bool>)Delegate.CreateDelegate(
+                typeof(Action<IConnectorValue, bool>), setValueMethod);
+            return (target, value) =>
+            {
+                if (value is bool boolVal)
+                    typedDelegate((IConnectorValue)target, boolVal);
+            };
+        }
+
+        return (target, value) =>
+        {
+            if (value != null && paramType.IsAssignableFrom(value.GetType()))
+                setValueMethod.Invoke(target, new[] { value });
+        };
     }
 }

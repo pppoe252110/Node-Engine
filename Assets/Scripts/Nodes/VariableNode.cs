@@ -36,13 +36,11 @@ public class VariableNode : NodeBase
         UpdateOutputValue(); // Set initial value
     }
 
-    // Add this method to update the output value
     public void UpdateOutputValue()
     {
         if (_outputValue != null && UIElement != null)
         {
             var val = UIElement.GetValue();
-            Debug.Log($"VariableNode: Setting output value to {val} (type: {val?.GetType()})");
             _outputValue.SetValue(val);
         }
     }
