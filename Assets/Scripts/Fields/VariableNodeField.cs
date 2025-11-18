@@ -1,40 +1,116 @@
-using System;
+﻿using System;
+using System.Reflection;
 using UnityEngine;
 
-public class VariableNodeField : NodeField<ConnectorValueObject>
+public class VariableNodeField : NodeFieldBase
 {
+    private IConnectorValue _currentValue;
+    private Action<IConnectorValue> _valueHandler;
     private VariableType _variableType;
 
-    public VariableNodeField(VariableType variableType) : base(false)
+    public VariableNodeField(VariableType variableType)
     {
         _variableType = variableType;
+        CreateDefaultValue();
     }
 
-    public override Type GetValueType()
+    private void CreateDefaultValue()
     {
-        return _variableType switch
+        _currentValue = _variableType switch
+        {
+            VariableType.Int => new ConnectorValueInt(0),
+            VariableType.Float => new ConnectorValueFloat(0f),
+            VariableType.Bool => new ConnectorValueBool(false),
+            VariableType.String => new ConnectorValueString(""),
+            _ => new ConnectorValueObject(null)
+        };
+    }
+
+    public VariableNodeField SetFunc(Action<IConnectorValue> handler)
+    {
+        _valueHandler = handler;
+        return this;
+    }
+
+    // ✅ NEW: Data-only propagation for VariableNodeField
+    public override void UpdateValueFromSource(IConnectorValue sourceValue)
+    {
+        if (sourceValue == null) return;
+
+        try
+        {
+            var innerValue = sourceValue.GetInnerValue();
+            SetValue(innerValue);
+
+            // Invoke handler but don't propagate further
+            _valueHandler?.Invoke(_currentValue);
+
+            Debug.Log($"[VariableNodeField] Updated to: {innerValue}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to update VariableNodeField value: {e.Message}");
+        }
+    }
+
+    public override void ProceedValue()
+    {
+        // Propagate to connected fields
+        if (Connector?.Connections?.Count > 0)
+        {
+            foreach (var connectedConnector in Connector.Connections)
+            {
+                var field = connectedConnector?.Field;
+                if (field != null && !connectedConnector.Node.IsProcessing)
+                {
+                    // Use data-only propagation
+                    field.UpdateValueFromSource(_currentValue);
+                }
+            }
+        }
+
+        _valueHandler?.Invoke(_currentValue);
+    }
+
+    public override Type GetValueType() => GetConnectorType(_variableType);
+    public override NodeValueAttribute GetAttribute() => _valueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
+    public override object GetObjectValue() => _currentValue?.GetInnerValue();
+
+    // Method to update the value
+    public void SetValue(object newValue)
+    {
+        if (_currentValue != null)
+        {
+            switch (_currentValue)
+            {
+                case ConnectorValueInt intConnector when newValue is int intVal:
+                    intConnector.SetValue(intVal);
+                    break;
+                case ConnectorValueFloat floatConnector when newValue is float floatVal:
+                    floatConnector.SetValue(floatVal);
+                    break;
+                case ConnectorValueBool boolConnector when newValue is bool boolVal:
+                    boolConnector.SetValue(boolVal);
+                    break;
+                case ConnectorValueString stringConnector when newValue is string stringVal:
+                    stringConnector.SetValue(stringVal);
+                    break;
+                case ConnectorValueObject objConnector:
+                    objConnector.SetValue(newValue);
+                    break;
+            }
+        }
+    }
+
+    private Type GetConnectorType(VariableType variableType)
+    {
+        return variableType switch
         {
             VariableType.Int => typeof(int),
-            VariableType.Single => typeof(float),
+            VariableType.Float => typeof(float),
+            VariableType.Bool => typeof(bool),
             VariableType.String => typeof(string),
-            VariableType.Vector3 => typeof(Vector3),
-            _ => typeof(object)  // Fallback
+            _ => typeof(object)
         };
-    }
-
-    public override NodeValueAttribute GetAttribute()
-    {
-        // Map VariableType to a KnownColor (matching your existing node colors for consistency)
-        System.Drawing.KnownColor color = _variableType switch
-        {
-            VariableType.Int => System.Drawing.KnownColor.Purple,          // Matches ForLoopNode (int)
-            VariableType.Single => System.Drawing.KnownColor.LawnGreen,     // Matches AddNode/TimeNode (float)
-            VariableType.String => System.Drawing.KnownColor.PaleVioletRed, // Matches DebugNode/ToStringNode (string)
-            VariableType.Vector3 => System.Drawing.KnownColor.Plum,        // Matches MoveGameObjectNode (Vector3)
-            _ => System.Drawing.KnownColor.Gray  // Fallback (original gray)
-        };
-
-        // Return a new attribute with the dynamic type and color
-        return new NodeValueAttribute("Value", GetValueType(), color);
     }
 }

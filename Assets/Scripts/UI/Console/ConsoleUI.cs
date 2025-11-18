@@ -17,16 +17,26 @@ public class ConsoleUI : MonoBehaviour
     [SerializeField] private Toggle logToggle;
 
     [Header("Prefabs")]
-    [SerializeField] private GameObject entryPrefab;
+    [SerializeField] private ConsoleEntryUI entryPrefab;  // Now directly ConsoleEntryUI
+
+    [Header("Pooling")]
+    [SerializeField] private int initialPoolSize = 50;  // Pre-create some entry objects
+    [SerializeField] private int maxDisplayedEntries = 200;  // Limit to prevent FPS drops
 
     private List<ConsoleEntry> allEntries = new List<ConsoleEntry>();
     private List<ConsoleEntry> filteredEntries = new List<ConsoleEntry>();
     private bool isCollapsed = false;
     private string searchFilter = "";
-    // Change this to track each type separately instead of using flags
     private bool showErrors = true;
     private bool showWarnings = true;
     private bool showLogs = true;
+
+    // Pooling for UI entries (now directly ConsoleEntryUI)
+    private Queue<ConsoleEntryUI> entryPool = new Queue<ConsoleEntryUI>();
+
+    // Throttling for refreshes
+    private float lastRefreshTime;
+    private const float refreshInterval = 0.2f;  // Update UI every 0.2 seconds
 
     public static ConsoleUI Instance { get; private set; }
 
@@ -51,6 +61,17 @@ public class ConsoleUI : MonoBehaviour
         errorToggle.isOn = true;
         warningToggle.isOn = true;
         logToggle.isOn = true;
+
+        // Initialize entry pool (directly instantiate ConsoleEntryUI)
+        for (int i = 0; i < initialPoolSize; i++)
+        {
+            ConsoleEntryUI obj = Instantiate(entryPrefab, entriesParent);
+            obj.gameObject.SetActive(false);
+            entryPool.Enqueue(obj);
+        }
+
+        // Ensure collapse button reflects initial state
+        collapseButton.GetComponentInChildren<TextMeshProUGUI>().text = isCollapsed ? "Collapse: ON" : "Collapse: OFF";
     }
 
     private void OnFilterChanged(bool isOn)
@@ -83,16 +104,16 @@ public class ConsoleUI : MonoBehaviour
             message = logString,
             stackTrace = stackTrace,
             logType = type,
-            timestamp = DateTime.Now
+            timestamps = new List<DateTime> { DateTime.Now }
         };
 
-        // Only collapse if collapse is enabled
+        // Only collapse consecutive if collapse is enabled
         if (isCollapsed && allEntries.Count > 0)
         {
             var lastEntry = allEntries[allEntries.Count - 1];
             if (lastEntry.message == logString && lastEntry.logType == type)
             {
-                lastEntry.count++;
+                lastEntry.timestamps.Add(DateTime.Now);
                 RefreshUI();
                 return;
             }
@@ -110,6 +131,10 @@ public class ConsoleUI : MonoBehaviour
 
     private void RefreshUI()
     {
+        // Throttle refreshes to avoid FPS drops
+        if (Time.time - lastRefreshTime < refreshInterval) return;
+        lastRefreshTime = Time.time;
+
         FilterEntries();
         UpdateEntryUIs();
     }
@@ -122,7 +147,6 @@ public class ConsoleUI : MonoBehaviour
         {
             // Check if this log type should be shown
             bool shouldShow = false;
-
             switch (entry.logType)
             {
                 case LogType.Error:
@@ -138,26 +162,46 @@ public class ConsoleUI : MonoBehaviour
             }
 
             if (!shouldShow) continue;
-
             if (!string.IsNullOrEmpty(searchFilter) &&
                 !entry.message.Contains(searchFilter, StringComparison.OrdinalIgnoreCase)) continue;
 
             filteredEntries.Add(entry);
         }
+
+        // Limit to max displayed entries (keep the most recent)
+        if (filteredEntries.Count > maxDisplayedEntries)
+        {
+            filteredEntries = filteredEntries.GetRange(filteredEntries.Count - maxDisplayedEntries, maxDisplayedEntries);
+        }
     }
 
     private void UpdateEntryUIs()
     {
-        // Clear existing entries
+        // Return all active entries to the pool
         foreach (Transform child in entriesParent)
         {
-            Destroy(child.gameObject);
+            if (child.gameObject.activeSelf)
+            {
+                child.gameObject.SetActive(false);
+                entryPool.Enqueue(child.GetComponent<ConsoleEntryUI>());  // Still need GetComponent here for existing children, but it's minimal
+            }
         }
 
-        // Create new entries
+        // Activate pooled entries for filtered list (no GetComponent needed)
         foreach (var entry in filteredEntries)
         {
-            var entryUI = Instantiate(entryPrefab, entriesParent).GetComponent<ConsoleEntryUI>();
+            ConsoleEntryUI entryUI;
+            if (entryPool.Count > 0)
+            {
+                entryUI = entryPool.Dequeue();
+            }
+            else
+            {
+                // Expand pool if needed (directly instantiate ConsoleEntryUI)
+                entryUI = Instantiate(entryPrefab, entriesParent);
+            }
+
+            entryUI.gameObject.SetActive(true);
             entryUI.Initialize(entry);
         }
     }
@@ -172,8 +216,11 @@ public class ConsoleUI : MonoBehaviour
     {
         isCollapsed = !isCollapsed;
 
-        // When turning OFF collapse, we need to create separate entries for any collapsed ones
-        if (!isCollapsed)
+        if (isCollapsed)
+        {
+            GroupCollapsedEntries();
+        }
+        else
         {
             ExpandCollapsedEntries();
         }
@@ -183,30 +230,48 @@ public class ConsoleUI : MonoBehaviour
         RefreshUI();
     }
 
+    private void GroupCollapsedEntries()
+    {
+        var groupedEntries = new Dictionary<string, ConsoleEntry>();
+
+        foreach (var entry in allEntries)
+        {
+            string key = entry.message + "|" + entry.logType.ToString();
+
+            if (groupedEntries.ContainsKey(key))
+            {
+                groupedEntries[key].timestamps.AddRange(entry.timestamps);
+            }
+            else
+            {
+                groupedEntries[key] = new ConsoleEntry
+                {
+                    message = entry.message,
+                    stackTrace = entry.stackTrace,
+                    logType = entry.logType,
+                    timestamps = new List<DateTime>(entry.timestamps)
+                };
+            }
+        }
+
+        allEntries = new List<ConsoleEntry>(groupedEntries.Values);
+    }
+
     private void ExpandCollapsedEntries()
     {
-        // Create a new list to replace the collapsed entries
         var expandedEntries = new List<ConsoleEntry>();
 
         foreach (var entry in allEntries)
         {
-            // If the entry was collapsed (count > 1), we need to expand it
-            if (entry.count > 1)
+            foreach (var timestamp in entry.timestamps)
             {
-                // Add the entry once with count = 1
                 expandedEntries.Add(new ConsoleEntry
                 {
                     message = entry.message,
                     stackTrace = entry.stackTrace,
                     logType = entry.logType,
-                    timestamp = entry.timestamp,
-                    count = 1
+                    timestamps = new List<DateTime> { timestamp }
                 });
-            }
-            else
-            {
-                // Add the entry as-is
-                expandedEntries.Add(entry);
             }
         }
 
@@ -216,7 +281,16 @@ public class ConsoleUI : MonoBehaviour
     public void Clear()
     {
         allEntries.Clear();
-        RefreshUI();
+
+        // Deactivate and return all current entries to pool (maintains pooling)
+        foreach (Transform child in entriesParent)
+        {
+            child.gameObject.SetActive(false);
+            entryPool.Enqueue(child.GetComponent<ConsoleEntryUI>());  // Minimal GetComponent for cleanup
+        }
+
+        // Reset refresh timer
+        lastRefreshTime = 0f;
     }
 
     private void OnDestroy()

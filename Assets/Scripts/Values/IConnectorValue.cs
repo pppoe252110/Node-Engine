@@ -1,5 +1,14 @@
-﻿public interface IConnectorValue
+﻿using System;
+using UnityEngine;
+
+// Core interfaces
+public interface IConnectorValue
 {
     object GetInnerValue();
-    event System.Action<object> ValueUpdated;
+}
+
+public interface IFastConnectorValue<T> : IConnectorValue
+{
+    void SetValue(T value);
+    T GetValue();
 }

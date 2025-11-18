@@ -1,17 +1,18 @@
 using System;
+using System.Collections.Generic;  // Added for List<DateTime>
 using UnityEngine;
 
 [Serializable]
-public class ConsoleEntry
+public struct ConsoleEntry  // Changed to struct for better performance
 {
     public string message;
     public string stackTrace;
     public LogType logType;
-    public DateTime timestamp;
-    public int count = 1;
+    public List<DateTime> timestamps;  // List of timestamps (one per occurrence)
+    public int count => timestamps?.Count ?? 0;  // Derived from timestamps count
 
     public string DisplayMessage => count > 1 ? $"{message} ({count})" : message;
-    public string TimeString => timestamp.ToString("HH:mm:ss");
+    public string TimeString => timestamps != null && timestamps.Count > 0 ? timestamps[0].ToString("HH:mm:ss") : "";  // Use first timestamp
 
     public Color Color => logType switch
     {

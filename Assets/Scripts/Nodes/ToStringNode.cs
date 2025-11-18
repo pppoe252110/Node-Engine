@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
 
@@ -16,7 +17,10 @@ public class ToStringNode : NodeBase
     public void Output(ConnectorValueString value)
     {
         var inputValue = _input?.GetValue() ?? "null";
-        value.SetValue(inputValue.ToString());
+        string stringValue = inputValue.ToString();
+
+        value.SetValue(stringValue);
+        _output = value;
     }
 
     public override void Setup()
@@ -29,5 +33,19 @@ public class ToStringNode : NodeBase
         {
             new NodeField<ConnectorValueString>(false).SetFunc(Output).ProvideDefaultValue(new ConnectorValueString("")),
         };
+    }
+
+    public override void Process(List<Connector> fromConnectors = null)
+    {
+        base.Process(fromConnectors);
+
+        // Force output update
+        if (_output != null && _input != null)
+        {
+            var inputValue = _input.GetValue();
+            string stringValue = inputValue?.ToString() ?? "null";
+
+            _output.SetValue(stringValue);
+        }
     }
 }

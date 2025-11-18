@@ -231,8 +231,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -34.999996}
-  m_SizeDelta: {x: 0, y: -70.00001}
+  m_AnchoredPosition: {x: 479.9995, y: -35}
+  m_SizeDelta: {x: -960.001, y: -70.00001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &255223162
 CanvasRenderer:
@@ -3241,7 +3241,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1982755720}
   m_HandleRect: {fileID: 1982755719}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3409,7 +3409,9 @@ MonoBehaviour:
   errorToggle: {fileID: 1548987926}
   warningToggle: {fileID: 897652631}
   logToggle: {fileID: 1228239324}
-  entryPrefab: {fileID: 966643757261123361, guid: 73e151b8715b6bf46bb5f4f2905608bd, type: 3}
+  entryPrefab: {fileID: 9014254646868665522, guid: 73e151b8715b6bf46bb5f4f2905608bd, type: 3}
+  initialPoolSize: 50
+  maxDisplayedEntries: 200
 --- !u!1 &1228239322
 GameObject:
   m_ObjectHideFlags: 0
@@ -4360,7 +4362,7 @@ GameObject:
   - component: {fileID: 1615664506}
   - component: {fileID: 1615664505}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: NodesConnector
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

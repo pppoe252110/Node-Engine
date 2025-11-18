@@ -68,7 +68,7 @@ public class NodeSpawner : MonoBehaviour
             return;
         }
 
-        uiElement.Initialize(database, varNode.VariableType);
+        uiElement.Initialize(varNode, varNode.VariableType);
         varNode.UIElement = uiElement;
 
         // Update node size

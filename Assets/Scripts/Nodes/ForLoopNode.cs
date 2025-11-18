@@ -1,7 +1,5 @@
-using System.Diagnostics;
-using System.Drawing;
+﻿using System.Drawing;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 public class ForLoopNode : ExecutableNode
 {
@@ -10,13 +8,13 @@ public class ForLoopNode : ExecutableNode
     private ConnectorValueVoid _body, _end;
     private ConnectorValueInt _index;
 
-    // Store references to the actual NodeField objects
     private NodeField<ConnectorValueVoid> _bodyField, _endField;
+    private NodeField<ConnectorValueInt> _indexField;  // Store the Index field for propagation
 
     [NodeValue("Execute", typeof(void), KnownColor.BlueViolet)]
     public void ExecuteInput(ConnectorValueVoid execute) => _execute = execute;
 
-    [NodeValue("Count", typeof(int), KnownColor.Purple)]
+    [NodeValue("Count", typeof(int), KnownColor.Red)]
     public void Count(ConnectorValueInt count) => _count = count;
 
     [NodeValue("Body", typeof(void), KnownColor.BlueViolet)]
@@ -30,46 +28,55 @@ public class ForLoopNode : ExecutableNode
 
     public override void Execute()
     {
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.Start();
+        System.Diagnostics.Stopwatch sw = new();
+        sw.Start();
+        // ✅ Get updated input values (loop count)
+        Process();
+
         int loopCount = _count?.GetValue() ?? 0;
 
         for (int i = 0; i < loopCount; i++)
         {
-            // Set the current index value
+            // Update index value
             _index?.SetValue(i);
-            // Trigger body execution - propagate through the body field
-            if (_bodyField != null)
-            {
-                _bodyField.ProceedValue();
-            }
+
+            // ✅ This should now work without circular execution
+            _bodyField.ProceedValue();
         }
 
-        // Trigger end execution
-        if (_endField != null)
-        {
-            _endField.ProceedValue();
-        }
-        stopwatch.Stop();
-        Debug.Log($"ForLoopNode: Execution completed in {stopwatch.ElapsedMilliseconds} ms");
+        _endField.ProceedValue();
+
+        sw.Stop();
+
+        ConsoleUI.Instance.LogMessage(sw.ElapsedMilliseconds + "ms");
+        Debug.LogError(sw.ElapsedMilliseconds + "ms");
     }
 
     public override void Setup()
     {
-        // Create the fields and store references
-        _bodyField = new NodeField<ConnectorValueVoid>(false).SetFunc(Body).ProvideDefaultValue(new ConnectorValueVoid(null));
-        _endField = new NodeField<ConnectorValueVoid>(false).SetFunc(End).ProvideDefaultValue(new ConnectorValueVoid(null));
+        // Create default void instances
+        var bodyVoid = new ConnectorValueVoid();
+        var endVoid = new ConnectorValueVoid();
+
+        _bodyField = new NodeField<ConnectorValueVoid>(false).SetFunc(Body).ProvideDefaultValue(bodyVoid);
+        _endField = new NodeField<ConnectorValueVoid>(false).SetFunc(End).ProvideDefaultValue(endVoid);
+        _indexField = new NodeField<ConnectorValueInt>(false).SetFunc(Index).ProvideDefaultValue(new ConnectorValueInt(0));  // Store the Index field
 
         inputFields = new()
         {
-            new NodeField<ConnectorValueVoid>(true).SetFunc(ExecuteInput).ProvideDefaultValue(new ConnectorValueVoid(null)),
+            new NodeField<ConnectorValueVoid>(true).SetFunc(ExecuteInput).ProvideDefaultValue(new ConnectorValueVoid()),
             new NodeField<ConnectorValueInt>(true).SetFunc(Count).ProvideDefaultValue(new ConnectorValueInt(0))
         };
         outputFields = new()
         {
             _bodyField,
-            new NodeField<ConnectorValueInt>(false).SetFunc(Index).ProvideDefaultValue(new ConnectorValueInt(0)),
+            _indexField,  // Use the stored field
             _endField
         };
+
+        // Set the initial values
+        _body = bodyVoid;
+        _end = endVoid;
+        _index = new ConnectorValueInt(0);
     }
 }

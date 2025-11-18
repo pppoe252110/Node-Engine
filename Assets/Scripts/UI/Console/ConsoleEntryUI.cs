@@ -19,7 +19,7 @@ public class ConsoleEntryUI : MonoBehaviour
     {
         messageText.text = entry.DisplayMessage;
         messageText.color = entry.Color;
-        timeText.text = entry.TimeString;
+        timeText.text = entry.TimeString;  // Now uses the first timestamp
         countText.text = entry.count > 1 ? entry.count.ToString() : "";
         countText.gameObject.SetActive(entry.count > 1);
 

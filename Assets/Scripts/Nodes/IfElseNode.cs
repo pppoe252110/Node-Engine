@@ -17,9 +17,15 @@ public class IfElseNode : ExecutableNode
     public override void Execute()
     {
         if (_condition.GetValue())
-            _trueTrigger?.ValueUpdated?.Invoke(_trueTrigger);  // Trigger connected nodes
+        {
+            _trueTrigger.SetValueFast(_trueTrigger);
+            _trueTrigger.Execute();
+        }
         else
-            _falseTrigger?.ValueUpdated?.Invoke(_falseTrigger);
+        {
+            _falseTrigger.SetValueFast(_falseTrigger);
+            _falseTrigger.Execute();
+        }
     }
 
     public override void Setup()
@@ -30,8 +36,8 @@ public class IfElseNode : ExecutableNode
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueVoid>(false).SetFunc(TrueTrigger).ProvideDefaultValue(new ConnectorValueVoid(null)),
-            new NodeField<ConnectorValueVoid>(false).SetFunc(FalseTrigger).ProvideDefaultValue(new ConnectorValueVoid(null))
+            new NodeField<ConnectorValueVoid>(false).SetFunc(TrueTrigger).ProvideDefaultValue(new ConnectorValueVoid()),
+            new NodeField<ConnectorValueVoid>(false).SetFunc(FalseTrigger).ProvideDefaultValue(new ConnectorValueVoid())
         };
     }
 }

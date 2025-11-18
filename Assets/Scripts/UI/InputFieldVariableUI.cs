@@ -10,12 +10,17 @@ public class InputFieldVariableUI : VariableUIElement
     private object _value;
     private CultureInfo _culture;
 
-    public override void Initialize(VariableDatabase database, VariableType type)
+    public override void Initialize(VariableNode node, VariableType type)
     {
+        base.Initialize(node, type);
+
         _type = type;
-        _culture = CultureInfo.InvariantCulture; // Use invariant culture for consistent parsing
+
+        _culture = CultureInfo.InvariantCulture;
+
         SetupInputFieldForType();
         SetDefaultValue();
+
         _inputField.onValueChanged.AddListener(UpdateValue);
     }
 
@@ -27,7 +32,7 @@ public class InputFieldVariableUI : VariableUIElement
                 _inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
                 _inputField.characterLimit = 10;
                 break;
-            case VariableType.Single:
+            case VariableType.Float:
                 _inputField.contentType = TMP_InputField.ContentType.DecimalNumber;
                 _inputField.characterLimit = 15;
                 break;
@@ -52,38 +57,62 @@ public class InputFieldVariableUI : VariableUIElement
             return;
         }
 
+        bool isValid = false;
+        object newValue = null;
+
         try
         {
             switch (_type)
             {
                 case VariableType.Int:
                     if (int.TryParse(value, NumberStyles.Integer, _culture, out int i))
-                        _value = i;
-                    else
-                        FormatIntValue();
+                    {
+                        newValue = i;
+                        isValid = true;
+                        // Reformat text to ensure it's clean (e.g., "051" -> "51")
+                        _inputField.SetTextWithoutNotify(i.ToString(_culture));
+                    }
                     break;
-
-                case VariableType.Single:
+                case VariableType.Float:
                     if (float.TryParse(value, NumberStyles.Float, _culture, out float f))
-                        _value = f;
-                    else
-                        FormatFloatValue();
+                    {
+                        newValue = f;
+                        isValid = true;
+                        _inputField.SetTextWithoutNotify(f.ToString("0.00", _culture));  // Consistent decimal places
+                    }
                     break;
-
                 case VariableType.String:
-                    _value = value;
+                    newValue = value;
+                    isValid = true;
+                    // No reformat needed
                     break;
-
                 case VariableType.Vector3:
+                    // Existing Vector3 parsing logic
                     ParseVector3Value(value);
+                    if (_value is Vector3)  // Assume ParseVector3Value sets _value if valid
+                    {
+                        isValid = true;
+                        FormatVector3Value();
+                    }
                     break;
             }
         }
         catch (System.Exception e)
         {
             Debug.LogWarning($"Failed to parse value '{value}' for type {_type}: {e.Message}");
+        }
+
+        if (isValid && newValue != null)
+        {
+            _value = newValue;
+        }
+        else
+        {
+            // Invalid input: Reset text to current value's string
             FormatCurrentValue();
         }
+
+        _node?.UpdateOutputValue();
     }
 
     private void ParseVector3Value(string value)
@@ -137,7 +166,7 @@ public class InputFieldVariableUI : VariableUIElement
                 _value = 0;
                 _inputField.text = "0";
                 break;
-            case VariableType.Single:
+            case VariableType.Float:
                 _value = 0f;
                 _inputField.text = "0.0";
                 break;
@@ -159,7 +188,7 @@ public class InputFieldVariableUI : VariableUIElement
             case VariableType.Int:
                 FormatIntValue();
                 break;
-            case VariableType.Single:
+            case VariableType.Float:
                 FormatFloatValue();
                 break;
             case VariableType.Vector3:
@@ -200,12 +229,13 @@ public class InputFieldVariableUI : VariableUIElement
         if (newValue != null)
         {
             if ((_type == VariableType.Int && newValue is int) ||
-                (_type == VariableType.Single && newValue is float) ||
+                (_type == VariableType.Float && newValue is float) ||
                 (_type == VariableType.String && newValue is string) ||
                 (_type == VariableType.Vector3 && newValue is Vector3))
             {
                 _value = newValue;
                 FormatCurrentValue();
+                _node?.UpdateOutputValue();
             }
             else
             {

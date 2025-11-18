@@ -1,43 +1,57 @@
-﻿[System.Serializable]
-public class ConnectorValueBase<T> : IConnectorValue
+﻿using System;
+using UnityEngine;
+
+// Base class for all connector values (your existing hierarchy)
+public abstract class ConnectorValueBase : IConnectorValue
 {
-    private T _value;
+    public abstract object GetInnerValue();
 
-    public delegate void Invoke(T value);
-    public Invoke ValueUpdated;
+    // Fast bridge access
+    private IConnectorValueBridge _fastBridge;
 
-    event System.Action<object> IConnectorValue.ValueUpdated
+    public IConnectorValueBridge GetFastBridge()
     {
-        add { ValueUpdated += (v) => value(v); }
-        remove { ValueUpdated -= (v) => value(v); }
+        if (_fastBridge == null)
+        {
+            _fastBridge = CreateFastBridge();
+        }
+        return _fastBridge;
     }
 
-    public ConnectorValueBase(T value)
+    protected virtual IConnectorValueBridge CreateFastBridge()
     {
-        _value = value; // Don't trigger event in constructor
+        var valueType = GetInnerValue()?.GetType() ?? typeof(object);
+        var bridgeType = typeof(FastConnectorBridge<>).MakeGenericType(valueType);
+        return (IConnectorValueBridge)Activator.CreateInstance(bridgeType, this);
     }
+}
 
-    public virtual void SetValue(T value)
+// Generic base for typed values
+public abstract class ConnectorValue<T> : ConnectorValueBase, IFastConnectorValue<T>, IConnectorValueBridge
+{
+    [SerializeField] protected T _value;
+
+    // IConnectorValue implementation
+    public override object GetInnerValue() => _value;
+
+    // IFastConnectorValue<T> implementation
+    public virtual void SetValue(T value) => _value = value;
+    public virtual T GetValue() => _value;
+
+    // IConnectorValueBridge implementation
+    public IConnectorValue WrappedValue => this;
+    public Type ValueType => typeof(T);
+    public void SetValueFast(object value)
     {
-        if (Equals(_value, value)) return; // Don't trigger if value didn't change
-
-        _value = value;
-        ValueUpdated?.Invoke(value);
+        if (value is T typedValue)
+            SetValue(typedValue);
     }
+    public object GetValueFast() => _value;
 
-    public virtual T GetValue()
-    {
-        return _value;
-    }
+    // Operator overloads for convenience
+    public static implicit operator T(ConnectorValue<T> connector) => connector._value;
 
-    public virtual void ProceedValue()
-    {
-        // Trigger update to propagate the current value
-        ValueUpdated?.Invoke(_value);
-    }
-
-    public object GetInnerValue()
-    {
-        return _value;
-    }
+    public override string ToString() => _value?.ToString() ?? "null";
+    public override bool Equals(object obj) => obj is ConnectorValue<T> other && Equals(_value, other._value);
+    public override int GetHashCode() => _value?.GetHashCode() ?? 0;
 }
