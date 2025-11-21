@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿// Fields/ConnectorBridgeFactory.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 #if UNITY_EDITOR
@@ -9,20 +9,13 @@ using UnityEngine;
 
 public static class ConnectorBridgeFactory
 {
-    private static readonly ConcurrentDictionary<Type, IConnectorValueBridge> _bridgeCache = new();
-
     // ✅ ADD: Bridge tracking and diagnostics
     public static int TotalBridgesCreated { get; private set; }
-    public static int CacheHits { get; private set; }
-    public static int CacheMisses { get; private set; }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     public static void ResetStats()
     {
         TotalBridgesCreated = 0;
-        CacheHits = 0;
-        CacheMisses = 0;
-        _bridgeCache.Clear();
     }
 
     public static IConnectorValueBridge CreateBridge(IConnectorValue value)
@@ -31,64 +24,43 @@ public static class ConnectorBridgeFactory
 
         var valueType = value.GetType();
 
-        if (_bridgeCache.TryGetValue(valueType, out var bridge))
-        {
-            CacheHits++;
-            Debug.Log($"[Bridge] Cache HIT for {valueType.Name} -> {bridge.GetType().Name}");
-            return bridge;
-        }
-
-        CacheMisses++;
-        Debug.Log($"[Bridge] Cache MISS for {valueType.Name}, creating FAST bridge...");
-
-        // ✅ ALWAYS try to create FastConnectorBridge first
-        var innerValue = value.GetInnerValue();
-        var innerType = innerValue?.GetType() ?? typeof(object);
-
         try
         {
+            // Always create a new bridge for the value instance
+            // The FastConnectorBridge will use static compiled setters and getters for the type
+            var innerValue = value.GetInnerValue();
+            var innerType = innerValue?.GetType() ?? typeof(object);
+
             var bridgeType = typeof(FastConnectorBridge<>).MakeGenericType(innerType);
-            bridge = (IConnectorValueBridge)Activator.CreateInstance(bridgeType, value);
+            var bridge = (IConnectorValueBridge)Activator.CreateInstance(bridgeType, value);
             TotalBridgesCreated++;
-            Debug.Log($"[Bridge] Successfully created FastConnectorBridge<{innerType.Name}>");
+            return bridge;
         }
         catch (Exception ex)
         {
-            Debug.LogWarning($"[Bridge] Fast bridge failed, falling back to self-bridge: {ex.Message}");
+            Debug.LogWarning($"Fast bridge failed, falling back to self-bridge: {ex.Message}");
 
-            // Fallback to self-bridge only if fast bridge fails
             if (value is IConnectorValueBridge selfBridge)
             {
-                bridge = selfBridge;
-                Debug.Log($"[Bridge] Using self-bridge as fallback");
+                return selfBridge;
             }
             else
             {
-                Debug.LogError($"[Bridge] No bridge available for {valueType.Name}");
+                Debug.LogError($"No bridge available for {valueType.Name}");
                 return null;
             }
         }
-
-        _bridgeCache[valueType] = bridge;
-        return bridge;
     }
 
 #if UNITY_EDITOR
-    // ✅ ADD: Diagnostic method to show all cached bridges
-    [MenuItem("Tools/Node System/Show Bridge Cache")]
-    public static void LogBridgeCache()
+    // ✅ ADD: Diagnostic method to show bridge statistics
+    [MenuItem("Tools/Node System/Show Bridge Statistics")]
+    public static void LogBridgeStatistics()
     {
-        Debug.Log($"=== BRIDGE CACHE STATUS ===");
+        Debug.Log($"=== BRIDGE STATISTICS ===");
         Debug.Log($"Total Bridges Created: {TotalBridgesCreated}");
-        Debug.Log($"Cache Hits: {CacheHits}");
-        Debug.Log($"Cache Misses: {CacheMisses}");
-        Debug.Log($"Cache Size: {_bridgeCache.Count}");
-        Debug.Log($"Cache Hit Rate: {((CacheHits + CacheMisses) > 0 ? (float)CacheHits / (CacheHits + CacheMisses) * 100 : 0):F1}%");
-        foreach (var kvp in _bridgeCache)
-        {
-            Debug.Log($"  {kvp.Key.Name} -> {kvp.Value.GetType().Name} (ValueType: {kvp.Value.ValueType?.Name})");
-        }
     }
+
     [MenuItem("Tools/Node System/Test Bridge Performance")]
     public static void TestBridgePerformance()
     {
@@ -101,23 +73,20 @@ public static class ConnectorBridgeFactory
         Debug.Log($"Is self-bridge: {bridge is ConnectorValueInt}");
         Debug.Log($"Is fast bridge: {bridge is FastConnectorBridge<int>}");
 
-        // Test performance
-        var stopwatch = new System.Diagnostics.Stopwatch();
-
-        // Test self-bridge performance
-        stopwatch.Start();
+        // Test non-generic performance (with boxing)
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         for (int i = 0; i < 1000000; i++)
         {
             bridge.SetValueFast(i);
             var val = bridge.GetValueFast();
         }
         stopwatch.Stop();
-        Debug.Log($"Self-bridge performance: {stopwatch.ElapsedMilliseconds}ms");
+        Debug.Log($"Non-generic bridge performance: {stopwatch.ElapsedMilliseconds}ms");
 
-        // Test what fast bridge would be
-        try
+        // Test generic performance (without boxing)
+        var fastBridge = bridge as FastConnectorBridge<int>;
+        if (fastBridge != null)
         {
-            var fastBridge = new FastConnectorBridge<int>(testValue);
             stopwatch.Restart();
             for (int i = 0; i < 1000000; i++)
             {
@@ -125,23 +94,8 @@ public static class ConnectorBridgeFactory
                 var val = fastBridge.GetValue();
             }
             stopwatch.Stop();
-            Debug.Log($"Fast-bridge performance: {stopwatch.ElapsedMilliseconds}ms");
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to create fast bridge: {e.Message}");
+            Debug.Log($"Generic bridge performance: {stopwatch.ElapsedMilliseconds}ms");
         }
     }
 #endif
-    // ✅ ADD: Method to check if a type has a bridge
-    public static bool HasBridgeForType(Type valueType)
-    {
-        return _bridgeCache.ContainsKey(valueType);
-    }
-
-    // ✅ ADD: Get all bridge types in cache
-    public static List<Type> GetCachedBridgeTypes()
-    {
-        return _bridgeCache.Values.Select(b => b.GetType()).Distinct().ToList();
-    }
 }

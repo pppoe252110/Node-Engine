@@ -1,7 +1,5 @@
-﻿// Values\FastConnectorBridge.cs
-using DG.Tweening.Core;
+﻿// Fields/FastConnectorBridge.cs
 using System;
-using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 using UnityEngine;
@@ -14,11 +12,14 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
     private static bool _isCompiled;
     private Action<IConnectorValue, T> _setter;
     private Func<IConnectorValue, T> _getter;
+
     public IConnectorValue WrappedValue => _wrappedValue;
     public Type ValueType => typeof(T);
+
     public FastConnectorBridge(IConnectorValue wrappedValue)
     {
         _wrappedValue = wrappedValue ?? throw new ArgumentNullException(nameof(wrappedValue));
+
         // 🚀 OPTIMIZATION: Compile once per type
         if (!_isCompiled)
         {
@@ -26,8 +27,10 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
             _staticGetter = CreateGetter(wrappedValue.GetType());
             _isCompiled = true;
         }
+
         _setter = _staticSetter;
         _getter = _staticGetter;
+
         if (_setter == null || _getter == null)
         {
             throw new InvalidOperationException($"Could not create fast accessors for type {wrappedValue.GetType()}");
@@ -39,6 +42,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
         if (!typeof(IConnectorValue).IsAssignableFrom(wrappedType))
             throw new ArgumentException($"Type {wrappedType} does not implement IConnectorValue");
 
+        // Look for SetValue method first
         var setValueMethod = wrappedType.GetMethod("SetValue", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(T) }, null);
         if (setValueMethod != null)
         {
@@ -47,10 +51,6 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
             var castConnector = Expression.Convert(connectorParam, wrappedType);
             var call = Expression.Call(castConnector, setValueMethod, valueParam);
             return Expression.Lambda<Action<IConnectorValue, T>>(call, connectorParam, valueParam).Compile();
-        }
-        else
-        {
-            Debug.LogError($"Bridge: SetValue not found on {wrappedType}!");
         }
 
         // Look for field
