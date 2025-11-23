@@ -13,57 +13,81 @@ MonoBehaviour:
   m_Name: NodesDatabase
   m_EditorClassIdentifier: Assembly-CSharp::NodesDatabase
   _serializableNodes:
+  - nodeName: Subtract
+    nodeType: SubtractNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 4
+    nodeIcon: {fileID: 21300000, guid: 64950f4f7df52fc47aa8d9b65ae99e41, type: 3}
+  - nodeName: Multiply
+    nodeType: MultiplyNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 4
+    nodeIcon: {fileID: 21300000, guid: 7e8aa967d9b68064783d566023be54fd, type: 3}
+  - nodeName: Clamp
+    nodeType: ClampNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 4
+    nodeIcon: {fileID: 21300000, guid: dcba1a93e2f7c5c40a27404c34f728d1, type: 3}
+  - nodeName: Divide
+    nodeType: DivideNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 4
+    nodeIcon: {fileID: 21300000, guid: 54e49583e36462041975130dd5497a93, type: 3}
+  - nodeName: Add
+    nodeType: AddNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 21300000, guid: d6310dc97ac020e4fb5de57fb41079c6, type: 3}
   - nodeName: Debug
-    nodeType: DebugNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: DebugNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 7e03df8074dc4fc4d92d0a006349ffbf, type: 3}
   - nodeName: Time
-    nodeType: TimeNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: TimeNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: d3a3174f83596a44491237579a224899, type: 3}
   - nodeName: ToString
-    nodeType: ToStringNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: ToStringNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 2006f918c9e351e449f4008ac84af791, type: 3}
   - nodeName: Update
-    nodeType: UpdateNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: UpdateNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: f476699faae46174d903d3682f5fdc11, type: 3}
-  - nodeName: Add
-    nodeType: AddNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-    variableType: 0
-    nodeIcon: {fileID: 21300000, guid: d6310dc97ac020e4fb5de57fb41079c6, type: 3}
   - nodeName: ForLoop
-    nodeType: ForLoopNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: ForLoopNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 0294a4f548cd51749b151bc7686a053f, type: 3}
   - nodeName: IfElse
-    nodeType: IfElseNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: IfElseNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 43068265e461b4d45a28a4fe110dbd05, type: 3}
   - nodeName: MoveGameObject
-    nodeType: MoveGameObjectNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    nodeType: MoveGameObjectNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 552918c18ce4c8f4ebcf83d4fd990c89, type: 3}
   - nodeName: SetVariable
-    nodeType: SetVariableNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    nodeType: SetVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 63eb2535a3c92f84585326fbd1fea345, type: 3}
   - nodeName: Int
-    nodeType: VariableNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 1
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: String
-    nodeType: VariableNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 3
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
-  - nodeName: Single
-    nodeType: VariableNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  - nodeName: Float
+    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 2
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Vector3
-    nodeType: VariableNode, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 4
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
