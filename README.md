@@ -48,7 +48,6 @@ The In-Game Node Engine is a **player-facing visual scripting system** that empo
 - **Performance Optimized**: Efficient execution even with complex node graphs
 - **Robust Type System**: Prevents errors with strong type validation
 
-/*
 ## 📦 Installation
 
 This package has a dependency on **UniTask**. Because of how Unity's Package Manager handles Git dependencies, you must install UniTask first.
