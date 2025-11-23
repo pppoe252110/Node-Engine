@@ -13,6 +13,7 @@ A complete in-game visual scripting system that allows players to create, edit, 
 </div>
 
 ![Node Engine Screenshot](https://github.com/user-attachments/assets/1c3b1f9d-b538-4435-b676-343d1a4704c3)
+![NodeEngineScreenshot](https://github.com/user-attachments/assets/2498380d-b6ec-4f4d-aefd-256994358eed)
 
 ## 📖 Table of Contents
 - [What is This?](#-what-is-this)
