@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
+[NodePath("Conversion/ToString")]
 public class ToStringNode : NodeBase
 {
     private ConnectorValueObject _input;

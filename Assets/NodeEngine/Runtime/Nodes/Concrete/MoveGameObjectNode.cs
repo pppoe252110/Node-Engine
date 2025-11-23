@@ -1,6 +1,7 @@
 using System.Drawing;
 using UnityEngine;
 
+[NodePath("Transform/Move")]
 public class MoveGameObjectNode : ExecutableNodeBase
 {
     private ConnectorValueObject _target;  // GameObject

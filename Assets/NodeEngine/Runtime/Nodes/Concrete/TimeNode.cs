@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
+[NodePath("Engine/Time")]
 public class TimeNode : NodeBase
 {
     [NodeValue("DeltaTime", typeof(float), KnownColor.LawnGreen)]

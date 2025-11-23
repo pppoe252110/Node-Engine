@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
+[NodePath("Variables/Set")]
 public class SetVariableNode : ExecutableNodeBase
 {
     private static Dictionary<string, object> _variables = new();  // Simple global storage

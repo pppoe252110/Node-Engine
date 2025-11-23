@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using UnityEngine;
 
+[NodePath("Control Flow/For Loop")]
 public class ForLoopNode : ExecutableNodeBase
 {
     private ConnectorValueVoid _execute;
@@ -9,7 +10,7 @@ public class ForLoopNode : ExecutableNodeBase
     private ConnectorValueInt _index;
 
     private NodeField<ConnectorValueVoid> _bodyField, _endField;
-    private NodeField<ConnectorValueInt> _indexField;  // Store the Index field for propagation
+    private NodeField<ConnectorValueInt> _indexField;
 
     [NodeValue("Execute", typeof(void), KnownColor.BlueViolet)]
     public void ExecuteInput(ConnectorValueVoid execute) => _execute = execute;
@@ -28,33 +29,20 @@ public class ForLoopNode : ExecutableNodeBase
 
     public override void Execute()
     {
-        System.Diagnostics.Stopwatch sw = new();
-        sw.Start();
-        // ✅ Get updated input values (loop count)
         Process();
 
         int loopCount = _count?.GetValue() ?? 0;
 
         for (int i = 0; i < loopCount; i++)
         {
-            // Update index value
             _index?.SetValue(i);
-
-            // ✅ This should now work without circular execution
             _bodyField.ProceedValue();
         }
 
         _endField.ProceedValue();
-
-        sw.Stop();
-
-        ConsoleUI.Instance.LogMessage(sw.ElapsedMilliseconds + "ms");
-        Debug.LogError(sw.ElapsedMilliseconds + "ms");
     }
-
     public override void Setup()
     {
-        // Create default void instances
         var bodyVoid = new ConnectorValueVoid();
         var endVoid = new ConnectorValueVoid();
 
@@ -70,11 +58,10 @@ public class ForLoopNode : ExecutableNodeBase
         outputFields = new()
         {
             _bodyField,
-            _indexField,  // Use the stored field
+            _indexField,
             _endField
         };
 
-        // Set the initial values
         _body = bodyVoid;
         _end = endVoid;
         _index = new ConnectorValueInt(0);

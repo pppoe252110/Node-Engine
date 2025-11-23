@@ -1,7 +1,7 @@
 using System.Drawing;
 
-[NodePath("Math/Add")]
-public class AddNode : NodeBase
+[NodePath("Math/Subtract")]
+public class SubtractNode : NodeBase
 {
     private ConnectorValueFloat _a, _b, _result;
 
@@ -15,7 +15,7 @@ public class AddNode : NodeBase
     public void Result(ConnectorValueFloat result)
     {
         _result = result;
-        _result.SetValue(_a.GetValue() + _b.GetValue());
+        _result.SetValue(_a.GetValue() - _b.GetValue());
     }
 
     public override void Setup()

@@ -1,7 +1,7 @@
 using System.Drawing;
 
-[NodePath("Math/Add")]
-public class AddNode : NodeBase
+[NodePath("Math/Divide")]
+public class DivideNode : NodeBase
 {
     private ConnectorValueFloat _a, _b, _result;
 
@@ -15,7 +15,17 @@ public class AddNode : NodeBase
     public void Result(ConnectorValueFloat result)
     {
         _result = result;
-        _result.SetValue(_a.GetValue() + _b.GetValue());
+        float denominator = _b.GetValue();
+
+        // Prevent division by zero
+        if (denominator == 0)
+        {
+            _result.SetValue(0);
+        }
+        else
+        {
+            _result.SetValue(_a.GetValue() / denominator);
+        }
     }
 
     public override void Setup()
@@ -23,7 +33,7 @@ public class AddNode : NodeBase
         inputFields = new()
         {
             new NodeField<ConnectorValueFloat>(true).SetHandler(A).SetDefaultValue(new ConnectorValueFloat(0)),
-            new NodeField<ConnectorValueFloat>(true).SetHandler(B).SetDefaultValue(new ConnectorValueFloat(0))
+            new NodeField<ConnectorValueFloat>(true).SetHandler(B).SetDefaultValue(new ConnectorValueFloat(1))
         };
         outputFields = new()
         {

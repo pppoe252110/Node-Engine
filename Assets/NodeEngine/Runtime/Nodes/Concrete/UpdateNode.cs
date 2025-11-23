@@ -1,5 +1,6 @@
 using System.Drawing;
 
+[NodePath("Events/Update")]
 public class UpdateNode : NodeBase
 {
     [NodeValue("Update", typeof(void), KnownColor.BlueViolet)]

@@ -1,6 +1,7 @@
 using System.Drawing;
 using UnityEngine;
 
+[NodePath("Debug/Log")]
 public class DebugNode : ExecutableNodeBase
 {
     private ConnectorValueString _logText;

@@ -1,5 +1,6 @@
 using System.Drawing;
 
+[NodePath("Control Flow/If Else")]
 public class IfElseNode : ExecutableNodeBase
 {
     private ConnectorValueBool _condition;
