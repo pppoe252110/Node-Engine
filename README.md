@@ -181,7 +181,7 @@ The node engine features a robust connection system with visual feedback:
 
 ## 🤝 Contributing
 
-I welcome contributions from the community! Whether you're fixing bugs, adding new features, or improving documentation, your help is appreciated.
+I'm open to contributions! Whether you're fixing bugs, adding new features, or improving documentation, your help is appreciated.
 
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
