@@ -104,11 +104,9 @@ public static class ConnectorBridgeFactory
             );
 
         // void
-        _directBridgeFactories[typeof(void)] = value =>
-            new FastConnectorBridge<object>(value,
-                (v, x) => { if (v is ConnectorValueVoid cv) cv.SetValueFast(x); },
-                v => (v is ConnectorValueVoid cv) ? cv.GetValueFast() : null
-            );
+        _directBridgeFactories[typeof(IExecutableConnector)] = value =>
+            new ExecutableConnectorBridge((IExecutableConnector)value);
+
     }
 
     // 🚀 MAIN METHOD: Ultra-optimized bridge creation
@@ -137,10 +135,22 @@ public static class ConnectorBridgeFactory
                 return weakPooled;
             }
 
+            // 🚀 STEP 3: NEW! Check for executable interface FIRST
+            // This ensures actions are handled by their specialized bridge.
+            if (value is IExecutableConnector executable)
+            {
+                DirectAccessHits++; // This is a direct access path
+                var br = new ExecutableConnectorBridge(executable);
+                _bridgePool[value] = br;
+                BridgesActuallyCreated++;
+                return br;
+            }
+
+            // If not an executable, get the inner value's type for standard processing
             var innerValue = value.GetInnerValue();
             var innerType = innerValue?.GetType() ?? typeof(object);
 
-            // 🚀 STEP 3: Try direct access for common types (ultra-fast)
+            // 🚀 STEP 4: Try direct access for other common types
             if (_directBridgeFactories.TryGetValue(innerType, out var directFactory))
             {
                 DirectAccessHits++;
@@ -150,7 +160,7 @@ public static class ConnectorBridgeFactory
                 return br;
             }
 
-            // 🚀 STEP 4: Generic bridge creation with caching
+            // 🚀 STEP 5: Generic bridge creation with caching
             var bridgeType = GetOrCreateBridgeType(innerType);
             var bridge = (IConnectorValueBridge)Activator.CreateInstance(bridgeType, value);
 
@@ -172,7 +182,6 @@ public static class ConnectorBridgeFactory
             }
         }
     }
-
     // 🚀 THREAD-SAFE BRIDGE TYPE CREATION
     private static Type GetOrCreateBridgeType(Type innerType)
     {

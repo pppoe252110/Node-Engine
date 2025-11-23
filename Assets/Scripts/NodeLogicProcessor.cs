@@ -36,9 +36,26 @@ public class NodeLogicProcessor : MonoBehaviour
     {
         if (Keyboard.current.eKey.wasReleasedThisFrame)
             Process();
-
+        if (Keyboard.current.rKey.wasReleasedThisFrame)
+            DoTest();
     }
 
+    private void DoTest()
+    {
+        System.Diagnostics.Stopwatch sw = new();
+        sw.Start();
+
+        for (int i = 0; i < 255555; i++)
+        {
+            ConsoleUI.Instance.LogMessage(i.ToString());
+        }
+
+        sw.Stop();
+
+        ConsoleUI.Instance.LogMessage(sw.ElapsedMilliseconds + "ms");
+        Debug.LogError(sw.ElapsedMilliseconds + "ms");
+
+    }
 
     public void Process()
     {
