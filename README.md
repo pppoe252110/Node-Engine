@@ -198,7 +198,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Thanks to all the contributors who have helped make this project possible
 - Inspired by other visual scripting tools like Unreal Blueprint and Unity Bolt
-- Special thanks to our beta testers for their valuable feedback
 
 ---
 
