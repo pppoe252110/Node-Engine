@@ -47,33 +47,55 @@ The In-Game Node Engine is a **player-facing visual scripting system** that empo
 - **Performance Optimized**: Efficient execution even with complex node graphs
 - **Robust Type System**: Prevents errors with strong type validation
 
+/*
 ## 📦 Installation
 
-### Option 1: Unity Package Manager (Recommended)
+This package has a dependency on **UniTask**. Because of how Unity's Package Manager handles Git dependencies, you must install UniTask first.
 
-1. Open your Unity project
-2. Navigate to **Window > Package Manager**
-3. Click the **+** icon in the top-left corner
-4. Select **"Add package from git URL..."**
-5. Enter the following URL:
-```
-https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine
-```
-7. Click **Add** and wait for the package to download
+Please follow one of the methods below carefully.
 
-### Option 2: Manifest.json
+### Option 1: Using Package Manager UI (Recommended)
 
-Add the following to your Unity project's `Packages/manifest.json`:
+This method uses the Unity Editor's interface and gives you visual feedback.
+
+**Step 1: Install UniTask Dependency**
+
+1.  In Unity, navigate to **Window > Package Manager**.
+2.  Click the **`+`** icon in the top-left corner and select **"Add package from git URL..."**.
+3.  Enter the following URL and click **Add**:
+    ```
+    https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask
+    ```
+4.  Wait for the package to install. You should see "UniTask" appear in your Package Manager list.
+
+**Step 2: Install the Node Engine**
+
+1.  With UniTask successfully installed, click the **`+`** icon in the Package Manager again.
+2.  Select **"Add package from git URL..."**.
+3.  Enter the following URL and click **Add**:
+    ```
+    https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine
+    ```
+
+The installation should now complete without errors.
+
+### Option 2: Using `manifest.json` (Advanced)
+
+This method involves editing a project file directly.
+
+1.  **Open your project's `manifest.json` file.** You can find it at `YourProject/Packages/manifest.json`.
+2.  **Add both packages** to the `dependencies` object. It should look something like this:
 
 ```json
 {
   "dependencies": {
- "com.parity.nodeengine": "https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine"
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.parity.nodeengine": "https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine",
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.modules.imgui": "1.0.0"
   }
 }
 ```
-
-/*
 ## 🚀 Getting Started
 
 1. **Install the package** using one of the methods above
