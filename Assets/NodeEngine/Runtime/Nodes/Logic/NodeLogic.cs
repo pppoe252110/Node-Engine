@@ -61,6 +61,7 @@ public class NodeLogic : MonoBehaviour
         // Add to processor
         NodeLogicProcessor.Instance?.AddNode(this);
     }
+
     public void DeleteNode()
     {
         if (_node == null)

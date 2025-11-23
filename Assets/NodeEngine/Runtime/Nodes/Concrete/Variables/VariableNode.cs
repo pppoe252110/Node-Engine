@@ -1,22 +1,9 @@
 using System.Drawing;
 using UnityEngine;
 
-public class VariableNode : NodeBase
+public abstract class VariableNode : NodeBase
 {
-    [SerializeField] private VariableType _variableType;
-    public VariableType VariableType
-    {
-        get => _variableType;
-        set
-        {
-            _variableType = value;
-            // Recreate output when type changes
-            if (outputFields != null && outputFields.Count > 0)
-            {
-                Setup();
-            }
-        }
-    }
+    public abstract VariableType VariableType { get; }
 
     public VariableUIElement UIElement { get; set; }
 
@@ -30,7 +17,7 @@ public class VariableNode : NodeBase
 
     private NodeFieldBase CreateTypedOutputField()
     {
-        switch (_variableType)
+        switch (VariableType)
         {
             case VariableType.Int:
                 return new NodeField<ConnectorValueInt>(isInput: false)
@@ -51,6 +38,11 @@ public class VariableNode : NodeBase
                 return new NodeField<ConnectorValueString>(isInput: false)
                     .SetHandler(OutputString)
                     .SetDefaultValue(new ConnectorValueString(""));
+
+            case VariableType.Vector3:
+                return new NodeField<ConnectorValueVector3>(isInput: false)
+                    .SetHandler(OutputVector3)
+                    .SetDefaultValue(new ConnectorValueVector3(Vector3.zero));
 
             default:
                 return new NodeField<ConnectorValueObject>(isInput: false)
@@ -77,8 +69,12 @@ public class VariableNode : NodeBase
     [NodeValue("Value", typeof(string), KnownColor.Yellow)]
     public void OutputString(ConnectorValueString value) { }
 
+    [NodeValue("Value", typeof(Vector3), KnownColor.Plum)]
+    public void OutputVector3(ConnectorValueVector3 value) { }
+
     [NodeValue("Value", typeof(object), KnownColor.Gray)]
     public void OutputObject(ConnectorValueObject value) { }
+
 
     public void UpdateOutputValue()
     {
@@ -130,6 +126,15 @@ public class VariableNode : NodeBase
                     {
                         stringValue.SetValue(stringVal);
                         stringField.ProceedValue();
+                    }
+                    break;
+
+                case NodeField<ConnectorValueVector3> vector3Field:
+                    var vector3Value = vector3Field.GetObjectValue() as ConnectorValueString;
+                    if (vector3Value != null && val is string vector3Val)
+                    {
+                        vector3Value.SetValue(vector3Val);
+                        vector3Field.ProceedValue();
                     }
                     break;
 

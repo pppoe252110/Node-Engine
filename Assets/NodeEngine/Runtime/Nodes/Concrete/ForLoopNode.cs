@@ -15,7 +15,7 @@ public class ForLoopNode : ExecutableNodeBase
     [NodeValue("Execute", typeof(void), KnownColor.BlueViolet)]
     public void ExecuteInput(ConnectorValueVoid execute) => _execute = execute;
 
-    [NodeValue("Count", typeof(int), KnownColor.Red)]
+    [NodeValue("Count", typeof(int), KnownColor.Purple)]
     public void Count(ConnectorValueInt count) => _count = count;
 
     [NodeValue("Body", typeof(void), KnownColor.BlueViolet)]

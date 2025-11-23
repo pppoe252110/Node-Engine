@@ -84,9 +84,9 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private NodeLogic SpawnVariableNode(VariableType type, Vector2 position)
     {
-        var variableNode = new VariableNode();
-        variableNode.VariableType = type;  // Set type
+        var variableNode = new IntVariableNode();
         var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
+
         nodeLogic.transform.localPosition = position;
         nodeLogic.VariableDatabase = _variableDatabase;
         nodeLogic.SetNodeBase(variableNode);

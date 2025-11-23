@@ -25,12 +25,12 @@ public class SetVariableNode : ExecutableNodeBase
 
     public override void Setup()
     {
-        base.Setup();
-
         inputFields = new()
         {
             new NodeField<ConnectorValueObject>(true).SetHandler(Value).SetDefaultValue(new ConnectorValueObject(null)),
             new NodeField<ConnectorValueString>(true).SetHandler(Name).SetDefaultValue(new ConnectorValueString(""))
         };
+
+        base.Setup();
     }
 }

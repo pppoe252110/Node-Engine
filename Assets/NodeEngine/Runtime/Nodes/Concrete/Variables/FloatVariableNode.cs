@@ -1,9 +1,5 @@
-using System.Drawing;
-
-public class FloatVariableNode : VariableNodeBase<ConnectorValueFloat>
+[NodePath("Variables/Float")]
+public class FloatVariableNode : VariableNode
 {
     public override VariableType VariableType => VariableType.Float;
-
-    [NodeValue("Value", typeof(float), KnownColor.Green)]
-    public override void Output(ConnectorValueFloat value) { }
 }

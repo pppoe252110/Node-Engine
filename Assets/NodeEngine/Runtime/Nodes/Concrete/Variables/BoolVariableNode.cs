@@ -1,9 +1,7 @@
 using System.Drawing;
 
-public class BoolVariableNode : VariableNodeBase<ConnectorValueBool>
+[NodePath("Variables/Bool")]
+public class BoolVariableNode : VariableNode
 {
     public override VariableType VariableType => VariableType.Bool;
-
-    [NodeValue("Value", typeof(bool), KnownColor.Blue)]
-    public override void Output(ConnectorValueBool value) { }
 }

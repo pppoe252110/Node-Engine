@@ -72,22 +72,22 @@ MonoBehaviour:
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 63eb2535a3c92f84585326fbd1fea345, type: 3}
   - nodeName: Int
-    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+    nodeType: IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 1
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: String
-    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+    nodeType: StringVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 3
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Float
-    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+    nodeType: FloatVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 2
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Vector3
-    nodeType: VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+    nodeType: Vector3VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 4
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}

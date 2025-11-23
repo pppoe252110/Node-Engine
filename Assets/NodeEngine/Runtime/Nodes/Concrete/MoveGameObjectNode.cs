@@ -21,17 +21,19 @@ public class MoveGameObjectNode : ExecutableNodeBase
     {
         if (_target.GetValue() is GameObject go && _position.GetValue() is Vector3 pos)
             go.transform.position = Vector3.MoveTowards(go.transform.position, pos, _speed.GetValue() * Time.deltaTime);
+
+        base.Execute();
     }
 
     public override void Setup()
     {
-        base.Setup();
-
         inputFields = new()
         {
             new NodeField<ConnectorValueObject>(true).SetHandler(Target).SetDefaultValue(new ConnectorValueObject(null)),
             new NodeField<ConnectorValueObject>(true).SetHandler(Position).SetDefaultValue(new ConnectorValueObject(Vector3.zero)),
             new NodeField<ConnectorValueFloat>(true).SetHandler(Speed).SetDefaultValue(new ConnectorValueFloat(1f))
         };
+
+        base.Setup();
     }
 }
