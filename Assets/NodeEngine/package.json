@@ -16,7 +16,7 @@
     "url": "https://github.com/pppoe252110"
   },
   "dependencies": {
-    "com.unity.render-pipelines.universal": "17.0.0"
+    "com.unity.render-pipelines.universal": "17.0.0",
     "com.unity.inputsystem": "1.15.0"
   }
 }
