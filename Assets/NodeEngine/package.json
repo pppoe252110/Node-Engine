@@ -19,6 +19,6 @@
     "com.unity.render-pipelines.universal": "17.0.0",
     "com.unity.inputsystem": "1.15.0",
     "com.unity.textmeshpro": "3.0.0",
-    "com.cysharp.unitask": "2.5.0"
+    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask"
   }
 }
