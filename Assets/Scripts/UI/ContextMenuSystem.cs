@@ -1,8 +1,9 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class ContextMenuSystem : MonoBehaviour
 {
@@ -166,8 +167,8 @@ public class ContextMenuSystem : MonoBehaviour
             {
                 await UniTask.Yield(cancellationTokenSource.Token);
 
-                if ((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)) && !IsClickOnContextMenu(Input.mousePosition)
-                    || Input.GetKeyDown(KeyCode.Escape))
+                if ((Mouse.current.leftButton.wasPressedThisFrame || Mouse.current.rightButton.wasPressedThisFrame) && !IsClickOnContextMenu(Mouse.current.position.value)
+                    || Keyboard.current.escapeKey.wasReleasedThisFrame)
                 {
                     HideContextMenu();
                     break;
@@ -255,8 +256,8 @@ public class ContextMenuSystem : MonoBehaviour
 
         while (true)
         {
-            if (Input.GetKeyDown(KeyCode.Y)) return true;
-            if (Input.GetKeyDown(KeyCode.N)) return false;
+            if (Keyboard.current.yKey.wasReleasedThisFrame) return true;
+            if (Keyboard.current.nKey.wasReleasedThisFrame) return false;
             await UniTask.Yield(cancellationTokenSource.Token);
         }
     }
@@ -325,7 +326,7 @@ public class ContextMenuSystem : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Keyboard.current.escapeKey.wasReleasedThisFrame)
         {
             if (IsContextMenuOpen) HideContextMenu();
             else if (IsDialogOpen) HideDialog();

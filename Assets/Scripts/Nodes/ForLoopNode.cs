@@ -1,7 +1,7 @@
 ﻿using System.Drawing;
 using UnityEngine;
 
-public class ForLoopNode : ExecutableNode
+public class ForLoopNode : ExecutableNodeBase
 {
     private ConnectorValueVoid _execute;
     private ConnectorValueInt _count;

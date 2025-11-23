@@ -1,6 +1,6 @@
 using System.Drawing;
 
-public class IfElseNode : ExecutableNode
+public class IfElseNode : ExecutableNodeBase
 {
     private ConnectorValueBool _condition;
     private ConnectorValueVoid _trueTrigger, _falseTrigger;

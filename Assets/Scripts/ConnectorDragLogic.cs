@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 public class ConnectorDragLogic : MonoBehaviour
 {
@@ -36,7 +37,7 @@ public class ConnectorDragLogic : MonoBehaviour
         {
             _dragLineRenderer.points = BezierFromTwoPoints.GetPoints(
                 _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint),
-                _dragLineRenderer.rectTransform.InverseTransformPoint(Input.mousePosition), 0.5f, 10);
+                _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value), 0.5f, 10);
             _dragLineRenderer.SetAllDirty();
         }
     }
@@ -71,7 +72,7 @@ public class ConnectorDragLogic : MonoBehaviour
             _dragLineRenderer.material.SetColor("_Color2", _dragConnector.Color);
             _dragLineRenderer.points = new Vector2[] {
                 _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint),
-                _dragLineRenderer.rectTransform.InverseTransformPoint(Input.mousePosition) };
+                _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value) };
         }
     }
 

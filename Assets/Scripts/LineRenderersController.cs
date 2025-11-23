@@ -47,12 +47,12 @@ public class LineRenderersController : MonoBehaviour
 
     private void UpdateLineRenderers()
     {
-        if (connectors.Count == 0) return; // Early exit if no connectors
+        if (connectors.Count == 0) return;
 
         transform.position = _inheritTransform.position;
-        transform.localScale = _inheritTransform.localScale;
+        transform.localScale = Vector3.one;
 
-        foreach (var item in connectors.ToArray()) // Use ToArray to avoid modification during iteration
+        foreach (var item in connectors.ToArray())
         {
             if (item.Item1 == null || item.Item2 == null)
             {

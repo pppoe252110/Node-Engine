@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using UnityEngine.InputSystem;
 
 public class ConfirmationDialog : MonoBehaviour
 {
@@ -50,7 +51,7 @@ public class ConfirmationDialog : MonoBehaviour
     private void Update()
     {
         // Close on Escape key
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Keyboard.current.escapeKey.wasReleasedThisFrame)
         {
             Complete(false);
         }

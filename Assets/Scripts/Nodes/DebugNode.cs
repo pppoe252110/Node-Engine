@@ -1,10 +1,15 @@
 using System.Drawing;
 using UnityEngine;
 
-public class DebugNode : ExecutableNode
+public class DebugNode : ExecutableNodeBase
 {
-    private ConnectorValueVoid _log;
     private ConnectorValueString _logText;
+
+    [NodeValue("LogString", typeof(string), KnownColor.PaleVioletRed)]
+    public void LogString(ConnectorValueString value)
+    {
+        _logText = value;
+    }
 
     public override void Execute()
     {
@@ -14,28 +19,24 @@ public class DebugNode : ExecutableNode
         {
             ConsoleUI.Instance.LogMessage($"[Debug] {text}");
         }
-    }
+        else
+        {
+            Debug.Log($"[Debug] {text}");
+        }
 
-    [NodeValue("Event", typeof(void), KnownColor.BlueViolet)]
-    public void Log(ConnectorValueVoid value)
-    {
-        _log = value;
-    }
-
-    [NodeValue("LogString", typeof(string), KnownColor.PaleVioletRed)]
-    public void LogString(ConnectorValueString value)
-    {
-        string text = value?.GetValue() ?? "null";
-
-        _logText = value;
+        base.Execute();
     }
 
     public override void Setup()
     {
-        inputFields = new()
-        {
-            new NodeField<ConnectorValueVoid>(true).SetFunc(Log).ProvideDefaultValue(new ConnectorValueVoid()),
-            new NodeField<ConnectorValueString>(true).SetFunc(LogString).ProvideDefaultValue(new ConnectorValueString(""))
-        };
+        // Setup execution flow first
+        base.Setup();
+
+        // Add other input fields
+        inputFields.Add(
+            new NodeField<ConnectorValueString>(true)
+                .SetFunc(LogString)
+                .ProvideDefaultValue(new ConnectorValueString(""))
+        );
     }
 }

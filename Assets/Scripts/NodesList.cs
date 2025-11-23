@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
-using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class NodesList : MonoBehaviour
 {
@@ -34,10 +35,10 @@ public class NodesList : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Keyboard.current.spaceKey.wasReleasedThisFrame)
         {
             _nodesListView.gameObject.SetActive(!_nodesListView.gameObject.activeSelf);
-            _nodesListView.position = Input.mousePosition;
+            _nodesListView.position = Mouse.current.position.value;
             _searchInputField.ActivateInputField();
 
             // Clear search when opening the list

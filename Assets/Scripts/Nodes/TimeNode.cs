@@ -17,12 +17,19 @@ public class TimeNode : NodeBase
         value.SetValue(UnityEngine.Time.time);
     }
 
+    [NodeValue("RealTime", typeof(float), KnownColor.LawnGreen)]
+    public void RealTime(ConnectorValueFloat value)
+    {
+        value.SetValue(UnityEngine.Time.realtimeSinceStartup);
+    }
+
     public override void Setup()
     {
         outputFields = new()
         {
             new NodeField<ConnectorValueFloat>(false).SetFunc(DeltaTime).ProvideDefaultValue(new ConnectorValueFloat(0)),
-            new NodeField<ConnectorValueFloat>(false).SetFunc(Time).ProvideDefaultValue(new ConnectorValueFloat(0))
+            new NodeField<ConnectorValueFloat>(false).SetFunc(Time).ProvideDefaultValue(new ConnectorValueFloat(0)),
+            new NodeField<ConnectorValueFloat>(false).SetFunc(RealTime).ProvideDefaultValue(new ConnectorValueFloat(0))
         };
     }
 

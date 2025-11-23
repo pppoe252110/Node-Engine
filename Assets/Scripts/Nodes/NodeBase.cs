@@ -19,7 +19,6 @@ public abstract class NodeBase : INode, ICloneable
     [System.NonSerialized]
     private int _guid = 0;
 
-    // Add processing tracking
     public bool IsProcessing { get; set; }
 
     private static HashSet<NodeBase> _processingNodes = new HashSet<NodeBase>();
@@ -30,7 +29,10 @@ public abstract class NodeBase : INode, ICloneable
     {
         _guid = guid;
         Setup();
+        Initialized();
     }
+
+    protected virtual void Initialized() { }
 
     internal void SetName(string name)
     {
@@ -83,7 +85,7 @@ public abstract class NodeBase : INode, ICloneable
             }
 
             // Skip ALL void event propagation for ExecutableNode to prevent re-triggering execution or extra calls
-            if (this is ExecutableNode) return;
+            if (this is ExecutableNodeBase) return;
 
             // Propagate void events from outputs (fire downstream)
             foreach (var connector in outputConnectors)

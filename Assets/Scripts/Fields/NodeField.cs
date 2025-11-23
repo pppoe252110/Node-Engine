@@ -135,7 +135,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
             else
             {
                 // VOID INPUT FLOW: Execute connected node
-                if (Connector.Node is ExecutableNode exe && !exe.IsProcessing)
+                if (Connector.Node is ExecutableNodeBase exe && !exe.IsProcessing)
                 {
                     exe.Process();
                     exe.Execute();

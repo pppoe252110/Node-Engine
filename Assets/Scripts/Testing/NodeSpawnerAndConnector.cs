@@ -1,8 +1,9 @@
+using Radishmouse;  // Ensure this is imported for UILineRenderer
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using Radishmouse;  // Ensure this is imported for UILineRenderer
 
 public class NodeSpawnerAndConnector : MonoBehaviour
 {
@@ -19,7 +20,7 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.T))
+        if (Keyboard.current.quoteKey.wasReleasedThisFrame)
         {
             SpawnAndConnectNodes();
         }

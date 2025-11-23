@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class UIZoomPan : MonoBehaviour
 {
@@ -36,8 +37,8 @@ public class UIZoomPan : MonoBehaviour
 
     void Update()
     {
-        float scrollDelta = Input.mouseScrollDelta.y;
-        Vector2 mousePos = Input.mousePosition / UIInstance.NodesCanvas.scaleFactor;
+        float scrollDelta = Mouse.current.scroll.value.y;
+        Vector2 mousePos = Mouse.current.position.value / UIInstance.NodesCanvas.scaleFactor;
 
         if (scrollDelta != 0.0f)
         {
@@ -56,12 +57,12 @@ public class UIZoomPan : MonoBehaviour
 
         }
 
-        if (Input.GetMouseButtonDown(2))
+        if (Mouse.current.middleButton.wasPressedThisFrame)
         {
             _lastMousePos = mousePos;
         }
 
-        if (Input.GetMouseButton(2))
+        if (Mouse.current.middleButton.isPressed)
         {
             Vector2 mouseMoveDir = mousePos - _lastMousePos;
             _rectTransform.anchoredPosition += mouseMoveDir;

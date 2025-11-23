@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-public class SetVariableNode : ExecutableNode
+public class SetVariableNode : ExecutableNodeBase
 {
     private static Dictionary<string, object> _variables = new();  // Simple global storage
 
@@ -18,10 +18,14 @@ public class SetVariableNode : ExecutableNode
     {
         if (!string.IsNullOrEmpty(_name.GetValue()))
             _variables[_name.GetValue()] = _value.GetValue();
+
+        base.Execute();
     }
 
     public override void Setup()
     {
+        base.Setup();
+
         inputFields = new()
         {
             new NodeField<ConnectorValueObject>(true).SetFunc(Value).ProvideDefaultValue(new ConnectorValueObject(null)),

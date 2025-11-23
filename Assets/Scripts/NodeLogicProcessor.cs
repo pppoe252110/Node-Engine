@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class NodeLogicProcessor : MonoBehaviour
 {
@@ -33,7 +34,7 @@ public class NodeLogicProcessor : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyUp(KeyCode.E))
+        if (Keyboard.current.eKey.wasReleasedThisFrame)
             Process();
 
     }

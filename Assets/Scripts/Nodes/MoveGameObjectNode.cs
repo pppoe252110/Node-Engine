@@ -1,7 +1,7 @@
 using System.Drawing;
 using UnityEngine;
 
-public class MoveGameObjectNode : ExecutableNode
+public class MoveGameObjectNode : ExecutableNodeBase
 {
     private ConnectorValueObject _target;  // GameObject
     private ConnectorValueObject _position;  // Vector3
@@ -24,6 +24,8 @@ public class MoveGameObjectNode : ExecutableNode
 
     public override void Setup()
     {
+        base.Setup();
+
         inputFields = new()
         {
             new NodeField<ConnectorValueObject>(true).SetFunc(Target).ProvideDefaultValue(new ConnectorValueObject(null)),
