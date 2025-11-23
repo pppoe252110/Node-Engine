@@ -58,14 +58,14 @@ public class ForLoopNode : ExecutableNodeBase
         var bodyVoid = new ConnectorValueVoid();
         var endVoid = new ConnectorValueVoid();
 
-        _bodyField = new NodeField<ConnectorValueVoid>(false).SetFunc(Body).ProvideDefaultValue(bodyVoid);
-        _endField = new NodeField<ConnectorValueVoid>(false).SetFunc(End).ProvideDefaultValue(endVoid);
-        _indexField = new NodeField<ConnectorValueInt>(false).SetFunc(Index).ProvideDefaultValue(new ConnectorValueInt(0));  // Store the Index field
+        _bodyField = new NodeField<ConnectorValueVoid>(false).SetHandler(Body).SetDefaultValue(bodyVoid);
+        _endField = new NodeField<ConnectorValueVoid>(false).SetHandler(End).SetDefaultValue(endVoid);
+        _indexField = new NodeField<ConnectorValueInt>(false).SetHandler(Index).SetDefaultValue(new ConnectorValueInt(0));  // Store the Index field
 
         inputFields = new()
         {
-            new NodeField<ConnectorValueVoid>(true).SetFunc(ExecuteInput).ProvideDefaultValue(new ConnectorValueVoid()),
-            new NodeField<ConnectorValueInt>(true).SetFunc(Count).ProvideDefaultValue(new ConnectorValueInt(0))
+            new NodeField<ConnectorValueVoid>(true).SetHandler(ExecuteInput).SetDefaultValue(new ConnectorValueVoid()),
+            new NodeField<ConnectorValueInt>(true).SetHandler(Count).SetDefaultValue(new ConnectorValueInt(0))
         };
         outputFields = new()
         {

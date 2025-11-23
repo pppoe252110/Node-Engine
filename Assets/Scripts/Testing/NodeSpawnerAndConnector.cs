@@ -113,7 +113,7 @@ public class NodeSpawnerAndConnector : MonoBehaviour
         }
 
         // Instantiate and add the line renderer
-        var lineRenderer = Instantiate(_lineRendererPrefab, LineRenderersController.instance.transform);  // Instantiate under the controller
+        var lineRenderer = Instantiate(_lineRendererPrefab, LineRenderersController.Instance.transform);  // Instantiate under the controller
         LineRenderersController.Add(fromConnector, toConnector, lineRenderer);
 
         // Update connections

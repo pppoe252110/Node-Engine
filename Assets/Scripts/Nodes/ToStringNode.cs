@@ -27,11 +27,11 @@ public class ToStringNode : NodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueObject>(true).SetFunc(Input).ProvideDefaultValue(new ConnectorValueObject(null)),
+            new NodeField<ConnectorValueObject>(true).SetHandler(Input).SetDefaultValue(new ConnectorValueObject(null)),
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueString>(false).SetFunc(Output).ProvideDefaultValue(new ConnectorValueString("")),
+            new NodeField<ConnectorValueString>(false).SetHandler(Output).SetDefaultValue(new ConnectorValueString("")),
         };
     }
 

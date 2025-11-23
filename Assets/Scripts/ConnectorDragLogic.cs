@@ -1,8 +1,5 @@
-using NUnit.Framework;
 using Radishmouse;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -15,6 +12,7 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private UILineRenderer _dragLineRenderer;
     private Connector _dragConnector;
+    private bool _isDragging = false;
 
     private void OnEnable()
     {
@@ -22,7 +20,6 @@ public class ConnectorDragLogic : MonoBehaviour
         _nodeDrag.OnStopDragCallback.AddListener(OnNodeStopDrag);
         _nodeDrag.OnClickCallback.AddListener(OnNodeClick);
     }
-
 
     private void OnDisable()
     {
@@ -33,76 +30,133 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private void Update()
     {
-        if (_dragLineRenderer)
+        if (_isDragging && _dragLineRenderer != null)
         {
-            _dragLineRenderer.points = BezierFromTwoPoints.GetPoints(
-                _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint),
-                _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value), 0.5f, 10);
-            _dragLineRenderer.SetAllDirty();
+            UpdateDragLine();
         }
     }
 
-    private void OnNodeClick(PointerEventData eventData, GameObject go)
+    private void UpdateDragLine()
+    {
+        var startPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint);
+        var endPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value);
+
+        _dragLineRenderer.points = BezierFromTwoPoints.GetPoints(startPoint, endPoint, 0.5f, 10);
+        _dragLineRenderer.SetAllDirty();
+    }
+
+    private void OnNodeClick(PointerEventData eventData, GameObject clickedObject)
     {
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            if (go.transform.parent.TryGetComponent(out Connector clickConnector))
-            {
-                if (clickConnector.ConnectionsCount > 0)
-                    foreach (var dragConnections in clickConnector.Connections)
-                    {
-                        LineRenderersController.Remove(clickConnector, dragConnections);
-                        dragConnections.Connections.Remove(clickConnector);
-                        dragConnections.UpdateFilled();
-                    }
-                clickConnector.Connections.Clear();
-                clickConnector.UpdateFilled();
-            }
+            HandleRightClick(clickedObject);
         }
     }
 
-    private void OnNodeDrag(PointerEventData eventData, GameObject go)
+    private void HandleRightClick(GameObject clickedObject)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
-            return;
-        if (go.transform.parent.TryGetComponent(out _dragConnector))
+        if (clickedObject.transform.parent.TryGetComponent(out Connector connector))
         {
-            _dragLineRenderer = Instantiate(_lineRendererPrefab, transform);
-            _dragLineRenderer.material.SetColor("_Color1", _dragConnector.Color);
-            _dragLineRenderer.material.SetColor("_Color2", _dragConnector.Color);
-            _dragLineRenderer.points = new Vector2[] {
-                _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint),
-                _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value) };
+            ClearConnectorConnections(connector);
         }
+    }
+
+    private void ClearConnectorConnections(Connector connector)
+    {
+        if (connector.ConnectionsCount > 0)
+        {
+            foreach (var connectedConnector in connector.Connections)
+            {
+                LineRenderersController.Remove(connector, connectedConnector);
+                connectedConnector.Connections.Remove(connector);
+                connectedConnector.UpdateFilled();
+            }
+            connector.Connections.Clear();
+            connector.UpdateFilled();
+        }
+    }
+
+    private void OnNodeDrag(PointerEventData eventData, GameObject draggedObject)
+    {
+        if (eventData.button != PointerEventData.InputButton.Left) return;
+
+        if (draggedObject.transform.parent.TryGetComponent(out _dragConnector))
+        {
+            StartDragConnection();
+        }
+    }
+
+    private void StartDragConnection()
+    {
+        _dragLineRenderer = Instantiate(_lineRendererPrefab, transform);
+        _dragLineRenderer.material = CreateLineMaterial(_dragConnector.Color);
+        _isDragging = true;
+
+        UpdateDragLine(); // Initial points
+    }
+
+    private Material CreateLineMaterial(Color color)
+    {
+        var material = new Material(_dragLineRenderer.material);
+        material.SetColor("_Color1", color);
+        material.SetColor("_Color2", color);
+        return material;
     }
 
     private void OnNodeStopDrag(PointerEventData eventData)
     {
         if (_dragConnector == null || eventData.button != PointerEventData.InputButton.Left) return;
-        foreach (var item in eventData.hovered)
+
+        TryCreateConnection(eventData);
+        CleanupDrag();
+    }
+
+    private void TryCreateConnection(PointerEventData eventData)
+    {
+        foreach (var hoveredObject in eventData.hovered)
         {
-            if (item.TryGetComponent(out Connector connector))
+            if (hoveredObject.TryGetComponent(out Connector targetConnector))
             {
-                if (_dragConnector.Node == connector.Node) continue; // Prevent self-connection
-                if (connector.ConnectionsCount > 0) continue; // Only allow one connection per input
-                                                              // Strict type check
-                if (!IsCompatibleType(_dragConnector.ValueType, connector.ValueType))
+                if (IsValidConnection(targetConnector))
                 {
-                    Debug.LogWarning($"Incompatible types: {_dragConnector.ValueType} to {connector.ValueType}");
-                    continue;
+                    CreateConnection(targetConnector);
+                    return;
                 }
-                // Create connection
-                LineRenderersController.Add(_dragConnector, connector, _dragLineRenderer);
-                _dragLineRenderer = null;
-                _dragConnector.AddConnection(connector);
-                _dragConnector.UpdateFilled();
-                connector.AddConnection(_dragConnector);
-                connector.UpdateFilled();
-                return;
             }
         }
-        if (_dragLineRenderer) Destroy(_dragLineRenderer.gameObject);
     }
+
+    private bool IsValidConnection(Connector targetConnector)
+    {
+        return _dragConnector.Node != targetConnector.Node &&           // Prevent self-connection
+               targetConnector.ConnectionsCount == 0 &&                // Only one connection per input
+               IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType); // Type check
+    }
+
+    private void CreateConnection(Connector targetConnector)
+    {
+        LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
+        _dragLineRenderer = null; // Controller now owns the line
+
+        _dragConnector.AddConnection(targetConnector);
+        targetConnector.AddConnection(_dragConnector);
+
+        _dragConnector.UpdateFilled();
+        targetConnector.UpdateFilled();
+    }
+
+    private void CleanupDrag()
+    {
+        if (_dragLineRenderer != null)
+        {
+            Destroy(_dragLineRenderer.gameObject);
+        }
+
+        _dragLineRenderer = null;
+        _dragConnector = null;
+        _isDragging = false;
+    }
+
     private bool IsCompatibleType(Type dragType, Type targetType)
     {
         return dragType == targetType || targetType == typeof(object);

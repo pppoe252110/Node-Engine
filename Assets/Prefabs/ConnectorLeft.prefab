@@ -134,7 +134,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f17ae2112dd0904f8b3a04e8a5a9c6a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _name: {fileID: 7823349366200766066}
+  _nameText: {fileID: 7823349366200766066}
   _connectorImage: {fileID: 5165647931958519878}
   _connectorImageFill: {fileID: 8045521568166781690}
 --- !u!1 &2073844013424072165

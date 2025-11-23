@@ -8,8 +8,8 @@ public abstract class VariableNodeBase<T> : NodeBase where T : class, IConnector
     public override void Setup()
     {
         _outputField = new NodeField<T>(isInput: false)
-            .SetFunc(Output)
-            .ProvideDefaultValue(new T());
+            .SetHandler(Output)
+            .SetDefaultValue(new T());
 
         outputFields = new() { _outputField };
     }

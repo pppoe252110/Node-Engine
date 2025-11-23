@@ -41,12 +41,12 @@ public abstract class ExecutableNodeBase : NodeBase
     protected void SetupDefaultExecutionFlow()
     {
         _executeInputField = new NodeField<ConnectorValueVoid>(true)
-            .SetFunc(OnExecuteInput)
-            .ProvideDefaultValue(new ConnectorValueVoid());
+            .SetHandler(OnExecuteInput)
+            .SetDefaultValue(new ConnectorValueVoid());
 
         _executeOutputField = new NodeField<ConnectorValueVoid>(false)
-            .SetFunc(OnExecuteOutput)
-            .ProvideDefaultValue(new ConnectorValueVoid());
+            .SetHandler(OnExecuteOutput)
+            .SetDefaultValue(new ConnectorValueVoid());
 
         // Add to fields list - input first, output last (standard convention)
         inputFields.Insert(0, _executeInputField);

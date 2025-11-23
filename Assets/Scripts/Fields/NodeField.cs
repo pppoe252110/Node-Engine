@@ -6,12 +6,18 @@ using UnityEngine;
 public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 {
     public delegate void ValueHandlerFunc(T value);
-    public event ValueHandlerFunc CurrentValueHandler;
-    private T currentValue;
-    private readonly bool _isInput;
 
+    // Private fields
+    private T _currentValue;
+    private readonly bool _isInput;
     private IConnectorValueBridge _fastBridge;
     private bool _hasFastBridge;
+
+    // Public properties for better encapsulation
+    public event ValueHandlerFunc CurrentValueHandler;
+    public T CurrentValue => _currentValue;
+    public bool HasFastBridge => _hasFastBridge;
+    public bool IsInput => _isInput;
 
     public NodeField(bool isInput)
     {
@@ -26,33 +32,31 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         {
             _hasFastBridge = false;
             _fastBridge = null;
-
             return;
         }
-        if (currentValue != null)
+
+        if (_currentValue != null)
         {
-            _fastBridge = ConnectorBridgeFactory.CreateBridge(currentValue);
+            _fastBridge = ConnectorBridgeFactory.CreateBridge(_currentValue);
             _hasFastBridge = _fastBridge != null;
         }
     }
 
-    public NodeField<T> SetFunc(ValueHandlerFunc value)
+    // Fluent interface methods
+    public NodeField<T> SetHandler(ValueHandlerFunc handler)
     {
-        CurrentValueHandler = value;
+        CurrentValueHandler = handler;
         return this;
     }
 
-    public NodeField<T> ProvideDefaultValue(T value)
+    public NodeField<T> SetDefaultValue(T value)
     {
-        currentValue = value;
-
-        // ✅ RE-INITIALIZE bridge when value is provided
-        InitializeFastBridge();
-
+        _currentValue = value;
+        InitializeFastBridge(); // Re-initialize bridge when value is provided
         return this;
     }
 
-    // ✅ NEW: Data-only propagation (no execution)
+    // ✅ Data-only propagation (no execution)
     public override void UpdateValueFromSource(IConnectorValue sourceValue)
     {
         if (sourceValue == null) return;
@@ -60,19 +64,10 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         try
         {
             var innerValue = sourceValue.GetInnerValue();
-
-            // Update current value without triggering execution
-            if (currentValue is IConnectorValueBridge targetBridge)
-            {
-                targetBridge.SetValueFast(innerValue);
-            }
-            else
-            {
-                SetValueManually(currentValue, innerValue);
-            }
+            UpdateCurrentValue(innerValue);
 
             // ✅ Invoke handler to update the value, but don't propagate further
-            CurrentValueHandler?.Invoke(currentValue);
+            CurrentValueHandler?.Invoke(_currentValue);
         }
         catch (Exception e)
         {
@@ -84,111 +79,161 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
     {
         if (Connector == null)
         {
-            CurrentValueHandler?.Invoke(currentValue);
+            CurrentValueHandler?.Invoke(_currentValue);
             return;
         }
 
-        // Handle INPUT fields (receiving values)
-        if (_isInput && Connector.Connections.Count > 0)
+        if (_isInput)
         {
-            var connectedConnector = Connector.Connections[Connector.Connections.Count - 1];
+            ProcessInputField();
+        }
+        else
+        {
+            ProcessOutputField();
+        }
+    }
 
-            if (connectedConnector?.Node == null)
+    private void ProcessInputField()
+    {
+        if (Connector.Connections.Count == 0)
+        {
+            CurrentValueHandler?.Invoke(_currentValue);
+            return;
+        }
+
+        var connectedConnector = Connector.Connections[Connector.Connections.Count - 1];
+
+        if (connectedConnector?.Node == null)
+        {
+            CurrentValueHandler?.Invoke(_currentValue);
+            return;
+        }
+
+        bool isVoid = connectedConnector.ValueType == typeof(void);
+
+        if (!isVoid)
+        {
+            ProcessDataInput(connectedConnector);
+        }
+        else
+        {
+            ProcessVoidInput(connectedConnector);
+        }
+    }
+
+    private void ProcessDataInput(Connector connectedConnector)
+    {
+        // DATA FLOW: Process connected node and get value
+        if (!connectedConnector.Node.IsProcessing)
+        {
+            connectedConnector.Node.Process();
+        }
+
+        var connectedField = connectedConnector.Field;
+        if (connectedField != null)
+        {
+            var sourceValue = connectedField.GetObjectValue();
+            UpdateFromSourceValue(sourceValue);
+        }
+    }
+
+    private void ProcessVoidInput(Connector connectedConnector)
+    {
+        // VOID INPUT FLOW: Execute connected node
+        if (Connector.Node is ExecutableNodeBase executableNode && !executableNode.IsProcessing)
+        {
+            executableNode.Process();
+            executableNode.Execute();
+        }
+    }
+
+    private void ProcessOutputField()
+    {
+        CurrentValueHandler?.Invoke(_currentValue);
+
+        if (Connector.Connections.Count > 0)
+        {
+            if (Connector.ValueType != typeof(void))
             {
-                CurrentValueHandler?.Invoke(currentValue);
-                return;
-            }
-
-            var connectedNode = connectedConnector.Node;
-            bool isVoid = connectedConnector.ValueType == typeof(void);
-
-            if (!isVoid)
-            {
-                // DATA FLOW: Process connected node and get value
-                if (!connectedNode.IsProcessing)
-                {
-                    connectedNode.Process();
-                }
-
-                var connectedField = connectedConnector.Field;
-                if (connectedField != null)
-                {
-                    var sourceValue = connectedField.GetObjectValue();
-
-                    if (sourceValue is IConnectorValue sourceConnector)
-                    {
-                        var innerValue = sourceConnector.GetInnerValue();
-
-                        if (currentValue is IConnectorValueBridge targetBridge)
-                        {
-                            targetBridge.SetValueFast(innerValue);
-                        }
-                        else
-                        {
-                            SetValueManually(currentValue, innerValue);
-                        }
-
-                        CurrentValueHandler?.Invoke(currentValue);
-                    }
-                }
+                ProcessDataOutput();
             }
             else
             {
-                // VOID INPUT FLOW: Execute connected node
-                if (Connector.Node is ExecutableNodeBase exe && !exe.IsProcessing)
-                {
-                    exe.Process();
-                    exe.Execute();
-                }
+                ProcessVoidOutput();
             }
         }
+    }
 
-        if (!_isInput)
+    private void ProcessDataOutput()
+    {
+        // DATA OUTPUT: Use data-only propagation
+        foreach (var connectedConnector in Connector.Connections)
         {
-            CurrentValueHandler?.Invoke(currentValue);
-            if (Connector.Connections.Count > 0)
+            var field = connectedConnector?.Field;
+            if (field != null && !connectedConnector.Node.IsProcessing)
             {
-                if (Connector.ValueType != typeof(void))
-                {
-                    // DATA OUTPUT: Use data-only propagation
-                    foreach (var connectedConnector in Connector.Connections)
-                    {
-                        var field = connectedConnector?.Field;
-                        if (field != null && !connectedConnector.Node.IsProcessing)
-                        {
-                            field.UpdateValueFromSource(currentValue as IConnectorValue);
-                        }
-                    }
-                }
-                else
-                {
-                    // 🚀 OPTIMIZATION: Void output - direct execution (no bridge)
-                    foreach (var connectedConnector in Connector.Connections)
-                    {
-                        var field = connectedConnector?.Field;
-                        if (field != null && !connectedConnector.Node.IsProcessing)
-                        {
-                            field.ProceedValue();  // Trigger execution directly
-                        }
-                    }
-                }
+                field.UpdateValueFromSource(_currentValue as IConnectorValue);
             }
+        }
+    }
+
+    private void ProcessVoidOutput()
+    {
+        // 🚀 OPTIMIZATION: Void output - direct execution (no bridge)
+        foreach (var connectedConnector in Connector.Connections)
+        {
+            var field = connectedConnector?.Field;
+            if (field != null && !connectedConnector.Node.IsProcessing)
+            {
+                field.ProceedValue();  // Trigger execution directly
+            }
+        }
+    }
+
+    private void UpdateFromSourceValue(object sourceValue)
+    {
+        if (sourceValue is IConnectorValue sourceConnector)
+        {
+            var innerValue = sourceConnector.GetInnerValue();
+            UpdateCurrentValue(innerValue);
+            CurrentValueHandler?.Invoke(_currentValue);
+        }
+    }
+
+    private void UpdateCurrentValue(object newValue)
+    {
+        if (_currentValue is IConnectorValueBridge targetBridge)
+        {
+            targetBridge.SetValueFast(newValue);
+        }
+        else
+        {
+            Debug.LogError("DADA");
+            SetValueManually(_currentValue, newValue);
         }
     }
 
     // Helper method for manual value setting
     private void SetValueManually(IConnectorValue target, object value)
     {
-        if (target is ConnectorValueInt intTarget && value is int intVal)
-            intTarget.SetValue(intVal);
-        else if (target is ConnectorValueFloat floatTarget && value is float floatVal)
-            floatTarget.SetValue(floatVal);
-        else if (target is ConnectorValueBool boolTarget && value is bool boolVal)
-            boolTarget.SetValue(boolVal);
-        else if (target is ConnectorValueString stringTarget && value is string stringVal)
-            stringTarget.SetValue(stringVal);
-        else if (target is ConnectorValueObject objTarget)
-            objTarget.SetValue(value);
+        switch (target)
+        {
+            case ConnectorValueInt intTarget when value is int intVal:
+                intTarget.SetValue(intVal);
+                break;
+            case ConnectorValueFloat floatTarget when value is float floatVal:
+                floatTarget.SetValue(floatVal);
+                break;
+            case ConnectorValueBool boolTarget when value is bool boolVal:
+                boolTarget.SetValue(boolVal);
+                break;
+            case ConnectorValueString stringTarget when value is string stringVal:
+                stringTarget.SetValue(stringVal);
+                break;
+            case ConnectorValueObject objTarget:
+                objTarget.SetValue(value);
+                break;
+        }
     }
 
     public override NodeValueAttribute GetAttribute()
@@ -205,9 +250,28 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
     {
         if (_hasFastBridge && _fastBridge != null)
         {
-            var wrapped = _fastBridge.WrappedValue;
-            return wrapped;
+            return _fastBridge.WrappedValue;
         }
-        return currentValue;
+        return _currentValue;
+    }
+
+    // New helper methods for better API
+    public bool TryGetValueAs<U>(out U result) where U : class
+    {
+        result = _currentValue as U;
+        return result != null;
+    }
+
+    public void TriggerValueUpdate()
+    {
+        CurrentValueHandler?.Invoke(_currentValue);
+    }
+
+    public void ClearConnections()
+    {
+        if (Connector != null)
+        {
+            Connector.ClearConnections();
+        }
     }
 }

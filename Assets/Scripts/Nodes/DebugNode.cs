@@ -35,8 +35,8 @@ public class DebugNode : ExecutableNodeBase
         // Add other input fields
         inputFields.Add(
             new NodeField<ConnectorValueString>(true)
-                .SetFunc(LogString)
-                .ProvideDefaultValue(new ConnectorValueString(""))
+                .SetHandler(LogString)
+                .SetDefaultValue(new ConnectorValueString(""))
         );
     }
 }

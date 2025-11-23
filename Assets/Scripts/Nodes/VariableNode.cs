@@ -34,28 +34,28 @@ public class VariableNode : NodeBase
         {
             case VariableType.Int:
                 return new NodeField<ConnectorValueInt>(isInput: false)
-                    .SetFunc(OutputInt)
-                    .ProvideDefaultValue(new ConnectorValueInt(0));
+                    .SetHandler(OutputInt)
+                    .SetDefaultValue(new ConnectorValueInt(0));
 
             case VariableType.Float:
                 return new NodeField<ConnectorValueFloat>(isInput: false)
-                    .SetFunc(OutputFloat)
-                    .ProvideDefaultValue(new ConnectorValueFloat(0f));
+                    .SetHandler(OutputFloat)
+                    .SetDefaultValue(new ConnectorValueFloat(0f));
 
             case VariableType.Bool:
                 return new NodeField<ConnectorValueBool>(isInput: false)
-                    .SetFunc(OutputBool)
-                    .ProvideDefaultValue(new ConnectorValueBool(false));
+                    .SetHandler(OutputBool)
+                    .SetDefaultValue(new ConnectorValueBool(false));
 
             case VariableType.String:
                 return new NodeField<ConnectorValueString>(isInput: false)
-                    .SetFunc(OutputString)
-                    .ProvideDefaultValue(new ConnectorValueString(""));
+                    .SetHandler(OutputString)
+                    .SetDefaultValue(new ConnectorValueString(""));
 
             default:
                 return new NodeField<ConnectorValueObject>(isInput: false)
-                    .SetFunc(OutputObject)
-                    .ProvideDefaultValue(new ConnectorValueObject(null));
+                    .SetHandler(OutputObject)
+                    .SetDefaultValue(new ConnectorValueObject(null));
         }
     }
 

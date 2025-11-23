@@ -28,8 +28,8 @@ public class SetVariableNode : ExecutableNodeBase
 
         inputFields = new()
         {
-            new NodeField<ConnectorValueObject>(true).SetFunc(Value).ProvideDefaultValue(new ConnectorValueObject(null)),
-            new NodeField<ConnectorValueString>(true).SetFunc(Name).ProvideDefaultValue(new ConnectorValueString(""))
+            new NodeField<ConnectorValueObject>(true).SetHandler(Value).SetDefaultValue(new ConnectorValueObject(null)),
+            new NodeField<ConnectorValueString>(true).SetHandler(Name).SetDefaultValue(new ConnectorValueString(""))
         };
     }
 }

@@ -14,7 +14,7 @@ public class UpdateNode : NodeBase
     {
         outputFields = new()
         {
-            new NodeField<ConnectorValueVoid>(false).SetFunc(UpdateVoid).ProvideDefaultValue(new ConnectorValueVoid())
+            new NodeField<ConnectorValueVoid>(false).SetHandler(UpdateVoid).SetDefaultValue(new ConnectorValueVoid())
         };
     }
 }

@@ -10,43 +10,28 @@ public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
     private RectTransform _rectTransform;
     private bool _canDrag = false;
-    
+
+    private void Start() => _rectTransform = transform as RectTransform;
+
     public void OnDrag(PointerEventData eventData)
     {
         if (eventData.button == PointerEventData.InputButton.Left && _canDrag)
             Move(eventData.delta);
     }
 
-    private void Move(Vector2 delta)
-    {
-        _rectTransform.anchoredPosition += delta / UIInstance.NodesCanvas.scaleFactor / UIInstance.NodesCanvasSize;
-    }
-
-    void Start()
-    {
-        _rectTransform = transform as RectTransform;
-    }
-
     public void OnBeginDrag(PointerEventData eventData)
     {
         _canDrag = eventData.pointerPressRaycast.gameObject == gameObject;
-
         transform.SetAsLastSibling();
+
         OnBeginDragCallback?.Invoke(eventData, eventData.pointerPressRaycast.gameObject);
-        
-        if (_canDrag)
-        {
-            Move(eventData.delta);
-        }
+
+        if (_canDrag) Move(eventData.delta);
     }
 
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        OnStopDragCallback?.Invoke(eventData);
-    }
+    public void OnEndDrag(PointerEventData eventData) => OnStopDragCallback?.Invoke(eventData);
 
-    public void OnPointerClick(PointerEventData eventData)
-    {
-        OnClickCallback?.Invoke(eventData, eventData.pointerPressRaycast.gameObject);
-    }
+    public void OnPointerClick(PointerEventData eventData) => OnClickCallback?.Invoke(eventData, eventData.pointerPressRaycast.gameObject);
+
+    private void Move(Vector2 delta) => _rectTransform.anchoredPosition += delta / UIInstance.NodesCanvas.scaleFactor / UIInstance.NodesCanvasSize;
 }
