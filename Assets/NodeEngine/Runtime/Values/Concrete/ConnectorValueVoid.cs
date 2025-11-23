@@ -1,5 +1,3 @@
-using System;
-
 public class ConnectorValueVoid : IExecutableConnector
 {
     public ConnectorValueVoid()

@@ -1,0 +1,16 @@
+{
+    "name": "NodeEngine.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:9b28c38733faf2d4f909ad0b9adc266b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

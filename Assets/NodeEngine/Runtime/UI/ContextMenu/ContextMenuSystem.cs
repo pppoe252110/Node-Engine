@@ -1,6 +1,5 @@
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -282,7 +281,7 @@ public class ContextMenuSystem : MonoBehaviour
             //bool confirmed = await ShowDeleteConfirmationDialog(targetNode.Node.NodeName);
             //if (confirmed && targetNode != null)
             //{
-                targetNode.DeleteNode();
+            targetNode.DeleteNode();
             //}
         }
         catch (System.Exception e)

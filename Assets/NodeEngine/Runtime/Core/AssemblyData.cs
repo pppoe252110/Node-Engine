@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 
 public class AssemblyData
 {
@@ -15,7 +14,7 @@ public class AssemblyData
 
     public List<Type> GetClasses()
     {
-        return _assembly.GetTypes().Where(s=>s.IsClass).ToList();
+        return _assembly.GetTypes().Where(s => s.IsClass).ToList();
     }
 
     public List<MethodInfo> GetMethods(Type type)

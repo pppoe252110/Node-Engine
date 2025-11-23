@@ -17,24 +17,24 @@ namespace Radishmouse
             if (points.Length < 2)
                 return;
 
-            for (int i = 0; i < points.Length-1; i++)
+            for (int i = 0; i < points.Length - 1; i++)
             {
                 // Create a line segment between the next two points
-                CreateLineSegment(points[i], points[i+1], vh);
+                CreateLineSegment(points[i], points[i + 1], vh);
 
                 int index = i * 5;
 
                 // Add the line segment to the triangles array
-                vh.AddTriangle(index, index+1, index+3);
-                vh.AddTriangle(index+3, index+2, index);
+                vh.AddTriangle(index, index + 1, index + 3);
+                vh.AddTriangle(index + 3, index + 2, index);
 
                 // These two triangles create the beveled edges
                 // between line segments using the end point of
                 // the last line segment and the start points of this one
                 if (i != 0)
                 {
-                    vh.AddTriangle(index, index-1, index-3);
-                    vh.AddTriangle(index+1, index-1, index-2);
+                    vh.AddTriangle(index, index - 1, index - 3);
+                    vh.AddTriangle(index + 1, index - 1, index - 2);
                 }
             }
         }
@@ -86,5 +86,5 @@ namespace Radishmouse
         {
             return (float)(Mathf.Atan2(target.y - vertex.y, target.x - vertex.x) * (180 / Mathf.PI));
         }
-}
+    }
 }

@@ -1,5 +1,3 @@
-using Radishmouse;
-using Unity.Mathematics;
 using UnityEngine;
 
 public static class BezierFromTwoPoints

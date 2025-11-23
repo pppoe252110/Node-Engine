@@ -92,7 +92,7 @@ public class VariableNode : NodeBase
                 case NodeField<ConnectorValueInt> intField:
                     // Get the actual ConnectorValueInt instance from the field
                     var intValue = intField.GetObjectValue() as ConnectorValueInt;
-                    
+
                     if (intValue != null && val is int intVal)
                     {
                         intValue.SetValue(intVal);

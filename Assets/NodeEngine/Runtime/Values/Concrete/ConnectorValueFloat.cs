@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
+using UnityEngine;
 
 [Serializable]
 public class ConnectorValueFloat : ConnectorValueBase, IFastConnectorValue<float>, IConnectorValueBridge

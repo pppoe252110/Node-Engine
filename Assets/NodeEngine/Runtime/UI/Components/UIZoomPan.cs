@@ -16,7 +16,7 @@ public class UIZoomPan : MonoBehaviour
     private static UIZoomPan instance;
 
     public static RectTransform NodesParent => Instance._nodesParent;
-    
+
     [Header("Zoom")]
     [SerializeField] private float _zoomSpeed = 0.1f;
     [SerializeField] private float _minZoom = 0.1f;

@@ -1,6 +1,6 @@
+using System.Globalization;
 using TMPro;
 using UnityEngine;
-using System.Globalization;
 
 public class InputFieldVariableUI : VariableUIElement
 {

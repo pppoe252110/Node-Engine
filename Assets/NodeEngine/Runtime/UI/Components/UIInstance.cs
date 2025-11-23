@@ -18,8 +18,8 @@ public class UIInstance : MonoBehaviour
         }
     }
 
-    [SerializeField]private Canvas _nodesCanvas;
-    [SerializeField]private float _nodesCanvasSize = 1f;
+    [SerializeField] private Canvas _nodesCanvas;
+    [SerializeField] private float _nodesCanvasSize = 1f;
 
     public static Vector2 GetMousePosition(Vector2 vec)
     {

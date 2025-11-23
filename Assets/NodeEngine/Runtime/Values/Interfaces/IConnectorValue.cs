@@ -1,7 +1,4 @@
-﻿using System;
-using UnityEngine;
-
-// Core interfaces
+﻿// Core interfaces
 public interface IConnectorValue
 {
     object GetInnerValue();
