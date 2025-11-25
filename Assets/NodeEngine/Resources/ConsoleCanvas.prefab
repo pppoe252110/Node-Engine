@@ -2821,7 +2821,7 @@ MonoBehaviour:
   searchInput: {fileID: 6791196387635425641}
   clearButton: {fileID: 3203935919149584902}
   collapseButton: {fileID: 116486914179124864}
-  collapseButtonText: {fileID: 0}
+  collapseButtonText: {fileID: 8630855682793471110}
   errorToggle: {fileID: 3051301573901528705}
   warningToggle: {fileID: 2081455362280705073}
   logToggle: {fileID: 5796228635682910164}
