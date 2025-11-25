@@ -24,7 +24,7 @@ public class SaveFileEntryUI : MonoBehaviour
 
     private void UpdateFileInfo()
     {
-        string filePath = Path.Combine(Application.persistentDataPath, $"{_saveName}.json");
+        string filePath = Path.Combine(Application.dataPath, $"{_saveName}.json");
 
         if (!File.Exists(filePath))
         {

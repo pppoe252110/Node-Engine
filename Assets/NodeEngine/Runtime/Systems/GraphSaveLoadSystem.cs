@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-[System.Serializable]
+[Serializable]
 public class GraphSaveData
 {
     public List<NodeInstanceData> nodes = new List<NodeInstanceData>();
@@ -13,23 +13,35 @@ public class GraphSaveData
     public int version = 2;
 }
 
-[System.Serializable]
+[Serializable]
 public class NodeInstanceData
 {
     public int instanceId;
     public string databaseId;
     public Vector2 position;
-    public Dictionary<string, object> nodeData = new Dictionary<string, object>();
-    public bool isDeleted;
+    public string fieldValuesJson;
 }
 
-[System.Serializable]
+[Serializable]
 public class ConnectionSaveData
 {
     public int fromNodeId;
     public int toNodeId;
     public string fromConnectorName;
     public string toConnectorName;
+}
+
+[Serializable]
+public class FieldValueData
+{
+    public string attributeName;
+    public string value;
+}
+
+[Serializable]
+public class FieldValueDataList
+{
+    public List<FieldValueData> values;
 }
 
 public class GraphSaveLoadSystem : MonoBehaviour
@@ -62,6 +74,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
         try
         {
             var saveData = CreateSaveData();
+
             string json = JsonUtility.ToJson(saveData, true);
             string filePath = GetSavePath(saveName);
 
@@ -116,10 +129,9 @@ public class GraphSaveLoadSystem : MonoBehaviour
                 instanceId = nodeLogic.Node.Guid,
                 databaseId = databaseId,
                 position = nodeLogic.transform.localPosition,
-                isDeleted = false
             };
 
-            SaveNodeData(nodeLogic.Node, nodeSaveData.nodeData);
+            SaveNodeData(nodeLogic.Node, nodeSaveData);
             saveData.nodes.Add(nodeSaveData);
         }
 
@@ -133,7 +145,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
                 toConnectorName = connection.toConnectorName
             });
         }
-
         return saveData;
     }
 
@@ -169,7 +180,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
 
                 if (nodeLogic != null)
                 {
-                    LoadNodeData(nodeLogic.Node, nodeSaveData.nodeData);
+                    LoadNodeData(nodeLogic.Node, nodeSaveData);
                     loadedNodeIds.Add(nodeSaveData.instanceId);
                 }
             }
@@ -230,7 +241,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
     public List<string> GetSaveFiles()
     {
         var saveFiles = new List<string>();
-        string saveDirectory = Application.persistentDataPath;
+        string saveDirectory = Application.dataPath;
 
         if (!Directory.Exists(saveDirectory)) return saveFiles;
 
@@ -275,42 +286,57 @@ public class GraphSaveLoadSystem : MonoBehaviour
         }
     }
 
-    private void SaveNodeData(NodeBase node, Dictionary<string, object> data)
+    private void SaveNodeData(NodeBase node, NodeInstanceData nodeSaveData)
     {
-        data["nodeName"] = node.NodeName;
-        if (node.NodeSprite != null)
-        {
-            data["nodeIcon"] = node.NodeSprite.name;
-        }
+        var fieldValues = new List<FieldValueData>();
 
         if (node is VariableNode variableNode)
         {
-            data["variableType"] = variableNode.VariableType.ToString();
             if (variableNode.UIElement != null)
             {
-                data["variableValue"] = variableNode.UIElement.GetValue();
+                fieldValues.Add(new FieldValueData
+                {
+                    attributeName = "variableValue",
+                    value = variableNode.UIElement.GetValue()?.ToString()
+                });
             }
         }
+
+        nodeSaveData.fieldValuesJson = JsonUtility.ToJson(new FieldValueDataList { values = fieldValues });
     }
 
-    private void LoadNodeData(NodeBase node, Dictionary<string, object> data)
+    private void LoadNodeData(NodeBase node, NodeInstanceData nodeSaveData)
     {
-        if (data.TryGetValue("nodeName", out object nameObj))
+        // Try to get the field values from the nodeSaveData
+        if (!string.IsNullOrEmpty(nodeSaveData.fieldValuesJson))
         {
-            node.SetName(nameObj.ToString());
-        }
-
-        if (node is VariableNode variableNode && data.TryGetValue("variableValue", out object valueObj))
-        {
-            if (variableNode.UIElement is InputFieldVariableUI inputField)
+            try
             {
-                inputField.SetValue(valueObj);
+                // Deserialize the list of FieldValueData
+                var fieldValuesList = JsonUtility.FromJson<FieldValueDataList>(nodeSaveData.fieldValuesJson);
+                if (fieldValuesList?.values != null)
+                {
+                    // Handle VariableNode special case
+                    if (node is VariableNode variableNode)
+                    {
+                        var variableValueData = fieldValuesList.values.FirstOrDefault();
+                        if (variableValueData != null && variableNode.UIElement is InputFieldVariableUI inputField)
+                        {
+                            Debug.LogError(variableValueData.value);
+                            inputField.UpdateValue(variableValueData.value);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to load node data: {e.Message}");
             }
         }
     }
 
     private string GetSavePath(string saveName)
     {
-        return Path.Combine(Application.persistentDataPath, $"{saveName}.json");
+        return Path.Combine(Application.dataPath, $"{saveName}.json");
     }
 }

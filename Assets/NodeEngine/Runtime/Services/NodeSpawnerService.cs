@@ -31,16 +31,7 @@ public class NodeSpawnerService : MonoBehaviour
         Instance = this;
     }
 
-    public NodeLogic SpawnNode(Type nodeType, Vector2 position, int nodeId = -1)
-    {
-        if (nodeType == null || !typeof(NodeBase).IsAssignableFrom(nodeType))
-        {
-            return null;
-        }
 
-        var nodeInstance = Activator.CreateInstance(nodeType) as NodeBase;
-        return SpawnNode(nodeInstance, position, nodeId);
-    }
 
     public NodeLogic SpawnNode(NodeBase nodeInstance, Vector2 position, int nodeId = -1)
     {

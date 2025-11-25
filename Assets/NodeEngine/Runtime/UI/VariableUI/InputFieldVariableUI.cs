@@ -49,7 +49,7 @@ public class InputFieldVariableUI : VariableUIElement
         }
     }
 
-    private void UpdateValue(string value)
+    public void UpdateValue(string value)
     {
         if (string.IsNullOrEmpty(value))
         {

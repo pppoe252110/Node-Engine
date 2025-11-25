@@ -8,14 +8,13 @@ public class NodeLogic : MonoBehaviour
     public NodeBase Node => _node;
     public VariableDatabase VariableDatabase { get; set; }
 
-    public RectTransform RightConnectorsParent => _nodeSpawner.RightConnectorsParent;
-    public RectTransform LeftConnectorsParent => _nodeSpawner.LeftConnectorsParent;
+    public RectTransform RightConnectorsParent => _nodeUIManager.RightConnectorsParent;
+    public RectTransform LeftConnectorsParent => _nodeUIManager.LeftConnectorsParent;
 
     [SerializeField] private NodeBase _node;
 
-    [Header("Connectors")]
-    [SerializeField] private NodeSpawner _nodeSpawner;
-    [SerializeField] private NodeDeleter _nodeDeleter;
+    [Header("References")]
+    [SerializeField] private NodeUIManager _nodeUIManager;
 
     [Header("Properties")]
     [SerializeField] private Image _image;
@@ -48,14 +47,14 @@ public class NodeLogic : MonoBehaviour
         
         if (_node is VariableNode varNode && VariableDatabase != null)
         {
-            _nodeSpawner.SpawnVariableUI(varNode, VariableDatabase, _image);
+            _nodeUIManager.CreateVariableUI(varNode, VariableDatabase, _image);
 
-            _nodeSpawner.GenerateOutputConnectors(_node, _node.outputFields, _node.outputConnectors);
+            _nodeUIManager.GenerateOutputConnectors(_node, _node.outputFields, _node.outputConnectors);
         }
         else
         {
             
-            _nodeSpawner.SpawnConnectors(_node, _node.inputFields, _node.outputFields, _node.inputConnectors, _node.outputConnectors);
+            _nodeUIManager.CreateConnectors(_node, _node.inputFields, _node.outputFields, _node.inputConnectors, _node.outputConnectors);
         }
 
         
@@ -79,7 +78,7 @@ public class NodeLogic : MonoBehaviour
 
             if (firstSlash >= 0)
             {
-                return path[..firstSlash]; 
+                return path.Substring(0, firstSlash); 
             }
             else
             {
@@ -99,8 +98,8 @@ public class NodeLogic : MonoBehaviour
             return;
         }
 
-        
-        _nodeDeleter.DeleteNode(_node, _node.inputConnectors, _node.outputConnectors);
+
+        NodeSpawnerService.Instance.DeleteNode(this);
     }
 
     private void RecalculateMaterial()

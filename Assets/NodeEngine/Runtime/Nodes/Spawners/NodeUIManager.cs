@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class NodeSpawner : MonoBehaviour
+public class NodeUIManager : MonoBehaviour
 {
     public RectTransform RightConnectorsParent => _rightConnectorsParent;
     public RectTransform LeftConnectorsParent => _leftConnectorsParent;
@@ -14,7 +14,7 @@ public class NodeSpawner : MonoBehaviour
     [SerializeField] private RectTransform _rightConnectorsParent;
     [SerializeField] private RectTransform _leftConnectorsParent;
 
-    public void SpawnConnectors(NodeBase node, List<NodeFieldBase> inputFields, List<NodeFieldBase> outputFields, List<Connector> inputConnectors, List<Connector> outputConnectors)
+    public void CreateConnectors(NodeBase node, List<NodeFieldBase> inputFields, List<NodeFieldBase> outputFields, List<Connector> inputConnectors, List<Connector> outputConnectors)
     {
         GenerateInputConnectors(node, inputFields, inputConnectors);
         GenerateOutputConnectors(node, outputFields, outputConnectors);
@@ -52,7 +52,7 @@ public class NodeSpawner : MonoBehaviour
         }
     }
 
-    public void SpawnVariableUI(VariableNode varNode, VariableDatabase database, Image nodeImage)
+    public void CreateVariableUI(VariableNode varNode, VariableDatabase database, Image nodeImage)
     {
         if (varNode == null || database == null) return;
 

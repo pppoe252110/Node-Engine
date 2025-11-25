@@ -117,7 +117,6 @@ GameObject:
   - component: {fileID: 2621976240982863169}
   - component: {fileID: 1799866906948828045}
   - component: {fileID: 2028984173989267109}
-  - component: {fileID: 8272728924584763893}
   - component: {fileID: 2615288927408150349}
   m_Layer: 0
   m_Name: Node
@@ -222,7 +221,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _nodeDrag: {fileID: 9049453108590102222}
-  _lineRendererPrefab: {fileID: 5862041919093896466, guid: 73c13b9193742d94983be8ac5e17c117, type: 3}
 --- !u!114 &1799866906948828045
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -235,8 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e104db5209f8fa645a345f773bb8d944, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _nodeSpawner: {fileID: 2615288927408150349}
-  _nodeDeleter: {fileID: 8272728924584763893}
+  _nodeUIManager: {fileID: 2615288927408150349}
   _image: {fileID: 8590004688524277348}
   _nodeIcon: {fileID: 2157151724413625442}
   _nodeName: {fileID: 3869312446641288361}
@@ -253,18 +250,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 733629eae5a2df94797e79d1c1134303, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NodeContextMenu
---- !u!114 &8272728924584763893
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4940753074841547606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ad01fd621c7e6b469c9a263d4e615e9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NodeDeleter
 --- !u!114 &2615288927408150349
 MonoBehaviour:
   m_ObjectHideFlags: 0

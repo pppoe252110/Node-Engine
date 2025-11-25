@@ -1,14 +1,18 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TMPro;
+using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class SaveLoadUI : MonoBehaviour
 {
     [Header("Main Panel")]
+    [SerializeField] private float fadeDuration = 0.3f;
+
+    [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private GameObject _saveLoadPanel;
     [SerializeField] private Button _openButton;
 
@@ -31,6 +35,8 @@ public class SaveLoadUI : MonoBehaviour
 
     private List<SaveFileEntryUI> _saveFileEntries = new List<SaveFileEntryUI>();
     private float _statusDisplayTimer;
+    private bool _isPanelOpen = false;
+    private Coroutine _fadeCoroutine;
 
     private void Start()
     {
@@ -39,6 +45,12 @@ public class SaveLoadUI : MonoBehaviour
 
         GraphSaveLoadSystem.Instance.OnGraphSaved += OnGraphSaved;
         GraphSaveLoadSystem.Instance.OnGraphLoaded += OnGraphLoaded;
+
+        // Initialize panel as closed with no interaction
+        canvasGroup.alpha = 0f;
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
+        _saveLoadPanel.SetActive(false);
     }
 
     private void OnDestroy()
@@ -80,7 +92,7 @@ public class SaveLoadUI : MonoBehaviour
     {
         if (Keyboard.current.f5Key.wasReleasedThisFrame) QuickSave();
         else if (Keyboard.current.f9Key.wasReleasedThisFrame) QuickLoad();
-        else if (Keyboard.current.escapeKey.wasReleasedThisFrame && _saveLoadPanel.activeInHierarchy) ClosePanel();
+        else if (Keyboard.current.escapeKey.wasReleasedThisFrame && _isPanelOpen) ClosePanel();
     }
 
     public void SaveGraph()
@@ -186,11 +198,69 @@ public class SaveLoadUI : MonoBehaviour
 
     public void TogglePanel()
     {
-        _saveLoadPanel.SetActive(!_saveLoadPanel.activeSelf);
+        if (_isPanelOpen)
+        {
+            ClosePanel();
+        }
+        else
+        {
+            OpenPanel();
+        }
+    }
+
+    public void OpenPanel()
+    {
+        if (_fadeCoroutine != null)
+        {
+            StopCoroutine(_fadeCoroutine);
+        }
+
+        _saveLoadPanel.SetActive(true);
+        _fadeCoroutine = StartCoroutine(FadePanel(true));
+        _isPanelOpen = true;
         RefreshSaveFilesList();
     }
 
-    public void ClosePanel() => _saveLoadPanel.SetActive(false);
+    public void ClosePanel()
+    {
+        if (_fadeCoroutine != null)
+        {
+            StopCoroutine(_fadeCoroutine);
+        }
+
+        _fadeCoroutine = StartCoroutine(FadePanel(false));
+        _isPanelOpen = false;
+    }
+
+    private IEnumerator FadePanel(bool fadeIn)
+    {
+        if (fadeIn)
+        {
+            _saveLoadPanel.SetActive(true);
+        }
+
+        float startAlpha = canvasGroup.alpha;
+        float endAlpha = fadeIn ? 1f : 0f;
+        float elapsedTime = 0f;
+
+        while (elapsedTime < fadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, elapsedTime / fadeDuration);
+            yield return null;
+        }
+
+        canvasGroup.alpha = endAlpha;
+        canvasGroup.interactable = fadeIn;
+        canvasGroup.blocksRaycasts = fadeIn;
+
+        if (!fadeIn)
+        {
+            _saveLoadPanel.SetActive(false);
+        }
+
+        _fadeCoroutine = null;
+    }
 
     private void UpdateSaveStatus(string message, float displayTime = 0f)
     {

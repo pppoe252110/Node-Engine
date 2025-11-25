@@ -229,10 +229,7 @@ public class NodesList : MonoBehaviour
         if (originalIndex >= 0 && originalIndex < nodes.Length)
         {
             var targetNode = nodes[originalIndex];
-            var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
-            nodeLogic.transform.position = _nodesListView.position;
-            nodeLogic.VariableDatabase = _variablesDatabase;
-            nodeLogic.SetNodeBase(targetNode);
+            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(targetNode, _nodesListView.position);
         }
 
         _nodesListView.gameObject.SetActive(false);
