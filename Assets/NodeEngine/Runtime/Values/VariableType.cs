@@ -4,5 +4,6 @@ public enum VariableType
     Int,
     Single,
     String,
-    Vector3
+    Vector3,
+    Object
 }

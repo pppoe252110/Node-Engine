@@ -86,7 +86,6 @@ public abstract class NodeBase : INode
             {
                 if (connector.ValueType != typeof(void))  
                 {
-                    Debug.LogError("DADAD");
                     connector.Field.ProceedValue();
                 }
             }

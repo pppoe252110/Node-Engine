@@ -166,7 +166,7 @@ public class LineRenderersController : MonoBehaviour
                  $"Active connections: {_connections.Count}");
     }
 
-    private readonly struct ConnectionData
+    public readonly struct ConnectionData
     {
         public readonly Connector ConnectorA;
         public readonly Connector ConnectorB;

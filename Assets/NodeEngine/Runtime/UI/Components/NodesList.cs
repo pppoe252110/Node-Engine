@@ -229,7 +229,7 @@ public class NodesList : MonoBehaviour
         if (originalIndex >= 0 && originalIndex < nodes.Length)
         {
             var targetNode = nodes[originalIndex];
-            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(targetNode, _nodesListView.position);
+            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(targetNode), _nodesListView.position);
         }
 
         _nodesListView.gameObject.SetActive(false);

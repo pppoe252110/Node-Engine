@@ -66,7 +66,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-
     public void SaveGraph(string saveName)
     {
         if (string.IsNullOrEmpty(saveName)) return;
@@ -118,6 +117,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
             version = 2
         };
 
+        // Save all nodes
         foreach (var (nodeId, nodeLogic) in NodeSpawnerService.Instance.GetAllNodes())
         {
             if (nodeLogic == null || nodeLogic.Node == null) continue;
@@ -135,17 +135,90 @@ public class GraphSaveLoadSystem : MonoBehaviour
             saveData.nodes.Add(nodeSaveData);
         }
 
+        // FIX: Improved connection saving with validation and duplicate prevention
+        SaveAllConnections(saveData);
+
+        return saveData;
+    }
+
+    // FIX: Added validation to skip invalid connections and prevent duplicates
+    private void SaveAllConnections(GraphSaveData saveData)
+    {
+        var savedConnections = new HashSet<string>();  // Track unique connections
+
+        // Save connections from ConnectionManager
         foreach (var connection in ConnectionManager.Instance.GetAllConnections())
         {
-            saveData.connections.Add(new ConnectionSaveData
+            // FIX: Skip invalid connections (null/unknown attributes, self-loops)
+            if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
+                string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
+                connection.fromNodeId == connection.toNodeId)  // Prevent self-loops
             {
-                fromNodeId = connection.fromNodeId,
-                toNodeId = connection.toNodeId,
-                fromConnectorName = connection.fromConnectorName,
-                toConnectorName = connection.toConnectorName
-            });
+                continue;
+            }
+
+            string key = $"{connection.fromNodeId}_{connection.toNodeId}_{connection.fromConnectorName}_{connection.toConnectorName}";
+            if (!savedConnections.Contains(key))
+            {
+                saveData.connections.Add(new ConnectionSaveData
+                {
+                    fromNodeId = connection.fromNodeId,
+                    toNodeId = connection.toNodeId,
+                    fromConnectorName = connection.fromConnectorName,
+                    toConnectorName = connection.toConnectorName
+                });
+                savedConnections.Add(key);
+            }
         }
-        return saveData;
+
+        // Also save visual connections from LineRenderersController (with same validation)
+        SaveVisualConnections(saveData, savedConnections);
+    }
+
+    private void SaveVisualConnections(GraphSaveData saveData, HashSet<string> savedConnections)
+    {
+        if (LineRenderersController.Instance == null) return;
+
+        // Use reflection or add a method to LineRenderersController to get connections
+        var controllerType = typeof(LineRenderersController);
+        var connectionsField = controllerType.GetField("_connections",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (connectionsField != null)
+        {
+            var connections = connectionsField.GetValue(LineRenderersController.Instance) as List<LineRenderersController.ConnectionData>;
+            if (connections != null)
+            {
+                foreach (var connection in connections)
+                {
+                    // FIX: Added validation for visual connections (same as above)
+                    if (connection.IsValid && connection.ConnectorA != null && connection.ConnectorB != null &&
+                        connection.ConnectorA.Node.Guid != connection.ConnectorB.Node.Guid)  // Prevent self-loops
+                    {
+                        var fromAttr = connection.ConnectorA.Field?.GetAttribute();
+                        var toAttr = connection.ConnectorB.Field?.GetAttribute();
+
+                        if (fromAttr != null && toAttr != null &&
+                            !string.IsNullOrEmpty(fromAttr.attributeName) && fromAttr.attributeName != "Unknown" &&
+                            !string.IsNullOrEmpty(toAttr.attributeName) && toAttr.attributeName != "Unknown")
+                        {
+                            string key = $"{connection.ConnectorA.Node.Guid}_{connection.ConnectorB.Node.Guid}_{fromAttr.attributeName}_{toAttr.attributeName}";
+                            if (!savedConnections.Contains(key))
+                            {
+                                saveData.connections.Add(new ConnectionSaveData
+                                {
+                                    fromNodeId = connection.ConnectorA.Node.Guid,
+                                    toNodeId = connection.ConnectorB.Node.Guid,
+                                    fromConnectorName = fromAttr.attributeName,
+                                    toConnectorName = toAttr.attributeName
+                                });
+                                savedConnections.Add(key);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private string FindDatabaseIdForNode(NodeBase node)
@@ -176,7 +249,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
         {
             if (databaseNodes.TryGetValue(nodeSaveData.databaseId, out var databaseNode))
             {
-                var nodeLogic = NodeSpawnerService.Instance.SpawnNode(databaseNode, nodeSaveData.position, nodeSaveData.instanceId);
+                var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(databaseNode), nodeSaveData.position, nodeSaveData.instanceId);
 
                 if (nodeLogic != null)
                 {
@@ -186,21 +259,37 @@ public class GraphSaveLoadSystem : MonoBehaviour
             }
         }
 
+        // FIX: Added validation during loading to skip invalid connections
         ConnectNodes(saveData, loadedNodeIds);
     }
 
     private void ConnectNodes(GraphSaveData saveData, HashSet<int> loadedNodeIds)
     {
+        Debug.Log($"Attempting to connect {saveData.connections.Count} saved connections");
+
         foreach (var connection in saveData.connections)
         {
-            if (loadedNodeIds.Contains(connection.fromNodeId) && loadedNodeIds.Contains(connection.toNodeId))
+            // FIX: Skip invalid connections (same checks as saving)
+            if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
+                string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
+                connection.fromNodeId == connection.toNodeId ||
+                !loadedNodeIds.Contains(connection.fromNodeId) || !loadedNodeIds.Contains(connection.toNodeId))
             {
-                ConnectNodesByAttributeNames(
-                    connection.fromNodeId,
-                    connection.toNodeId,
-                    connection.fromConnectorName,
-                    connection.toConnectorName
-                );
+                continue;
+            }
+
+            Debug.Log($"Connecting saved: {connection.fromNodeId}.{connection.fromConnectorName} -> {connection.toNodeId}.{connection.toConnectorName}");
+
+            bool success = ConnectNodesByAttributeNames(
+                connection.fromNodeId,
+                connection.toNodeId,
+                connection.fromConnectorName,
+                connection.toConnectorName
+            );
+
+            if (!success)
+            {
+                Debug.LogError($"Failed to connect: {connection.fromNodeId}.{connection.fromConnectorName} -> {connection.toNodeId}.{connection.toConnectorName}");
             }
         }
     }
@@ -210,23 +299,77 @@ public class GraphSaveLoadSystem : MonoBehaviour
         var fromNode = NodeSpawnerService.Instance.GetNodeById(fromNodeId);
         var toNode = NodeSpawnerService.Instance.GetNodeById(toNodeId);
 
-        if (fromNode == null || toNode == null) return false;
-
-        var fromConnector = fromNode.Node.outputConnectors.FirstOrDefault(c =>
+        if (fromNode == null || toNode == null)
         {
-            var attr = c.Field?.GetAttribute();
-            return attr?.attributeName == fromConnectorName;
-        });
+            Debug.LogError($"Cannot connect: nodes not found. From: {fromNodeId}, To: {toNodeId}");
+            return false;
+        }
 
-        var toConnector = toNode.Node.inputConnectors.FirstOrDefault(c =>
+        // Find the FROM connector (output)
+        Connector fromConnector = FindConnectorByAttributeName(fromNode.Node.outputConnectors, fromConnectorName);
+        if (fromConnector == null)
         {
-            var attr = c.Field?.GetAttribute();
-            return attr?.attributeName == toConnectorName;
-        });
+            // Try input connectors as fallback (though outputs are more common for "from")
+            fromConnector = FindConnectorByAttributeName(fromNode.Node.inputConnectors, fromConnectorName);
+        }
 
-        if (fromConnector == null || toConnector == null) return false;
+        // Find the TO connector (input)  
+        Connector toConnector = FindConnectorByAttributeName(toNode.Node.inputConnectors, toConnectorName);
+        if (toConnector == null)
+        {
+            // Try output connectors as fallback
+            toConnector = FindConnectorByAttributeName(toNode.Node.outputConnectors, toConnectorName);
+        }
+
+        if (fromConnector == null)
+        {
+            Debug.LogError($"FROM connector not found: Node {fromNodeId}, Attribute '{fromConnectorName}'. " +
+                          $"Available outputs: {GetConnectorNames(fromNode.Node.outputConnectors)}, " +
+                          $"Inputs: {GetConnectorNames(fromNode.Node.inputConnectors)}");
+            return false;
+        }
+
+        if (toConnector == null)
+        {
+            Debug.LogError($"TO connector not found: Node {toNodeId}, Attribute '{toConnectorName}'. " +
+                          $"Available inputs: {GetConnectorNames(toNode.Node.inputConnectors)}, " +
+                          $"Outputs: {GetConnectorNames(toNode.Node.outputConnectors)}");
+            return false;
+        }
+
+        if (fromConnector == toConnector)
+        {
+            Debug.LogError($"Cannot connect connector to itself: {fromConnectorName} -> {toConnectorName}");
+            return false;
+        }
+
+        Debug.Log($"Connecting: {fromNode.Node.GetType().Name}.{fromConnectorName} -> {toNode.Node.GetType().Name}.{toConnectorName}");
 
         return ConnectionManager.Instance.CreateConnectionWithConnectors(fromConnector, toConnector);
+    }
+
+    private Connector FindConnectorByAttributeName(List<Connector> connectors, string attributeName)
+    {
+        foreach (var connector in connectors)
+        {
+            var attribute = connector.Field?.GetAttribute();
+            if (attribute != null && attribute.attributeName == attributeName)
+            {
+                return connector;
+            }
+        }
+        return null;
+    }
+
+    private string GetConnectorNames(List<Connector> connectors)
+    {
+        var names = new List<string>();
+        foreach (var connector in connectors)
+        {
+            var attribute = connector.Field?.GetAttribute();
+            names.Add(attribute?.attributeName ?? "Unknown");
+        }
+        return string.Join(", ", names);
     }
 
     private void ClearCurrentGraph()
@@ -237,6 +380,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
 
     public void QuickSave() => SaveGraph("quicksave");
     public void QuickLoad() => LoadGraph("quicksave");
+
 
     public List<string> GetSaveFiles()
     {
@@ -322,7 +466,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
                         var variableValueData = fieldValuesList.values.FirstOrDefault();
                         if (variableValueData != null && variableNode.UIElement is InputFieldVariableUI inputField)
                         {
-                            Debug.LogError(variableValueData.value);
                             inputField.UpdateValue(variableValueData.value);
                         }
                     }

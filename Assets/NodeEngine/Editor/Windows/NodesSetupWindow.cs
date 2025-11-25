@@ -11,6 +11,7 @@ public class NodesSetupWindow : EditorWindow
     private const string TARGET_RESOURCE_PATH = "Assets/Resources/NodeEngine";
 
     private bool copyResources = true;
+    private bool copyGraphExamples = true; // New toggle for GraphExamples
     private Vector2 scrollPosition;
     private bool showPackageResources = false;
     private bool showAdvancedOptions = false;
@@ -26,6 +27,12 @@ public class NodesSetupWindow : EditorWindow
     [InitializeOnLoadMethod]
     private static void InitializeOnLoad()
     {
+        // Check if the output folder exists and is not empty
+        if (IsOutputFolderNotEmpty())
+        {
+            EditorPrefs.SetBool(SETUP_COMPLETE_KEY, true);
+        }
+
         if (!EditorPrefs.GetBool(SETUP_COMPLETE_KEY, false))
         {
             EditorApplication.delayCall += () => {
@@ -35,6 +42,24 @@ public class NodesSetupWindow : EditorWindow
                 }
             };
         }
+    }
+
+    // New method to check if the output folder exists and is not empty
+    private static bool IsOutputFolderNotEmpty()
+    {
+        string targetFullPath = Path.Combine(Application.dataPath, TARGET_RESOURCE_PATH.Substring("Assets/".Length));
+
+        // Check if the directory exists
+        if (!Directory.Exists(targetFullPath))
+        {
+            return false;
+        }
+
+        // Check if the directory contains any files (excluding .meta files)
+        string[] files = Directory.GetFiles(targetFullPath, "*", SearchOption.AllDirectories)
+            .Where(f => !f.EndsWith(".meta")).ToArray();
+
+        return files.Length > 0;
     }
 
     private void OnGUI()
@@ -50,15 +75,20 @@ public class NodesSetupWindow : EditorWindow
         EditorGUILayout.LabelField("This setup will copy the necessary resources from the package to your project and fix all references.", descStyle);
         EditorGUILayout.Space(20);
 
-        // REMOVED: Folder structure option
         EditorGUILayout.LabelField("Setup Options", EditorStyles.boldLabel);
         EditorGUILayout.Space(10);
+
         copyResources = EditorGUILayout.ToggleLeft(" Copy Resources and Fix References", copyResources);
         EditorGUILayout.HelpBox("Copies files from the package to 'Assets/Resources/NodeEngine' and updates all internal GUID references.", MessageType.Info);
 
+        // New toggle for Graph Examples
+        copyGraphExamples = EditorGUILayout.ToggleLeft(" Copy Graph Examples", copyGraphExamples);
+        EditorGUILayout.HelpBox("Copies example graphs from the package to the 'Assets' root folder.", MessageType.Info);
+
         EditorGUILayout.Space(30);
 
-        GUI.enabled = copyResources;
+        // Enable the button if either option is selected
+        GUI.enabled = copyResources || copyGraphExamples;
         if (GUILayout.Button("Run Setup", GUILayout.Height(40)))
         {
             RunSetup();
@@ -126,7 +156,6 @@ public class NodesSetupWindow : EditorWindow
     {
         try
         {
-
             EditorUtility.DisplayProgressBar("Node Engine Setup", "Starting setup...", 0f);
 
             if (copyResources)
@@ -134,6 +163,15 @@ public class NodesSetupWindow : EditorWindow
                 EditorUtility.DisplayProgressBar("Node Engine Setup", "Copying resources and fixing references...", 0.5f);
                 CopyResourcesAndFixReferences();
             }
+
+            if (copyGraphExamples)
+            {
+                // Adjust progress bar based on whether resources were also copied
+                float progress = copyResources ? 0.7f : 0.8f;
+                EditorUtility.DisplayProgressBar("Node Engine Setup", "Copying GraphExamples...", progress);
+                CopyGraphExamples();
+            }
+
             EditorPrefs.SetBool(SETUP_COMPLETE_KEY, true);
             EditorUtility.DisplayProgressBar("Node Engine Setup", "Finalizing...", 1f);
 
@@ -254,6 +292,70 @@ public class NodesSetupWindow : EditorWindow
         // Final refresh to ensure all changes are picked up
         AssetDatabase.Refresh();
         Debug.Log("Resource copy and reference fixing complete.");
+    }
+
+    // New method to copy GraphExamples from package to Assets root
+    private void CopyGraphExamples()
+    {
+        string sourcePath = FindPackageGraphExamplesPath();
+        if (string.IsNullOrEmpty(sourcePath) || !Directory.Exists(sourcePath))
+        {
+            Debug.LogWarning($"GraphExamples not found at: {sourcePath}");
+            return;
+        }
+
+        string targetPath = Application.dataPath; // This points to the Assets folder
+
+        // Get all files in the GraphExamples directory
+        string[] sourceFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
+            .Where(f => !f.EndsWith(".meta")).ToArray();
+
+        if (sourceFiles.Length == 0)
+        {
+            Debug.LogWarning("No files found in GraphExamples folder.");
+            return;
+        }
+
+        // Copy each file to the target directory
+        foreach (string sourceFile in sourceFiles)
+        {
+            // Get the relative path from the source directory
+            string relativePath = sourceFile.Substring(sourcePath.Length + 1);
+
+            // Create the target file path
+            string targetFile = Path.Combine(targetPath, relativePath);
+
+            // Ensure the target directory exists
+            string targetDir = Path.GetDirectoryName(targetFile);
+            if (!Directory.Exists(targetDir))
+                Directory.CreateDirectory(targetDir);
+
+            // Copy the file, overwrite if it exists
+            File.Copy(sourceFile, targetFile, true);
+
+            Debug.Log($"Copied GraphExample: {relativePath}");
+        }
+
+        Debug.Log($"Copied {sourceFiles.Length} GraphExample files to Assets folder.");
+    }
+
+    // New method to find the GraphExamples folder in the package
+    private string FindPackageGraphExamplesPath()
+    {
+        string packageCacheRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Library", "PackageCache");
+        if (!Directory.Exists(packageCacheRoot)) return null;
+
+        string packageSearchPattern = "com.parity.nodeengine*";
+        string[] packageFolders = Directory.GetDirectories(packageCacheRoot, packageSearchPattern);
+
+        if (packageFolders.Length > 0)
+        {
+            // The first one is usually fine
+            string graphExamplesPath = Path.Combine(packageFolders[0], "GraphExamples");
+            if (Directory.Exists(graphExamplesPath)) return graphExamplesPath;
+        }
+
+        return null;
     }
 
     private string FindPackageResourcesPath()

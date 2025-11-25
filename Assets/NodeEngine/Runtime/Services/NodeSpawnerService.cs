@@ -128,19 +128,6 @@ public class NodeSpawnerService : MonoBehaviour
         nodeLogic.Node.outputConnectors.Clear();
     }
 
-    public NodeLogic SpawnNodeFromDatabase(string nodeTypeName, Vector2 position, int nodeId = -1)
-    {
-        var nodes = _nodesDatabase.GetNodes();
-        var nodeInstance = nodes.FirstOrDefault(n => n.GetType().Name == nodeTypeName);
-
-        if (nodeInstance != null)
-        {
-            return SpawnNode(nodeInstance, position, nodeId);
-        }
-
-        return null;
-    }
-
     public void DeleteNode(NodeLogic nodeLogic)
     {
         if (nodeLogic == null) return;

@@ -116,6 +116,25 @@ public class ConnectionManager : MonoBehaviour
     public bool CreateConnectionWithConnectors(Connector fromConnector, Connector toConnector)
     {
         if (fromConnector == null || toConnector == null) return false;
+
+        // FIX: Validate attributes and prevent loops at creation time
+        var fromAttr = fromConnector.Field?.GetAttribute();
+        var toAttr = toConnector.Field?.GetAttribute();
+
+        if (fromAttr == null || toAttr == null ||
+            string.IsNullOrEmpty(fromAttr.attributeName) || fromAttr.attributeName == "Unknown" ||
+            string.IsNullOrEmpty(toAttr.attributeName) || toAttr.attributeName == "Unknown")
+        {
+            Debug.LogWarning($"Rejected invalid connection: {fromConnector.Node.GetType().Name}.{fromAttr?.attributeName ?? "Unknown"} -> {toConnector.Node.GetType().Name}.{toAttr?.attributeName ?? "Unknown"}");
+            return false;
+        }
+
+        if (fromConnector.Node == toConnector.Node || WouldCreateInvalidLoop(fromConnector, toConnector))
+        {
+            Debug.LogWarning($"Rejected loop/self-connection: {fromConnector.Node.GetType().Name} -> {toConnector.Node.GetType().Name}");
+            return false;
+        }
+
         if (LineRenderersController.Instance == null) return false;
 
         var lineRendererPrefab = LineRenderersController.Instance.LineRendererPrefab;
@@ -141,13 +160,13 @@ public class ConnectionManager : MonoBehaviour
 
         var fromNodeId = fromConnector.Node.Guid;
         var toNodeId = toConnector.Node.Guid;
-        var fromAttr = fromConnector.Field?.GetAttribute();
-        var toAttr = toConnector.Field?.GetAttribute();
+        var fromAttrFinal = fromConnector.Field?.GetAttribute();
+        var toAttrFinal = toConnector.Field?.GetAttribute();
 
         var connection = new ConnectionData(
             fromNodeId, toNodeId,
-            fromAttr?.attributeName ?? "Unknown",
-            toAttr?.attributeName ?? "Unknown",
+            fromAttrFinal?.attributeName ?? "Unknown",
+            toAttrFinal?.attributeName ?? "Unknown",
             fromConnector.ValueType.Name,
             toConnector.ValueType.Name
         );
@@ -155,6 +174,17 @@ public class ConnectionManager : MonoBehaviour
         _connections.Add(connection);
 
         return true;
+    }
+
+    private bool WouldCreateInvalidLoop(Connector outputConnector, Connector inputConnector)
+    {
+        if (outputConnector.Node == inputConnector.Node)
+        {
+            Debug.LogWarning("Rejected self-connection: Node cannot connect to itself");
+            return true;
+        }
+
+        return false;
     }
 
     private void CreateConnectionWithoutVisual(Connector fromConnector, Connector toConnector)

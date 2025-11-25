@@ -28,51 +28,71 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
         if (updateNode == null || intVariableNode == null || forLoopNode == null || toStringNode == null || debugNode == null)
         {
+            Debug.LogWarning("One or more required nodes not found in database");
             return;
         }
 
         Vector2 startPos = new Vector2(0, 0);
         float spacing = 200f;
 
-        var updateNodeLogic = NodeSpawnerService.Instance.SpawnNode(updateNode, startPos);
-        var intNodeLogic = NodeSpawnerService.Instance.SpawnNode(intVariableNode, startPos + new Vector2(spacing, 50));
-        var forLoopNodeLogic = NodeSpawnerService.Instance.SpawnNode(forLoopNode, startPos + new Vector2(spacing * 2, 0));
-        var toStringNodeLogic = NodeSpawnerService.Instance.SpawnNode(toStringNode, startPos + new Vector2(spacing * 3, 50));
-        var debugNodeLogic = NodeSpawnerService.Instance.SpawnNode(debugNode, startPos + new Vector2(spacing * 4, 0));
+        var updateNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(updateNode), startPos);
+        var intNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(intVariableNode), startPos + new Vector2(spacing, 50));
+        var forLoopNode1Logic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(forLoopNode), startPos + new Vector2(spacing * 2, 0));
+        var forLoopNode2Logic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(forLoopNode), startPos + new Vector2(spacing * 3, -50));
+        var toStringNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(toStringNode), startPos + new Vector2(spacing * 4, 50));
+        var debugNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(debugNode), startPos + new Vector2(spacing * 5, 0));
 
-        if (updateNodeLogic == null || intNodeLogic == null || forLoopNodeLogic == null || toStringNodeLogic == null || debugNodeLogic == null)
+        if (updateNodeLogic == null || intNodeLogic == null || forLoopNode1Logic == null ||
+            forLoopNode2Logic == null || toStringNodeLogic == null || debugNodeLogic == null)
         {
+            Debug.LogWarning("Failed to spawn one or more nodes");
             return;
         }
 
-        ConnectNodes(updateNodeLogic, intNodeLogic, forLoopNodeLogic, toStringNodeLogic, debugNodeLogic);
+        ConnectNodes(updateNodeLogic, intNodeLogic, forLoopNode1Logic, forLoopNode2Logic, toStringNodeLogic, debugNodeLogic);
     }
 
-    private void ConnectNodes(NodeLogic updateNode, NodeLogic intNode, NodeLogic forLoopNode, NodeLogic toStringNode, NodeLogic debugNode)
-    {
-        TryConnectNodes(updateNode, forLoopNode, intNode, toStringNode, debugNode);
-    }
-
-    private bool TryConnectNodes(NodeLogic updateNode, NodeLogic forLoopNode, NodeLogic intNode, NodeLogic toStringNode, NodeLogic debugNode)
+    private void ConnectNodes(NodeLogic updateNode, NodeLogic intNode, NodeLogic forLoopNode1,
+                             NodeLogic forLoopNode2, NodeLogic toStringNode, NodeLogic debugNode)
     {
         bool allSuccess = true;
 
-        if (!TryConnectWithFallback(updateNode, forLoopNode, "Update", "Execute", typeof(void), typeof(void)))
+        // UpdateNode.Update (void) -> ForLoopNode1.Execute (void)
+        if (!TryConnectWithFallback(updateNode, forLoopNode1, "Update", "Execute", typeof(void), typeof(void)))
             allSuccess = false;
 
-        if (!TryConnectWithFallback(intNode, forLoopNode, "Value", "Count", typeof(int), typeof(int)))
+        // IntVariableNode.Value (int) -> ForLoopNode1.Count (int)
+        if (!TryConnectWithFallback(intNode, forLoopNode1, "Value", "Count", typeof(int), typeof(int)))
             allSuccess = false;
 
-        if (!TryConnectWithFallback(forLoopNode, toStringNode, "Index", "Input", typeof(int), typeof(object)))
+        // ForLoopNode1.Body (void) -> ForLoopNode2.Execute (void)
+        if (!TryConnectWithFallback(forLoopNode1, forLoopNode2, "Body", "Execute", typeof(void), typeof(void)))
             allSuccess = false;
 
+        // ForLoopNode1.Index (int) -> ForLoopNode1.Count (int)
+        if (!TryConnectWithFallback(forLoopNode1, forLoopNode2, "Index", "Count", typeof(int), typeof(int)))
+            allSuccess = false;
+
+        // ForLoopNode2.Index (int) -> ToStringNode.Input (object)
+        if (!TryConnectWithFallback(forLoopNode2, toStringNode, "Index", "Input", typeof(int), typeof(object)))
+            allSuccess = false;
+
+        // ToStringNode.Output (string) -> DebugNode.LogString (string)
         if (!TryConnectWithFallback(toStringNode, debugNode, "Output", "LogString", typeof(string), typeof(string)))
             allSuccess = false;
 
-        if (!TryConnectWithFallback(forLoopNode, debugNode, "Body", "Execute", typeof(void), typeof(void)))
+        // ForLoopNode2.Body (void) -> DebugNode.Input (void)
+        if (!TryConnectWithFallback(forLoopNode2, debugNode, "Body", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 
-        return allSuccess;
+        if (allSuccess)
+        {
+            Debug.Log("All node connections established successfully");
+        }
+        else
+        {
+            Debug.LogWarning("Some node connections failed");
+        }
     }
 
     private bool TryConnectWithFallback(NodeLogic fromNode, NodeLogic toNode, string fromConnectorName, string toConnectorName, Type fromType, Type toType)
@@ -105,16 +125,8 @@ public class NodeSpawnerAndConnector : MonoBehaviour
         return false;
     }
 
-    private bool IsCompatibleType(Type outputType, Type inputType)
+    private bool IsCompatibleType(Type dragType, Type targetType)
     {
-        if (outputType == inputType) return true;
-        if (inputType == typeof(object)) return true;
-        if (outputType == typeof(void) && inputType == typeof(void)) return true;
-
-        if ((outputType == typeof(int) || outputType == typeof(float)) &&
-            (inputType == typeof(int) || inputType == typeof(float)))
-            return true;
-
-        return false;
+        return dragType == targetType || targetType == typeof(object);
     }
 }

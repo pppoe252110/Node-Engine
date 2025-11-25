@@ -14,7 +14,7 @@ public class NodesDatabase : ScriptableObject
         var result = new NodeBase[_serializableNodes.Length];
         for (int i = 0; i < _serializableNodes.Length; i++)
         {
-            
+
             var nodeType = Type.GetType(_serializableNodes[i].nodeType);
             if (nodeType != null)
             {
@@ -30,6 +30,20 @@ public class NodesDatabase : ScriptableObject
         return result;
     }
 
+    public NodeBase GetClone(NodeBase node)
+    {
+        var clone = Activator.CreateInstance(node.GetType()) as NodeBase;
+
+        var setupNode = _serializableNodes.FirstOrDefault(s => s.nodeType == node.GetType().AssemblyQualifiedName);
+        if (setupNode != null)
+        {
+            clone.SetName(setupNode.nodeName);
+            clone.SetIcon(setupNode.nodeIcon);
+        }
+
+        return clone;
+    }
+
     [Button("Auto fill", "AutoFill")]
     public void AutoFill()
     {
@@ -39,12 +53,12 @@ public class NodesDatabase : ScriptableObject
            .Where(t => t.IsSubclassOf(typeof(NodeBase)) && !t.IsAbstract)
            .ToArray();
 
-        
+
         var existingNodes = _serializableNodes?.ToList() ?? new System.Collections.Generic.List<SerializableNode>();
 
         foreach (var type in subclassTypes)
         {
-            
+
             bool typeAlreadyExists = existingNodes.Any(node =>
                 node != null &&
                 node.nodeType != null &&
@@ -52,14 +66,14 @@ public class NodesDatabase : ScriptableObject
 
             if (!typeAlreadyExists)
             {
-                
+
                 var newNode = new SerializableNode();
                 newNode.Initialize(type, type.Name.Replace("Node", ""));
                 existingNodes.Add(newNode);
             }
         }
 
-        
+
         _serializableNodes = existingNodes.ToArray();
     }
 }

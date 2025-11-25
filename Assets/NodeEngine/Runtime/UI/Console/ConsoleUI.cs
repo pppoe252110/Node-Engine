@@ -14,7 +14,7 @@ public class ConsoleUI : MonoBehaviour
     [SerializeField] private TMP_InputField searchInput;
     [SerializeField] private Button clearButton;
     [SerializeField] private Button collapseButton;
-    [SerializeField] private TextMeshProUGUI collapseButtonText; 
+    [SerializeField] private TextMeshProUGUI collapseButtonText;
     [SerializeField] private Toggle errorToggle;
     [SerializeField] private Toggle warningToggle;
     [SerializeField] private Toggle logToggle;
@@ -30,7 +30,9 @@ public class ConsoleUI : MonoBehaviour
     [Header("Fading")]
     [SerializeField] private float fadeDuration = 0.3f;
 
-    
+    [Header("Refresh Settings")]
+    [SerializeField] private float delayedRefreshTime = 0.5f;
+
     private List<ConsoleEntry> allEntries = new List<ConsoleEntry>();
     private readonly List<ConsoleEntry> filteredEntries = new List<ConsoleEntry>();
     private bool isCollapsed = false;
@@ -39,15 +41,19 @@ public class ConsoleUI : MonoBehaviour
     private bool showWarnings = true;
     private bool showLogs = true;
 
-    
+
     private readonly Queue<ConsoleEntryUI> entryPool = new Queue<ConsoleEntryUI>();
     private readonly List<ConsoleEntryUI> activeEntries = new List<ConsoleEntryUI>();
 
-    
+
     private float lastRefreshTime;
-    private const float refreshInterval = 0.05f; 
+    private const float refreshInterval = 0.05f;
 
     private bool isConsoleVisible = false;
+    private Coroutine delayedRefreshCoroutine;
+
+    // Track last known entry for collapse mode
+    private ConsoleEntry lastCollapsedEntry = null;
 
     public static ConsoleUI Instance { get; private set; }
 
@@ -60,7 +66,7 @@ public class ConsoleUI : MonoBehaviour
         }
         Instance = this;
 
-        
+
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
 
         Application.logMessageReceived += HandleLog;
@@ -77,7 +83,7 @@ public class ConsoleUI : MonoBehaviour
         warningToggle.onValueChanged.AddListener(OnFilterChanged);
         logToggle.onValueChanged.AddListener(OnFilterChanged);
 
-        
+
         for (int i = 0; i < initialPoolSize; i++)
         {
             ConsoleEntryUI entry = Instantiate(entryPrefab, entriesParent);
@@ -86,7 +92,7 @@ public class ConsoleUI : MonoBehaviour
         }
 
         UpdateCollapseButtonText();
-        SetConsoleVisibility(false); 
+        SetConsoleVisibility(false);
     }
 
     public void ToggleConsoleVisibility()
@@ -104,7 +110,7 @@ public class ConsoleUI : MonoBehaviour
 
         if (isVisible)
         {
-            ForceRefresh(); 
+            ForceRefresh();
         }
     }
 
@@ -136,12 +142,12 @@ public class ConsoleUI : MonoBehaviour
         }
     }
 
-    private void OnFilterChanged(bool _) 
+    private void OnFilterChanged(bool _)
     {
         showErrors = errorToggle.isOn;
         showWarnings = warningToggle.isOn;
         showLogs = logToggle.isOn;
-        RefreshUI();
+        ScheduleDelayedRefresh();
     }
 
     public void LogMessage(string message, LogType type = LogType.Log)
@@ -161,41 +167,71 @@ public class ConsoleUI : MonoBehaviour
 
     private void HandleLog(string logString, string stackTrace, LogType type)
     {
-        var newEntry = new ConsoleEntry
-        {
-            message = logString,
-            stackTrace = stackTrace,
-            logType = type,
-            timestamps = new List<DateTime> { DateTime.Now }
-        };
-
         if (isCollapsed && allEntries.Count > 0)
         {
+            // Use the lastCollapsedEntry reference for more reliable collapsing
+            if (lastCollapsedEntry != null &&
+                lastCollapsedEntry.message == logString &&
+                lastCollapsedEntry.logType == type)
+            {
+                // Add timestamp to existing entry
+                lastCollapsedEntry.timestamps.Add(DateTime.Now);
+                ScheduleDelayedRefresh();
+                return;
+            }
+
+            // Check the actual last entry in the list as fallback
             var lastEntry = allEntries.Last();
             if (lastEntry.message == logString && lastEntry.logType == type)
             {
                 lastEntry.timestamps.Add(DateTime.Now);
-                RefreshUI();
+                lastCollapsedEntry = lastEntry;
+                ScheduleDelayedRefresh();
                 return;
             }
         }
 
-        allEntries.Add(newEntry);
-        RefreshUI();
+        // Create new entry
+        var newEntry = new ConsoleEntry
+        {
+            message = logString,
+            stackTrace = stackTrace,
+            logType = type
+        };
+        newEntry.timestamps.Add(DateTime.Now);
 
-        
+        allEntries.Add(newEntry);
+        lastCollapsedEntry = newEntry;
+        ScheduleDelayedRefresh();
+
         StartCoroutine(ScrollToBottom());
     }
 
     private IEnumerator ScrollToBottom()
     {
-        yield return new WaitForEndOfFrame(); 
+        yield return new WaitForEndOfFrame();
         scrollRect.verticalNormalizedPosition = 0f;
+    }
+
+    private void ScheduleDelayedRefresh()
+    {
+        if (delayedRefreshCoroutine != null)
+        {
+            StopCoroutine(delayedRefreshCoroutine);
+        }
+
+        delayedRefreshCoroutine = StartCoroutine(DelayedRefreshCoroutine());
+    }
+
+    private IEnumerator DelayedRefreshCoroutine()
+    {
+        yield return new WaitForSeconds(delayedRefreshTime);
+        ForceRefresh();
     }
 
     public void ForceRefresh()
     {
-        lastRefreshTime = 0f; 
+        lastRefreshTime = 0f;
         RefreshUI();
     }
 
@@ -212,7 +248,6 @@ public class ConsoleUI : MonoBehaviour
     {
         filteredEntries.Clear();
 
-        
         if (!showErrors && !showWarnings && !showLogs) return;
 
         foreach (var entry in allEntries)
@@ -231,7 +266,6 @@ public class ConsoleUI : MonoBehaviour
             filteredEntries.Add(entry);
         }
 
-        
         if (filteredEntries.Count > maxDisplayedEntries)
         {
             filteredEntries.RemoveRange(0, filteredEntries.Count - maxDisplayedEntries);
@@ -240,7 +274,6 @@ public class ConsoleUI : MonoBehaviour
 
     private void UpdateEntryUIs()
     {
-        
         while (activeEntries.Count > filteredEntries.Count)
         {
             var entryToReturn = activeEntries[activeEntries.Count - 1];
@@ -249,18 +282,15 @@ public class ConsoleUI : MonoBehaviour
             activeEntries.RemoveAt(activeEntries.Count - 1);
         }
 
-        
         for (int i = 0; i < filteredEntries.Count; i++)
         {
             ConsoleEntryUI entryUI;
             if (i < activeEntries.Count)
             {
-                
                 entryUI = activeEntries[i];
             }
             else
             {
-                
                 if (entryPool.Count > 0)
                 {
                     entryUI = entryPool.Dequeue();
@@ -273,7 +303,6 @@ public class ConsoleUI : MonoBehaviour
                 activeEntries.Add(entryUI);
             }
 
-            
             entryUI.transform.SetSiblingIndex(i);
             entryUI.Initialize(filteredEntries[i]);
         }
@@ -282,12 +311,13 @@ public class ConsoleUI : MonoBehaviour
     private void OnSearchChanged(string searchText)
     {
         searchFilter = searchText;
-        RefreshUI();
+        ScheduleDelayedRefresh();
     }
 
     private void ToggleCollapse()
     {
         isCollapsed = !isCollapsed;
+        lastCollapsedEntry = null; // Reset when changing collapse mode
 
         if (isCollapsed)
         {
@@ -304,7 +334,6 @@ public class ConsoleUI : MonoBehaviour
 
     private void UpdateCollapseButtonText()
     {
-        
         if (collapseButtonText != null)
         {
             collapseButtonText.text = isCollapsed ? "Collapse: ON" : "Collapse: OFF";
@@ -313,53 +342,78 @@ public class ConsoleUI : MonoBehaviour
 
     private void GroupCollapsedEntries()
     {
-        var groupedEntries = new Dictionary<string, ConsoleEntry>(StringComparer.Ordinal);
+        var groupedEntries = new Dictionary<int, ConsoleEntry>();
+        var messageToIdMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var entry in allEntries)
         {
-            string key = $"{entry.logType}|{entry.message}";
-            if (groupedEntries.TryGetValue(key, out var existingEntry))
+            string messageKey = $"{entry.logType}|{entry.message}";
+
+            if (messageToIdMap.TryGetValue(messageKey, out int existingId))
             {
-                existingEntry.timestamps.AddRange(entry.timestamps);
+                // Add to existing grouped entry
+                if (groupedEntries.TryGetValue(existingId, out var existingEntry))
+                {
+                    // Create new list to avoid reference issues
+                    var combinedTimestamps = new List<DateTime>(existingEntry.timestamps);
+                    combinedTimestamps.AddRange(entry.timestamps);
+                    existingEntry.timestamps = combinedTimestamps;
+                }
             }
             else
             {
-                groupedEntries[key] = new ConsoleEntry
-                {
-                    message = entry.message,
-                    stackTrace = entry.stackTrace,
-                    logType = entry.logType,
-                    timestamps = new List<DateTime>(entry.timestamps)
-                };
+                // Create new grouped entry with the original ID
+                var newGroupedEntry = new ConsoleEntry(entry); // Use copy constructor
+                groupedEntries[entry.id] = newGroupedEntry;
+                messageToIdMap[messageKey] = entry.id;
             }
         }
+
         allEntries = new List<ConsoleEntry>(groupedEntries.Values);
+
+        // Update lastCollapsedEntry reference
+        if (allEntries.Count > 0)
+        {
+            lastCollapsedEntry = allEntries.Last();
+        }
     }
 
     private void ExpandCollapsedEntries()
     {
         var expandedEntries = new List<ConsoleEntry>();
+
         foreach (var entry in allEntries)
         {
             foreach (var timestamp in entry.timestamps)
             {
-                expandedEntries.Add(new ConsoleEntry
+                // Create new entry for each timestamp with proper ID inheritance
+                var newEntry = new ConsoleEntry
                 {
+                    id = entry.id, // Keep the same ID for tracking
                     message = entry.message,
                     stackTrace = entry.stackTrace,
-                    logType = entry.logType,
-                    timestamps = new List<DateTime> { timestamp }
-                });
+                    logType = entry.logType
+                };
+                newEntry.timestamps.Add(timestamp);
+                expandedEntries.Add(newEntry);
             }
         }
+
         allEntries = expandedEntries;
+
+        // Update lastCollapsedEntry reference
+        if (allEntries.Count > 0)
+        {
+            lastCollapsedEntry = allEntries.Last();
+        }
     }
 
     public void Clear()
     {
         allEntries.Clear();
         filteredEntries.Clear();
-        RefreshUI(); 
+        lastCollapsedEntry = null;
+        ForceRefresh();
     }
 
     private void OnDestroy()
@@ -367,6 +421,11 @@ public class ConsoleUI : MonoBehaviour
         if (Instance == this)
         {
             Application.logMessageReceived -= HandleLog;
+
+            if (delayedRefreshCoroutine != null)
+            {
+                StopCoroutine(delayedRefreshCoroutine);
+            }
         }
     }
 }

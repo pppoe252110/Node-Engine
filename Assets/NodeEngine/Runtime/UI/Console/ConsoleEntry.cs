@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public struct ConsoleEntry  
+public class ConsoleEntry  
 {
+    private static int nextId = 0;
+
+    public int id;
     public string message;
     public string stackTrace;
     public LogType logType;
@@ -22,4 +25,19 @@ public struct ConsoleEntry
         LogType.Exception => new Color(1f, 0.2f, 0.2f),
         _ => Color.white
     };
+
+    public ConsoleEntry()
+    {
+        id = nextId++;
+        timestamps = new List<DateTime>();
+    }
+
+    public ConsoleEntry(ConsoleEntry other)
+    {
+        id = other.id;
+        message = other.message;
+        stackTrace = other.stackTrace;
+        logType = other.logType;
+        timestamps = new List<DateTime>(other.timestamps);
+    }
 }
