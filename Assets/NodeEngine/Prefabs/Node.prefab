@@ -240,6 +240,7 @@ MonoBehaviour:
   _image: {fileID: 8590004688524277348}
   _nodeIcon: {fileID: 2157151724413625442}
   _nodeName: {fileID: 3869312446641288361}
+  _nodeType: {fileID: 8980912533149418559}
 --- !u!114 &2028984173989267109
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -254,24 +254,4 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         }
         return _currentValue;
     }
-
-    
-    public bool TryGetValueAs<U>(out U result) where U : class
-    {
-        result = _currentValue as U;
-        return result != null;
-    }
-
-    public void TriggerValueUpdate()
-    {
-        CurrentValueHandler?.Invoke(_currentValue);
-    }
-
-    public void ClearConnections()
-    {
-        if (Connector != null)
-        {
-            Connector.ClearConnections();
-        }
-    }
 }

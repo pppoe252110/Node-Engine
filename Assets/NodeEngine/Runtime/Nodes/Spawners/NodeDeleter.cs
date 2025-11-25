@@ -3,10 +3,9 @@ using System.Linq;
 using UnityEngine;
 public class NodeDeleter : MonoBehaviour
 {
-    public void DeleteNode(NodeBase node, List<Connector> inputConnectors, List<Connector> outputConnectors, NodeLogicProcessor processor)
+    public void DeleteNode(NodeBase node, List<Connector> inputConnectors, List<Connector> outputConnectors)
     {
         RemoveAllConnections(inputConnectors, outputConnectors);
-        processor?.RemoveNode(GetComponent<NodeLogic>());
         Destroy(gameObject);
     }
     private void RemoveAllConnections(List<Connector> inputConnectors, List<Connector> outputConnectors)

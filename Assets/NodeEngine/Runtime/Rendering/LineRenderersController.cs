@@ -8,8 +8,17 @@ public class LineRenderersController : MonoBehaviour
     public static LineRenderersController Instance => _instance ??= FindFirstObjectByType<LineRenderersController>();
     private static LineRenderersController _instance;
 
+    public UILineRenderer LineRendererPrefab => _lineRendererPrefab;
+
     [SerializeField] private RectTransform _inheritTransform;
-    [SerializeField] private Material _lineRendererMaterial; 
+    [SerializeField] private Material _lineRendererMaterial;
+    [SerializeField] private UILineRenderer _lineRendererPrefab;
+
+    [Header("Line Quality Settings")]
+    [SerializeField] private float _pointsPerPixel = 0.1f; 
+    [SerializeField] private int _minPoints = 5; 
+    [SerializeField] private int _maxPoints = 50; 
+    [SerializeField] private float _curveIntensity = 0.5f; 
 
     private List<ConnectionData> _connections = new List<ConnectionData>();
 
@@ -26,6 +35,8 @@ public class LineRenderersController : MonoBehaviour
         }
 
         lineRenderer.transform.SetParent(Instance.transform);
+        lineRenderer.transform.localScale = Vector3.one;
+
         lineRenderer.material = CreateConnectionMaterial(connectorA.Color, connectorB.Color);
         Instance._connections.Add(new ConnectionData(connectorA, connectorB, lineRenderer));
     }
@@ -51,7 +62,7 @@ public class LineRenderersController : MonoBehaviour
         if (Instance._lineRendererMaterial == null)
         {
             Debug.LogError("LineRenderer material is not assigned in LineRenderersController");
-            
+
             var fallbackMaterial = new Material(Shader.Find("UI/Default"));
             fallbackMaterial.SetColor("_Color1", colorA);
             fallbackMaterial.SetColor("_Color2", colorB);
@@ -98,12 +109,61 @@ public class LineRenderersController : MonoBehaviour
                        connection.ConnectorB.AnchoredPositionPoint.y / Screen.height));
 
         
+        Vector2 startPoint = lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorA.DragPoint);
+        Vector2 endPoint = lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorB.DragPoint);
+
+        float pixelDistance = Vector2.Distance(startPoint, endPoint);
+        int pointsCount = CalculateDynamicPointsCount(pixelDistance);
+
+        
+        float dynamicCurveIntensity = CalculateDynamicCurveIntensity(pixelDistance);
+
         lineRenderer.points = BezierFromTwoPoints.GetPoints(
-            lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorA.DragPoint),
-            lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorB.DragPoint),
-            0.5f, 10);
+            startPoint,
+            endPoint,
+            dynamicCurveIntensity,
+            pointsCount);
 
         lineRenderer.SetAllDirty();
+    }
+
+        private int CalculateDynamicPointsCount(float pixelDistance)
+    {
+        
+        int calculatedPoints = Mathf.RoundToInt(pixelDistance * _pointsPerPixel);
+
+        
+        return Mathf.Clamp(calculatedPoints, _minPoints, _maxPoints);
+    }
+
+        private float CalculateDynamicCurveIntensity(float pixelDistance)
+    {
+        
+        float baseIntensity = _curveIntensity;
+        float distanceFactor = Mathf.Clamp(pixelDistance / 1000f, 0f, 1f); 
+        float additionalCurve = distanceFactor * 0.3f; 
+
+        return baseIntensity + additionalCurve;
+    }
+
+        public void SetLineQuality(float pointsPerPixel, int minPoints = 5, int maxPoints = 50, float curveIntensity = 0.5f)
+    {
+        _pointsPerPixel = Mathf.Max(0.01f, pointsPerPixel);
+        _minPoints = Mathf.Max(2, minPoints);
+        _maxPoints = Mathf.Max(_minPoints, maxPoints);
+        _curveIntensity = Mathf.Clamp01(curveIntensity);
+
+        Debug.Log($"Line quality updated: {_pointsPerPixel} points/pixel, {_minPoints}-{_maxPoints} points, curve: {_curveIntensity}");
+    }
+
+        public void LogCurrentSettings()
+    {
+        Debug.Log($"Line Quality Settings:\n" +
+                 $"Points per pixel: {_pointsPerPixel}\n" +
+                 $"Min points: {_minPoints}\n" +
+                 $"Max points: {_maxPoints}\n" +
+                 $"Curve intensity: {_curveIntensity}\n" +
+                 $"Active connections: {_connections.Count}");
     }
 
     private readonly struct ConnectionData
@@ -122,7 +182,6 @@ public class LineRenderersController : MonoBehaviour
         public bool IsValid => ConnectorA != null && ConnectorB != null && LineRenderer != null;
     }
 
-    
     public static void ClearAllConnections()
     {
         if (Instance == null) return;
@@ -133,5 +192,27 @@ public class LineRenderersController : MonoBehaviour
                 Destroy(connection.LineRenderer.gameObject);
         }
         Instance._connections.Clear();
+    }
+
+    
+    [ContextMenu("Debug Line Quality")]
+    public void DebugLineQuality()
+    {
+        if (_connections.Count == 0)
+        {
+            Debug.Log("No active connections to debug");
+            return;
+        }
+
+        foreach (var connection in _connections)
+        {
+            Vector2 startPoint = connection.LineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorA.DragPoint);
+            Vector2 endPoint = connection.LineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorB.DragPoint);
+            float pixelDistance = Vector2.Distance(startPoint, endPoint);
+            int pointsCount = CalculateDynamicPointsCount(pixelDistance);
+
+            Debug.Log($"Connection: {pointsCount} points for {pixelDistance:F0}px distance " +
+                     $"(from {connection.ConnectorA.Node.GetType().Name} to {connection.ConnectorB.Node.GetType().Name})");
+        }
     }
 }

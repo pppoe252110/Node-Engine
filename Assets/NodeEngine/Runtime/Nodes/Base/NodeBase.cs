@@ -1,22 +1,24 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 [System.Serializable]
-public abstract class NodeBase : INode, ICloneable
+public abstract class NodeBase : INode
 {
+    public int Guid => _guid;
     public string NodeName => _nodeName;
     public Sprite NodeSprite => _nodeIcon;
 
     [SerializeField] private string _nodeName = "Basic";
     [SerializeField] private Sprite _nodeIcon;
 
-    public List<NodeFieldBase> inputFields = new();
-    public List<Connector> inputConnectors = new();
-    public List<NodeFieldBase> outputFields = new();
-    public List<Connector> outputConnectors = new();
+    public List<NodeFieldBase> inputFields;
+    public List<Connector> inputConnectors;
+    public List<NodeFieldBase> outputFields;
+    public List<Connector> outputConnectors;
 
-    [System.NonSerialized]
+    [SerializeField]
     private int _guid = 0;
 
     public bool IsProcessing { get; set; }
@@ -27,6 +29,10 @@ public abstract class NodeBase : INode, ICloneable
 
     public void Initialize(NodeLogic nodeLogic, int guid)
     {
+        inputFields = new();
+        inputConnectors = new();
+        outputFields = new();
+        outputConnectors = new();
         _guid = guid;
         Setup();
         Initialized();
@@ -80,6 +86,7 @@ public abstract class NodeBase : INode, ICloneable
             {
                 if (connector.ValueType != typeof(void))  
                 {
+                    Debug.LogError("DADAD");
                     connector.Field.ProceedValue();
                 }
             }
@@ -101,14 +108,5 @@ public abstract class NodeBase : INode, ICloneable
             _processingNodes.Remove(this);
             IsProcessing = false;
         }
-    }
-    public object Clone()
-    {
-        var clone = MemberwiseClone() as NodeBase;
-        clone.inputFields = new List<NodeFieldBase>();
-        clone.inputConnectors = new List<Connector>();
-        clone.outputFields = new List<NodeFieldBase>();
-        clone.outputConnectors = new List<Connector>();
-        return clone;
     }
 }

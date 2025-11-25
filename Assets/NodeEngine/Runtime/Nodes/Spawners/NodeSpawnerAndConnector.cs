@@ -1,5 +1,4 @@
-using Radishmouse;  
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -8,13 +7,6 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 {
     [Header("Dependencies")]
     [SerializeField] private NodesDatabase _nodesDatabase;
-    [SerializeField] private NodeLogic _nodeLogicPrefab;
-    [SerializeField] private UILineRenderer _lineRendererPrefab;  
-
-    [Header("Settings")]
-    [SerializeField] private float _spacing = 200f;  
-
-    private List<NodeLogic> _spawnedNodes = new List<NodeLogic>();
 
     private void Update()
     {
@@ -26,96 +18,103 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private void SpawnAndConnectNodes()
     {
-        if (_nodesDatabase == null || _nodeLogicPrefab == null || _lineRendererPrefab == null)
-        {
-            Debug.LogError("Missing dependencies in NodeSpawnerAndConnector (check NodesDatabase, NodeLogic prefab, VariableDatabase, and UILineRenderer prefab)");
-            return;
-        }
-
-        
-        foreach (var node in _spawnedNodes)
-        {
-            if (node != null) node.DeleteNode();
-        }
-        _spawnedNodes.Clear();
-
-        
         var nodes = _nodesDatabase.GetNodes();
-        var updateNodeType = nodes.FirstOrDefault(n => n.GetType().Name == "UpdateNode");
-        var forLoopNodeType = nodes.FirstOrDefault(n => n.GetType().Name == "ForLoopNode");
-        var toStringNodeType = nodes.FirstOrDefault(n => n.GetType().Name == "ToStringNode");
-        var debugNodeType = nodes.FirstOrDefault(n => n.GetType().Name == "DebugNode");
 
-        if (updateNodeType == null || forLoopNodeType == null || toStringNodeType == null || debugNodeType == null)
+        var updateNode = nodes.FirstOrDefault(n => n.GetType().Name == "UpdateNode");
+        var intVariableNode = nodes.FirstOrDefault(n => n is IntVariableNode);
+        var forLoopNode = nodes.FirstOrDefault(n => n.GetType().Name == "ForLoopNode");
+        var toStringNode = nodes.FirstOrDefault(n => n.GetType().Name == "ToStringNode");
+        var debugNode = nodes.FirstOrDefault(n => n.GetType().Name == "DebugNode");
+
+        if (updateNode == null || intVariableNode == null || forLoopNode == null || toStringNode == null || debugNode == null)
         {
-            Debug.LogError("Required node types not found in NodesDatabase");
             return;
         }
 
-        
         Vector2 startPos = new Vector2(0, 0);
-        var updateNode = SpawnNode(updateNodeType, startPos);
-        var intNode = SpawnVariableNode(VariableType.Int, startPos + new Vector2(_spacing, 0));
-        var forLoopNode = SpawnNode(forLoopNodeType, startPos + new Vector2(_spacing * 2, 0));
-        var toStringNode = SpawnNode(toStringNodeType, startPos + new Vector2(_spacing * 3, 0));
-        var debugNode = SpawnNode(debugNodeType, startPos + new Vector2(_spacing * 4, 0));
+        float spacing = 200f;
 
-        _spawnedNodes.AddRange(new[] { updateNode, intNode, forLoopNode, toStringNode, debugNode });
+        var updateNodeLogic = NodeSpawnerService.Instance.SpawnNode(updateNode, startPos);
+        var intNodeLogic = NodeSpawnerService.Instance.SpawnNode(intVariableNode, startPos + new Vector2(spacing, 50));
+        var forLoopNodeLogic = NodeSpawnerService.Instance.SpawnNode(forLoopNode, startPos + new Vector2(spacing * 2, 0));
+        var toStringNodeLogic = NodeSpawnerService.Instance.SpawnNode(toStringNode, startPos + new Vector2(spacing * 3, 50));
+        var debugNodeLogic = NodeSpawnerService.Instance.SpawnNode(debugNode, startPos + new Vector2(spacing * 4, 0));
 
-        
-        ConnectNodes(updateNode, forLoopNode, typeof(void), typeof(void));  
-        ConnectNodes(intNode, forLoopNode, typeof(int), typeof(int));      
-        ConnectNodes(forLoopNode, toStringNode, typeof(int), typeof(object));  
-        ConnectNodes(toStringNode, debugNode, typeof(string), typeof(string)); 
-        ConnectNodes(forLoopNode, debugNode, typeof(void), typeof(void));     
-
-        Debug.Log("Nodes spawned and connected successfully!");
-    }
-
-    private NodeLogic SpawnNode(NodeBase nodeType, Vector2 position)
-    {
-        var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
-        nodeLogic.transform.localPosition = position;
-        nodeLogic.SetNodeBase(nodeType);
-        return nodeLogic;
-    }
-
-    private NodeLogic SpawnVariableNode(VariableType type, Vector2 position)
-    {
-        var variableNode = new IntVariableNode();
-        var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
-
-        nodeLogic.transform.localPosition = position;
-        nodeLogic.SetNodeBase(variableNode);
-
-        
-        if (variableNode.UIElement is InputFieldVariableUI inputField)
+        if (updateNodeLogic == null || intNodeLogic == null || forLoopNodeLogic == null || toStringNodeLogic == null || debugNodeLogic == null)
         {
-            inputField.SetValue(5);  
-        }
-
-        return nodeLogic;
-    }
-
-    private void ConnectNodes(NodeLogic fromNode, NodeLogic toNode, System.Type outputType, System.Type inputType)
-    {
-        var fromConnector = fromNode.Node.outputConnectors.FirstOrDefault(c => c.ValueType == outputType);
-        var toConnector = toNode.Node.inputConnectors.FirstOrDefault(c => c.ValueType == inputType);
-
-        if (fromConnector == null || toConnector == null)
-        {
-            Debug.LogWarning($"Failed to find connectors for types {outputType} -> {inputType}");
             return;
         }
 
-        
-        var lineRenderer = Instantiate(_lineRendererPrefab, LineRenderersController.Instance.transform);  
-        LineRenderersController.Add(fromConnector, toConnector, lineRenderer);
+        ConnectNodes(updateNodeLogic, intNodeLogic, forLoopNodeLogic, toStringNodeLogic, debugNodeLogic);
+    }
 
-        
-        fromConnector.AddConnection(toConnector);
-        fromConnector.UpdateFilled();
-        toConnector.AddConnection(fromConnector);
-        toConnector.UpdateFilled();
+    private void ConnectNodes(NodeLogic updateNode, NodeLogic intNode, NodeLogic forLoopNode, NodeLogic toStringNode, NodeLogic debugNode)
+    {
+        TryConnectNodes(updateNode, forLoopNode, intNode, toStringNode, debugNode);
+    }
+
+    private bool TryConnectNodes(NodeLogic updateNode, NodeLogic forLoopNode, NodeLogic intNode, NodeLogic toStringNode, NodeLogic debugNode)
+    {
+        bool allSuccess = true;
+
+        if (!TryConnectWithFallback(updateNode, forLoopNode, "Update", "Execute", typeof(void), typeof(void)))
+            allSuccess = false;
+
+        if (!TryConnectWithFallback(intNode, forLoopNode, "Value", "Count", typeof(int), typeof(int)))
+            allSuccess = false;
+
+        if (!TryConnectWithFallback(forLoopNode, toStringNode, "Index", "Input", typeof(int), typeof(object)))
+            allSuccess = false;
+
+        if (!TryConnectWithFallback(toStringNode, debugNode, "Output", "LogString", typeof(string), typeof(string)))
+            allSuccess = false;
+
+        if (!TryConnectWithFallback(forLoopNode, debugNode, "Body", "Execute", typeof(void), typeof(void)))
+            allSuccess = false;
+
+        return allSuccess;
+    }
+
+    private bool TryConnectWithFallback(NodeLogic fromNode, NodeLogic toNode, string fromConnectorName, string toConnectorName, Type fromType, Type toType)
+    {
+        if (ConnectionManager.Instance.CreateConnection(fromNode, toNode, fromConnectorName, toConnectorName))
+            return true;
+
+        if (ConnectionManager.Instance.CreateConnection(fromNode, toNode, fromType, toType))
+            return true;
+
+        return TryConnectAnyCompatible(fromNode, toNode, fromType, toType);
+    }
+
+    private bool TryConnectAnyCompatible(NodeLogic fromNode, NodeLogic toNode, Type preferredFromType, Type preferredToType)
+    {
+        if (fromNode?.Node?.outputConnectors == null || toNode?.Node?.inputConnectors == null)
+            return false;
+
+        foreach (var outputConnector in fromNode.Node.outputConnectors)
+        {
+            foreach (var inputConnector in toNode.Node.inputConnectors)
+            {
+                if (IsCompatibleType(outputConnector.ValueType, inputConnector.ValueType))
+                {
+                    return ConnectionManager.Instance.CreateConnectionWithConnectors(outputConnector, inputConnector);
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsCompatibleType(Type outputType, Type inputType)
+    {
+        if (outputType == inputType) return true;
+        if (inputType == typeof(object)) return true;
+        if (outputType == typeof(void) && inputType == typeof(void)) return true;
+
+        if ((outputType == typeof(int) || outputType == typeof(float)) &&
+            (inputType == typeof(int) || inputType == typeof(float)))
+            return true;
+
+        return false;
     }
 }

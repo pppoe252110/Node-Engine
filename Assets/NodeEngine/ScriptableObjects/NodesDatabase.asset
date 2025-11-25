@@ -81,7 +81,7 @@ MonoBehaviour:
       PublicKeyToken=null
     variableType: 3
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
-  - nodeName: Float
+  - nodeName: Single
     nodeType: FloatVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 2

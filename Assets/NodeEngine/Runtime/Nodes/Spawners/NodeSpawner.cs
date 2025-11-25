@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class NodeSpawner : MonoBehaviour
 {
+    public RectTransform RightConnectorsParent => _rightConnectorsParent;
+    public RectTransform LeftConnectorsParent => _leftConnectorsParent;
+
     [SerializeField] private ConnectorColorDatabase _colorDatabase;
 
     [SerializeField] private Connector _rightConnectorPrefab;

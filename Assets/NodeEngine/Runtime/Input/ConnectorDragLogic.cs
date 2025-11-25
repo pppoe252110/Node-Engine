@@ -8,7 +8,6 @@ public class ConnectorDragLogic : MonoBehaviour
 {
     [SerializeField] private NodeBase _node;
     [SerializeField] private NodeDrag _nodeDrag;
-    [SerializeField] private UILineRenderer _lineRendererPrefab;
 
     private UILineRenderer _dragLineRenderer;
     private Connector _dragConnector;
@@ -88,7 +87,7 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private void StartDragConnection()
     {
-        _dragLineRenderer = Instantiate(_lineRendererPrefab, transform);
+        _dragLineRenderer = Instantiate(LineRenderersController.Instance.LineRendererPrefab, transform);
         _dragLineRenderer.material = CreateLineMaterial(_dragConnector.Color);
         _isDragging = true;
 
@@ -133,16 +132,34 @@ public class ConnectorDragLogic : MonoBehaviour
                IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType); 
     }
 
+    
     private void CreateConnection(Connector targetConnector)
     {
         LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
-        _dragLineRenderer = null; 
+        _dragLineRenderer = null;
 
         _dragConnector.AddConnection(targetConnector);
         targetConnector.AddConnection(_dragConnector);
 
         _dragConnector.UpdateFilled();
         targetConnector.UpdateFilled();
+
+        
+        if (ConnectionManager.Instance != null)
+        {
+            var fromAttr = _dragConnector.Field?.GetAttribute();
+            var toAttr = targetConnector.Field?.GetAttribute();
+
+            if (fromAttr != null && toAttr != null)
+            {
+                ConnectionManager.Instance.CreateConnection(
+                    _dragConnector.Node.Guid,
+                    targetConnector.Node.Guid,
+                    fromAttr.attributeName,
+                    toAttr.attributeName
+                );
+            }
+        }
     }
 
     private void CleanupDrag()

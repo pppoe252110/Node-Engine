@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 [NodePath("Events/Update")]
 public class UpdateNode : NodeBase
 {

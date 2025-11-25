@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -13,9 +14,18 @@ public class NodesDatabase : ScriptableObject
         var result = new NodeBase[_serializableNodes.Length];
         for (int i = 0; i < _serializableNodes.Length; i++)
         {
-            result[i] = _serializableNodes[i].CreateInstance();
-            result[i].SetName(_serializableNodes[i].nodeName);
-            result[i].SetIcon(_serializableNodes[i].nodeIcon);
+            
+            var nodeType = Type.GetType(_serializableNodes[i].nodeType);
+            if (nodeType != null)
+            {
+                result[i] = Activator.CreateInstance(nodeType) as NodeBase;
+                result[i].SetName(_serializableNodes[i].nodeName);
+                result[i].SetIcon(_serializableNodes[i].nodeIcon);
+            }
+            else
+            {
+                Debug.LogError($"Could not create node type: {_serializableNodes[i].nodeType}");
+            }
         }
         return result;
     }

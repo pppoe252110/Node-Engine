@@ -8,31 +8,6 @@ public class VariableNodeField : NodeFieldBase
     private Action<IConnectorValue> _valueHandler;
     private VariableType _variableType;
 
-    public VariableNodeField(VariableType variableType)
-    {
-        _variableType = variableType;
-        CreateDefaultValue();
-    }
-
-    private void CreateDefaultValue()
-    {
-        _currentValue = _variableType switch
-        {
-            VariableType.Int => new ConnectorValueInt(0),
-            VariableType.Single => new ConnectorValueFloat(0f),
-            VariableType.Bool => new ConnectorValueBool(false),
-            VariableType.String => new ConnectorValueString(""),
-            _ => new ConnectorValueObject(null)
-        };
-    }
-
-    public VariableNodeField SetFunc(Action<IConnectorValue> handler)
-    {
-        _valueHandler = handler;
-        return this;
-    }
-
-    
     public override void UpdateValueFromSource(IConnectorValue sourceValue)
     {
         if (sourceValue == null) return;
@@ -76,7 +51,6 @@ public class VariableNodeField : NodeFieldBase
     public override NodeValueAttribute GetAttribute() => _valueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
     public override object GetObjectValue() => _currentValue?.GetInnerValue();
 
-    
     public void SetValue(object newValue)
     {
         if (_currentValue != null)
