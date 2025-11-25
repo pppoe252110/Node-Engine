@@ -9,7 +9,6 @@ public class NodeSpawnerAndConnector : MonoBehaviour
     [Header("Dependencies")]
     [SerializeField] private NodesDatabase _nodesDatabase;
     [SerializeField] private NodeLogic _nodeLogicPrefab;
-    [SerializeField] private VariableDatabase _variableDatabase;
     [SerializeField] private UILineRenderer _lineRendererPrefab;  // NEW: Assign the UILineRenderer prefab from ConnectorDragLogic
 
     [Header("Settings")]
@@ -27,7 +26,7 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private void SpawnAndConnectNodes()
     {
-        if (_nodesDatabase == null || _nodeLogicPrefab == null || _variableDatabase == null || _lineRendererPrefab == null)
+        if (_nodesDatabase == null || _nodeLogicPrefab == null || _lineRendererPrefab == null)
         {
             Debug.LogError("Missing dependencies in NodeSpawnerAndConnector (check NodesDatabase, NodeLogic prefab, VariableDatabase, and UILineRenderer prefab)");
             return;
@@ -77,7 +76,6 @@ public class NodeSpawnerAndConnector : MonoBehaviour
     {
         var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
         nodeLogic.transform.localPosition = position;
-        nodeLogic.VariableDatabase = _variableDatabase;
         nodeLogic.SetNodeBase(nodeType);
         return nodeLogic;
     }
@@ -88,7 +86,6 @@ public class NodeSpawnerAndConnector : MonoBehaviour
         var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
 
         nodeLogic.transform.localPosition = position;
-        nodeLogic.VariableDatabase = _variableDatabase;
         nodeLogic.SetNodeBase(variableNode);
 
         // Set default value (e.g., 5 for Int)

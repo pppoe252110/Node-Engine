@@ -4,6 +4,8 @@ using UnityEngine.UI;
 
 public class NodeSpawner : MonoBehaviour
 {
+    [SerializeField] private ConnectorColorDatabase _colorDatabase;
+
     [SerializeField] private Connector _rightConnectorPrefab;
     [SerializeField] private Connector _leftConnectorPrefab;
     [SerializeField] private RectTransform _rightConnectorsParent;
@@ -22,18 +24,10 @@ public class NodeSpawner : MonoBehaviour
             var connector = Instantiate(_leftConnectorPrefab, _leftConnectorsParent);
             connector.SetField(field);
             connector.SetNode(node);
+            connector.SetColorDatabase(_colorDatabase);
 
             var attribute = field.GetAttribute();
-            if (attribute != null)
-            {
-                connector.SetData(attribute);
-            }
-            else
-            {
-                // Create a default attribute for fields without one
-                var defaultAttribute = CreateDefaultAttribute(field);
-                connector.SetData(defaultAttribute);
-            }
+            connector.SetData(attribute);
 
             inputConnectors.Add(connector);
         }
@@ -46,94 +40,23 @@ public class NodeSpawner : MonoBehaviour
             var connector = Instantiate(_rightConnectorPrefab, _rightConnectorsParent);
             connector.SetField(field);
             connector.SetNode(node);
+            connector.SetColorDatabase(_colorDatabase);
 
             var attribute = field.GetAttribute();
-            if (attribute != null)
-            {
-                connector.SetData(attribute);
-            }
-            else
-            {
-                // Create a default attribute for fields without one
-                var defaultAttribute = CreateDefaultAttribute(field);
-                connector.SetData(defaultAttribute);
-            }
+            connector.SetData(attribute);
 
             outputConnectors.Add(connector);
         }
     }
 
-    private NodeValueAttribute CreateDefaultAttribute(NodeFieldBase field)
-    {
-        var valueType = field.GetValueType();
-        var color = GetDefaultColorForType(valueType);
-
-        return new NodeValueAttribute(
-            GetDefaultNameForType(valueType),
-            valueType,
-            GetKnownColorFromUnityColor(color)
-        );
-    }
-
-    private string GetDefaultNameForType(System.Type type)
-    {
-        return type.Name switch
-        {
-            "Int32" => "Value",
-            "Single" => "Value",
-            "Boolean" => "Value",
-            "String" => "Value",
-            "Void" => "Execute",
-            _ => "Object"
-        };
-    }
-
-    private Color GetDefaultColorForType(System.Type type)
-    {
-        return type.Name switch
-        {
-            "Int32" => Color.red,
-            "Single" => Color.green,
-            "Boolean" => Color.blue,
-            "String" => Color.yellow,
-            "Void" => new Color(0.5f, 0f, 0.5f), // Purple
-            _ => Color.gray
-        };
-    }
-
-    private System.Drawing.KnownColor GetKnownColorFromUnityColor(Color color)
-    {
-        // Map Unity colors to System.Drawing known colors
-        if (color == Color.red) return System.Drawing.KnownColor.Red;
-        if (color == Color.green) return System.Drawing.KnownColor.Green;
-        if (color == Color.blue) return System.Drawing.KnownColor.Blue;
-        if (color == Color.yellow) return System.Drawing.KnownColor.Yellow;
-        if (color == new Color(0.5f, 0f, 0.5f)) return System.Drawing.KnownColor.BlueViolet;
-        return System.Drawing.KnownColor.Gray;
-    }
-
     public void SpawnVariableUI(VariableNode varNode, VariableDatabase database, Image nodeImage)
     {
-        if (varNode == null || database == null)
-        {
-            Debug.LogError("VariableNode or VariableDatabase is null in SpawnVariableUI");
-            return;
-        }
+        if (varNode == null || database == null) return;
 
         var prefab = database.GetPrefabForType(varNode.VariableType);
-        if (prefab == null)
-        {
-            Debug.LogWarning($"No prefab found for VariableType {varNode.VariableType} in VariableDatabase");
-            return;
-        }
+        if (prefab == null) return;
 
         var uiElement = Instantiate(prefab, _leftConnectorsParent);
-        if (uiElement == null)
-        {
-            Debug.LogError("Failed to instantiate UI element in SpawnVariableUI");
-            return;
-        }
-
         uiElement.Initialize(varNode, varNode.VariableType);
         varNode.UIElement = uiElement;
 

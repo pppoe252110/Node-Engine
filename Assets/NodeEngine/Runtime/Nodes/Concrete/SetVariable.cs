@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
 
 [NodePath("Variables/Set")]
 public class SetVariableNode : ExecutableNodeBase
@@ -9,10 +8,10 @@ public class SetVariableNode : ExecutableNodeBase
     private ConnectorValueObject _value;
     private ConnectorValueString _name;
 
-    [NodeValue("Value", typeof(object), KnownColor.Gray)]
+    [NodeValue("Value", typeof(object))]
     public void Value(ConnectorValueObject value) => _value = value;
 
-    [NodeValue("Name", typeof(string), KnownColor.Yellow)]
+    [NodeValue("Name", typeof(string))]
     public void Name(ConnectorValueString name) => _name = name;
 
     public override void Execute()

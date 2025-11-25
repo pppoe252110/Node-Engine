@@ -2,7 +2,7 @@ public enum VariableType
 {
     Bool,
     Int,
-    Float,
+    Single,
     String,
     Vector3
 }

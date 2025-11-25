@@ -1,18 +1,16 @@
-using System.Drawing;
-
 [NodePath("Control Flow/If Else")]
 public class IfElseNode : ExecutableNodeBase
 {
     private ConnectorValueBool _condition;
     private ConnectorValueVoid _trueTrigger, _falseTrigger;
 
-    [NodeValue("Condition", typeof(bool), KnownColor.Red)]
+    [NodeValue("Condition", typeof(bool))]
     public void Condition(ConnectorValueBool condition) => _condition = condition;
 
-    [NodeValue("True", typeof(void), KnownColor.BlueViolet)]
+    [NodeValue("True", typeof(void))]
     public void TrueTrigger(ConnectorValueVoid trigger) => _trueTrigger = trigger;
 
-    [NodeValue("False", typeof(void), KnownColor.BlueViolet)]
+    [NodeValue("False", typeof(void))]
     public void FalseTrigger(ConnectorValueVoid trigger) => _falseTrigger = trigger;
 
     public override void Execute()

@@ -1,7 +1,4 @@
-﻿using System.Drawing;
-using UnityEngine;
-
-[NodePath("Control Flow/For Loop")]
+﻿[NodePath("Control Flow/For Loop")]
 public class ForLoopNode : ExecutableNodeBase
 {
     private ConnectorValueVoid _execute;
@@ -12,19 +9,19 @@ public class ForLoopNode : ExecutableNodeBase
     private NodeField<ConnectorValueVoid> _bodyField, _endField;
     private NodeField<ConnectorValueInt> _indexField;
 
-    [NodeValue("Execute", typeof(void), KnownColor.BlueViolet)]
+    [NodeValue("Execute", typeof(void))]
     public void ExecuteInput(ConnectorValueVoid execute) => _execute = execute;
 
-    [NodeValue("Count", typeof(int), KnownColor.Purple)]
+    [NodeValue("Count", typeof(int))]
     public void Count(ConnectorValueInt count) => _count = count;
 
-    [NodeValue("Body", typeof(void), KnownColor.BlueViolet)]
+    [NodeValue("Body", typeof(void))]
     public void Body(ConnectorValueVoid body) => _body = body;
 
-    [NodeValue("Index", typeof(int), KnownColor.Purple)]
+    [NodeValue("Index", typeof(int))]
     public void Index(ConnectorValueInt index) => _index = index;
 
-    [NodeValue("End", typeof(void), KnownColor.BlueViolet)]
+    [NodeValue("End", typeof(void))]
     public void End(ConnectorValueVoid end) => _end = end;
 
     public override void Execute()

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
 
 [NodePath("Conversion/ToString")]
 public class ToStringNode : NodeBase
@@ -7,13 +6,13 @@ public class ToStringNode : NodeBase
     private ConnectorValueObject _input;
     private ConnectorValueString _output;
 
-    [NodeValue("Input", typeof(object), KnownColor.DarkSlateBlue)]
+    [NodeValue("Input", typeof(object))]
     public void Input(ConnectorValueObject value)
     {
         _input = value;
     }
 
-    [NodeValue("Output", typeof(string), KnownColor.PaleVioletRed)]
+    [NodeValue("Output", typeof(string))]
     public void Output(ConnectorValueString value)
     {
         var inputValue = _input?.GetValue() ?? "null";

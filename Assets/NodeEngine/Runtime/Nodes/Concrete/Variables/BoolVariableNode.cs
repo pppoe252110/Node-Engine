@@ -1,5 +1,3 @@
-using System.Drawing;
-
 [NodePath("Variables/Bool")]
 public class BoolVariableNode : VariableNode
 {

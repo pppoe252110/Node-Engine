@@ -1,5 +1,5 @@
 [NodePath("Variables/Float")]
 public class FloatVariableNode : VariableNode
 {
-    public override VariableType VariableType => VariableType.Float;
+    public override VariableType VariableType => VariableType.Single;
 }

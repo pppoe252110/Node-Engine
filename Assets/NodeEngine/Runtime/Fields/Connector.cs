@@ -14,52 +14,57 @@ public class Connector : MonoBehaviour
     private NodeFieldBase _field;
     private NodeValueAttribute _valueAttribute;
     private List<Connector> _connections = new List<Connector>();
+    private static ConnectorColorDatabase _colorDatabase;
 
-    // Public properties
     public NodeBase Node => _node;
     public NodeFieldBase Field => _field;
     public Type ValueType => Field is VariableNodeField ? ((VariableNodeField)Field).GetValueType() : _valueAttribute?.type ?? typeof(object);
-    public Color Color => _valueAttribute?.attributeColor ?? Color.gray;
+    public Color Color => GetConnectorColor();
     public Vector3 DragPoint => _connectorImage.rectTransform.position;
     public Vector3 AnchoredPositionPoint => _connectorImage.rectTransform.position;
     public int ConnectionsCount => _connections.Count;
     public List<Connector> Connections => _connections;
 
+    public void SetColorDatabase(ConnectorColorDatabase colorDatabase)
+    {
+        _colorDatabase = colorDatabase;
+    }
+
+    private Color GetConnectorColor()
+    {
+        if (_colorDatabase != null)
+            return _colorDatabase.GetColorForType(ValueType);
+
+        return Color.gray; // Ultimate fallback
+    }
+
     public void SetData(NodeValueAttribute attribute)
     {
-        if (attribute == null)
-        {
-            Debug.LogWarning("Connector.SetData called with null attribute, using defaults");
-            attribute = CreateDefaultAttribute();
-        }
-
-        _valueAttribute = attribute;
+        _valueAttribute = attribute ?? CreateDefaultAttribute();
 
         if (_nameText != null)
         {
-            _nameText.text = $"{attribute.attributeName}\n<size=8>({attribute.type.Name})</size>";
+            _nameText.text = $"{_valueAttribute.attributeName}\n<size=8>({_valueAttribute.type.Name})</size>";
         }
 
-        if (_connectorImage != null)
-        {
-            _connectorImage.color = attribute.attributeColor;
-        }
-
-        if (_connectorImageFill != null)
-        {
-            _connectorImageFill.color = attribute.attributeColor;
-        }
-
+        UpdateVisuals();
         SetConnectorFilled(false);
     }
 
     private NodeValueAttribute CreateDefaultAttribute()
     {
-        return new NodeValueAttribute(
-            "Default",
-            typeof(object),
-            System.Drawing.KnownColor.Gray
-        );
+        return new NodeValueAttribute("Default", typeof(object));
+    }
+
+    private void UpdateVisuals()
+    {
+        Color connectorColor = Color;
+
+        if (_connectorImage != null)
+            _connectorImage.color = connectorColor;
+
+        if (_connectorImageFill != null)
+            _connectorImageFill.color = connectorColor;
     }
 
     public void AddConnection(Connector connector) => _connections.Add(connector);

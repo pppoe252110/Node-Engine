@@ -1,22 +1,21 @@
 using System.Collections.Generic;
-using System.Drawing;
 
 [NodePath("Engine/Time")]
 public class TimeNode : NodeBase
 {
-    [NodeValue("DeltaTime", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("DeltaTime", typeof(float))]
     public void DeltaTime(ConnectorValueFloat value)
     {
         value.SetValue(UnityEngine.Time.deltaTime);
     }
 
-    [NodeValue("Time", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("Time", typeof(float))]
     public void Time(ConnectorValueFloat value)
     {
         value.SetValue(UnityEngine.Time.time);
     }
 
-    [NodeValue("RealTime", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("RealTime", typeof(float))]
     public void RealTime(ConnectorValueFloat value)
     {
         value.SetValue(UnityEngine.Time.realtimeSinceStartup);

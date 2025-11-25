@@ -1,4 +1,3 @@
-using System.Drawing;
 using UnityEngine;
 
 public abstract class VariableNode : NodeBase
@@ -24,7 +23,7 @@ public abstract class VariableNode : NodeBase
                     .SetHandler(OutputInt)
                     .SetDefaultValue(new ConnectorValueInt(0));
 
-            case VariableType.Float:
+            case VariableType.Single:
                 return new NodeField<ConnectorValueFloat>(isInput: false)
                     .SetHandler(OutputFloat)
                     .SetDefaultValue(new ConnectorValueFloat(0f));
@@ -52,7 +51,7 @@ public abstract class VariableNode : NodeBase
     }
 
     // Separate methods for each type with correct attributes
-    [NodeValue("Value", typeof(int), KnownColor.Red)]
+    [NodeValue("Value", typeof(int))]
     public void OutputInt(ConnectorValueInt value)
     {
         if (UIElement != null && UIElement.GetValue() is int uiVal)
@@ -60,19 +59,19 @@ public abstract class VariableNode : NodeBase
             value.SetValue(uiVal);
         }
     }
-    [NodeValue("Value", typeof(float), KnownColor.Green)]
+    [NodeValue("Value", typeof(float))]
     public void OutputFloat(ConnectorValueFloat value) { }
 
-    [NodeValue("Value", typeof(bool), KnownColor.Blue)]
+    [NodeValue("Value", typeof(bool))]
     public void OutputBool(ConnectorValueBool value) { }
 
-    [NodeValue("Value", typeof(string), KnownColor.Yellow)]
+    [NodeValue("Value", typeof(string))]
     public void OutputString(ConnectorValueString value) { }
 
-    [NodeValue("Value", typeof(Vector3), KnownColor.Plum)]
+    [NodeValue("Value", typeof(Vector3))]
     public void OutputVector3(ConnectorValueVector3 value) { }
 
-    [NodeValue("Value", typeof(object), KnownColor.Gray)]
+    [NodeValue("Value", typeof(object))]
     public void OutputObject(ConnectorValueObject value) { }
 
 

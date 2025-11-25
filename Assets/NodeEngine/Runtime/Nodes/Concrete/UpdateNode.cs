@@ -1,13 +1,8 @@
-using System.Drawing;
-
 [NodePath("Events/Update")]
 public class UpdateNode : NodeBase
 {
-    [NodeValue("Update", typeof(void), KnownColor.BlueViolet)]
-    public void UpdateVoid(ConnectorValueVoid value)
-    {
-        // Trigger only; no value
-    }
+    [NodeValue("Update", typeof(void))]
+    public void UpdateVoid(ConnectorValueVoid value) { }
 
     public override void Setup()
     {

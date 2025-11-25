@@ -19,7 +19,7 @@ public class VariableNodeField : NodeFieldBase
         _currentValue = _variableType switch
         {
             VariableType.Int => new ConnectorValueInt(0),
-            VariableType.Float => new ConnectorValueFloat(0f),
+            VariableType.Single => new ConnectorValueFloat(0f),
             VariableType.Bool => new ConnectorValueBool(false),
             VariableType.String => new ConnectorValueString(""),
             _ => new ConnectorValueObject(null)
@@ -107,7 +107,7 @@ public class VariableNodeField : NodeFieldBase
         return variableType switch
         {
             VariableType.Int => typeof(int),
-            VariableType.Float => typeof(float),
+            VariableType.Single => typeof(float),
             VariableType.Bool => typeof(bool),
             VariableType.String => typeof(string),
             _ => typeof(object)

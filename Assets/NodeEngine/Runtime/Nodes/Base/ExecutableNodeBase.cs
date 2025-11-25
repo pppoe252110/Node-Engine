@@ -1,5 +1,3 @@
-using System.Drawing;
-
 public abstract class ExecutableNodeBase : NodeBase
 {
     protected ConnectorValueVoid _executeInput;
@@ -7,7 +5,7 @@ public abstract class ExecutableNodeBase : NodeBase
     protected NodeField<ConnectorValueVoid> _executeInputField;
     protected NodeField<ConnectorValueVoid> _executeOutputField;
 
-    [NodeValue("Input", typeof(void), KnownColor.BlueViolet)]
+    [NodeValue("Input", typeof(void))]
     protected virtual void OnExecuteInput(ConnectorValueVoid execute)
     {
         _executeInput = execute;
@@ -15,7 +13,7 @@ public abstract class ExecutableNodeBase : NodeBase
         TriggerOutput();
     }
 
-    [NodeValue("Output", typeof(void), KnownColor.BlueViolet)]
+    [NodeValue("Output", typeof(void))]
     protected virtual void OnExecuteOutput(ConnectorValueVoid execute)
     {
         _executeOutput = execute;

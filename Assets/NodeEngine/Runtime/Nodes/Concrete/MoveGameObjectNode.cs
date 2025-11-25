@@ -1,4 +1,3 @@
-using System.Drawing;
 using UnityEngine;
 
 [NodePath("Transform/Move")]
@@ -8,13 +7,13 @@ public class MoveGameObjectNode : ExecutableNodeBase
     private ConnectorValueObject _position;  // Vector3
     private ConnectorValueFloat _speed;
 
-    [NodeValue("Target", typeof(GameObject), KnownColor.Cyan)]
+    [NodeValue("Target", typeof(GameObject))]
     public void Target(ConnectorValueObject target) => _target = target;
 
-    [NodeValue("Position", typeof(Vector3), KnownColor.Plum)]
+    [NodeValue("Position", typeof(Vector3))]
     public void Position(ConnectorValueObject position) => _position = position;
 
-    [NodeValue("Speed", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("Speed", typeof(float))]
     public void Speed(ConnectorValueFloat speed) => _speed = speed;
 
     public override void Execute()

@@ -1,4 +1,3 @@
-using System.Drawing;
 using UnityEngine;
 
 [NodePath("Math/Clamp")]
@@ -6,16 +5,16 @@ public class ClampNode : NodeBase
 {
     private ConnectorValueFloat _value, _min, _max, _result;
 
-    [NodeValue("Value", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("Value", typeof(float))]
     public void Value(ConnectorValueFloat value) => _value = value;
 
-    [NodeValue("Min", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("Min", typeof(float))]
     public void Min(ConnectorValueFloat min) => _min = min;
 
-    [NodeValue("Max", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("Max", typeof(float))]
     public void Max(ConnectorValueFloat max) => _max = max;
 
-    [NodeValue("Result", typeof(float), KnownColor.LawnGreen)]
+    [NodeValue("Result", typeof(float))]
     public void Result(ConnectorValueFloat result)
     {
         _result = result;

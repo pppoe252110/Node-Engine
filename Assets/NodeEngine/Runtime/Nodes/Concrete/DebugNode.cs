@@ -1,4 +1,3 @@
-using System.Drawing;
 using UnityEngine;
 
 [NodePath("Debug/Log")]
@@ -6,7 +5,7 @@ public class DebugNode : ExecutableNodeBase
 {
     private ConnectorValueString _logText;
 
-    [NodeValue("LogString", typeof(string), KnownColor.PaleVioletRed)]
+    [NodeValue("LogString", typeof(string))]
     public void LogString(ConnectorValueString value)
     {
         _logText = value;

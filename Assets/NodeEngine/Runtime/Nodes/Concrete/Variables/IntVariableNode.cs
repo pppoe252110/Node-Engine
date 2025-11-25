@@ -1,5 +1,3 @@
-using System.Drawing;
-
 [NodePath("Variables/Int")]
 public class IntVariableNode : VariableNode
 {

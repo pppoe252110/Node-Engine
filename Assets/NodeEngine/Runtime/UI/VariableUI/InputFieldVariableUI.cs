@@ -32,7 +32,7 @@ public class InputFieldVariableUI : VariableUIElement
                 _inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
                 _inputField.characterLimit = 10;
                 break;
-            case VariableType.Float:
+            case VariableType.Single:
                 _inputField.contentType = TMP_InputField.ContentType.DecimalNumber;
                 _inputField.characterLimit = 15;
                 break;
@@ -73,7 +73,7 @@ public class InputFieldVariableUI : VariableUIElement
                         _inputField.SetTextWithoutNotify(i.ToString(_culture));
                     }
                     break;
-                case VariableType.Float:
+                case VariableType.Single:
                     if (float.TryParse(value, NumberStyles.Float, _culture, out float f))
                     {
                         newValue = f;
@@ -166,7 +166,7 @@ public class InputFieldVariableUI : VariableUIElement
                 _value = 0;
                 _inputField.text = "0";
                 break;
-            case VariableType.Float:
+            case VariableType.Single:
                 _value = 0f;
                 _inputField.text = "0.0";
                 break;
@@ -188,7 +188,7 @@ public class InputFieldVariableUI : VariableUIElement
             case VariableType.Int:
                 FormatIntValue();
                 break;
-            case VariableType.Float:
+            case VariableType.Single:
                 FormatFloatValue();
                 break;
             case VariableType.Vector3:
@@ -229,7 +229,7 @@ public class InputFieldVariableUI : VariableUIElement
         if (newValue != null)
         {
             if ((_type == VariableType.Int && newValue is int) ||
-                (_type == VariableType.Float && newValue is float) ||
+                (_type == VariableType.Single && newValue is float) ||
                 (_type == VariableType.String && newValue is string) ||
                 (_type == VariableType.Vector3 && newValue is Vector3))
             {
