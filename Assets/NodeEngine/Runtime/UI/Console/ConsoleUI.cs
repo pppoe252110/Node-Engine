@@ -52,7 +52,7 @@ public class ConsoleUI : MonoBehaviour
     private bool isConsoleVisible = false;
     private Coroutine delayedRefreshCoroutine;
 
-    // Track last known entry for collapse mode
+    
     private ConsoleEntry lastCollapsedEntry = null;
 
     public static ConsoleUI Instance { get; private set; }
@@ -169,18 +169,18 @@ public class ConsoleUI : MonoBehaviour
     {
         if (isCollapsed && allEntries.Count > 0)
         {
-            // Use the lastCollapsedEntry reference for more reliable collapsing
+            
             if (lastCollapsedEntry != null &&
                 lastCollapsedEntry.message == logString &&
                 lastCollapsedEntry.logType == type)
             {
-                // Add timestamp to existing entry
+                
                 lastCollapsedEntry.timestamps.Add(DateTime.Now);
                 ScheduleDelayedRefresh();
                 return;
             }
 
-            // Check the actual last entry in the list as fallback
+            
             var lastEntry = allEntries.Last();
             if (lastEntry.message == logString && lastEntry.logType == type)
             {
@@ -191,7 +191,7 @@ public class ConsoleUI : MonoBehaviour
             }
         }
 
-        // Create new entry
+        
         var newEntry = new ConsoleEntry
         {
             message = logString,
@@ -317,7 +317,7 @@ public class ConsoleUI : MonoBehaviour
     private void ToggleCollapse()
     {
         isCollapsed = !isCollapsed;
-        lastCollapsedEntry = null; // Reset when changing collapse mode
+        lastCollapsedEntry = null; 
 
         if (isCollapsed)
         {
@@ -351,10 +351,10 @@ public class ConsoleUI : MonoBehaviour
 
             if (messageToIdMap.TryGetValue(messageKey, out int existingId))
             {
-                // Add to existing grouped entry
+                
                 if (groupedEntries.TryGetValue(existingId, out var existingEntry))
                 {
-                    // Create new list to avoid reference issues
+                    
                     var combinedTimestamps = new List<DateTime>(existingEntry.timestamps);
                     combinedTimestamps.AddRange(entry.timestamps);
                     existingEntry.timestamps = combinedTimestamps;
@@ -362,8 +362,8 @@ public class ConsoleUI : MonoBehaviour
             }
             else
             {
-                // Create new grouped entry with the original ID
-                var newGroupedEntry = new ConsoleEntry(entry); // Use copy constructor
+                
+                var newGroupedEntry = new ConsoleEntry(entry); 
                 groupedEntries[entry.id] = newGroupedEntry;
                 messageToIdMap[messageKey] = entry.id;
             }
@@ -371,7 +371,7 @@ public class ConsoleUI : MonoBehaviour
 
         allEntries = new List<ConsoleEntry>(groupedEntries.Values);
 
-        // Update lastCollapsedEntry reference
+        
         if (allEntries.Count > 0)
         {
             lastCollapsedEntry = allEntries.Last();
@@ -386,10 +386,10 @@ public class ConsoleUI : MonoBehaviour
         {
             foreach (var timestamp in entry.timestamps)
             {
-                // Create new entry for each timestamp with proper ID inheritance
+                
                 var newEntry = new ConsoleEntry
                 {
-                    id = entry.id, // Keep the same ID for tracking
+                    id = entry.id, 
                     message = entry.message,
                     stackTrace = entry.stackTrace,
                     logType = entry.logType
@@ -401,7 +401,7 @@ public class ConsoleUI : MonoBehaviour
 
         allEntries = expandedEntries;
 
-        // Update lastCollapsedEntry reference
+        
         if (allEntries.Count > 0)
         {
             lastCollapsedEntry = allEntries.Last();

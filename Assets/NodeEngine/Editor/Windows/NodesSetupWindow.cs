@@ -1,33 +1,48 @@
-﻿using UnityEngine;
-using UnityEditor;
+using Cysharp.Threading.Tasks;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
+using System.Net;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Networking;
 
 public class NodesSetupWindow : EditorWindow
 {
     private const string SETUP_COMPLETE_KEY = "NodeEngine_SetupComplete";
-    // The final destination for the copied files
     private const string TARGET_RESOURCE_PATH = "Assets/Resources/NodeEngine";
 
+    private const string PACKAGE_VERSION_KEY = "NodeEngine_PackageVersion";
+    private const string GITHUB_PACKAGE_URL = "https://raw.githubusercontent.com/pppoe252110/Node-Engine/main/Assets/NodeEngine/package.json";
+
     private bool copyResources = true;
-    private bool copyGraphExamples = true; // New toggle for GraphExamples
+    private bool copyGraphExamples = true;
     private Vector2 scrollPosition;
     private bool showPackageResources = false;
     private bool showAdvancedOptions = false;
+    private bool isCheckingForUpdates = false;
+    private bool updateAvailable = false;
+    private string localVersion = "";
+    private string remoteVersion = "";
+
+    private Color accentColor = new Color(0.2f, 0.6f, 1f, 1f);
+    private Color successColor = new Color(0.2f, 0.8f, 0.4f, 1f);
+    private Color warningColor = new Color(1f, 0.7f, 0.2f, 1f);
+    private Color errorColor = new Color(0.9f, 0.3f, 0.3f, 1f);
 
     [MenuItem("Tools/Node Engine/Setup")]
     public static void ShowWindow()
     {
         NodesSetupWindow window = GetWindow<NodesSetupWindow>("Node Engine Setup");
-        window.minSize = new Vector2(400, 400);
+        window.minSize = new Vector2(500, 500);
         window.Show();
     }
 
     [InitializeOnLoadMethod]
     private static void InitializeOnLoad()
     {
-        // Check if the output folder exists and is not empty
         if (IsOutputFolderNotEmpty())
         {
             EditorPrefs.SetBool(SETUP_COMPLETE_KEY, true);
@@ -35,7 +50,8 @@ public class NodesSetupWindow : EditorWindow
 
         if (!EditorPrefs.GetBool(SETUP_COMPLETE_KEY, false))
         {
-            EditorApplication.delayCall += () => {
+            EditorApplication.delayCall += () =>
+            {
                 if (!EditorPrefs.GetBool(SETUP_COMPLETE_KEY, false))
                 {
                     ShowWindow();
@@ -44,78 +60,308 @@ public class NodesSetupWindow : EditorWindow
         }
     }
 
-    // New method to check if the output folder exists and is not empty
     private static bool IsOutputFolderNotEmpty()
     {
         string targetFullPath = Path.Combine(Application.dataPath, TARGET_RESOURCE_PATH.Substring("Assets/".Length));
 
-        // Check if the directory exists
         if (!Directory.Exists(targetFullPath))
         {
             return false;
         }
 
-        // Check if the directory contains any files (excluding .meta files)
         string[] files = Directory.GetFiles(targetFullPath, "*", SearchOption.AllDirectories)
             .Where(f => !f.EndsWith(".meta")).ToArray();
 
         return files.Length > 0;
     }
 
+    private void OnEnable()
+    {
+        
+        GetLocalVersion();
+
+        
+        CheckForUpdatesAsync().Forget();
+    }
+
+    private void GetLocalVersion()
+    {
+        
+        string packagePath = FindPackageJsonPath();
+        if (!string.IsNullOrEmpty(packagePath) && File.Exists(packagePath))
+        {
+            try
+            {
+                string jsonContent = File.ReadAllText(packagePath);
+                var packageJson = JsonUtility.FromJson<PackageInfo>(jsonContent);
+                localVersion = packageJson.version;
+                EditorPrefs.SetString(PACKAGE_VERSION_KEY, localVersion);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to read local package version: {e.Message}");
+                localVersion = "Unknown";
+            }
+        }
+        else
+        {
+            
+            localVersion = EditorPrefs.GetString(PACKAGE_VERSION_KEY, "Unknown");
+        }
+    }
+
+    private string FindPackageJsonPath()
+    {
+        
+        string[] guids = AssetDatabase.FindAssets("package.json");
+        foreach (string guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (path.Contains("NodeEngine") || path.Contains("Node Engine"))
+            {
+                return path;
+            }
+        }
+
+        
+        string packageCacheRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Library", "PackageCache");
+        if (Directory.Exists(packageCacheRoot))
+        {
+            string[] packageFolders = Directory.GetDirectories(packageCacheRoot, "com.parity.nodeengine*");
+            if (packageFolders.Length > 0)
+            {
+                return Path.Combine(packageFolders[0], "package.json");
+            }
+        }
+
+        return null;
+    }
+
+    private async UniTaskVoid CheckForUpdatesAsync()
+    {
+        if (isCheckingForUpdates) return;
+
+        isCheckingForUpdates = true;
+        updateAvailable = false;
+
+        using (var request = UnityWebRequest.Get(GITHUB_PACKAGE_URL))
+        {
+            await request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                try
+                {
+                    string jsonContent = request.downloadHandler.text;
+                    var packageJson = JsonUtility.FromJson<PackageInfo>(jsonContent);
+                    remoteVersion = packageJson.version;
+
+                    
+                    if (!string.IsNullOrEmpty(localVersion) && !string.IsNullOrEmpty(remoteVersion))
+                    {
+                        updateAvailable = CompareVersions(localVersion, remoteVersion) < 0;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Failed to parse remote package version: {e.Message}");
+                    remoteVersion = "Error";
+                }
+            }
+            else
+            {
+                Debug.LogError($"Failed to check for updates: {request.error}");
+                remoteVersion = "Error";
+            }
+        }
+
+        isCheckingForUpdates = false;
+        Repaint();
+    }
+
+    private int CompareVersions(string v1, string v2)
+    {
+        var v1Parts = v1.Split('.');
+        var v2Parts = v2.Split('.');
+
+        for (int i = 0; i < Math.Max(v1Parts.Length, v2Parts.Length); i++)
+        {
+            int v1Part = i < v1Parts.Length ? int.Parse(v1Parts[i]) : 0;
+            int v2Part = i < v2Parts.Length ? int.Parse(v2Parts[i]) : 0;
+
+            if (v1Part < v2Part) return -1;
+            if (v1Part > v2Part) return 1;
+        }
+
+        return 0;
+    }
+
     private void OnGUI()
     {
+        
+        GUIStyle headerStyle = new GUIStyle(EditorStyles.largeLabel)
+        {
+            fontSize = 24,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            clipping = TextClipping.Overflow,
+            normal = { textColor = Color.white }
+        };
+
+        GUIStyle versionStyle = new GUIStyle(EditorStyles.miniLabel)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(0.8f, 0.8f, 0.8f, 1f) }
+        };
+
+        GUIStyle sectionHeaderStyle = new GUIStyle(EditorStyles.boldLabel)
+        {
+            fontSize = 14,
+            normal = { textColor = accentColor }
+        };
+
+        GUIStyle buttonStyle = new GUIStyle("button")
+        {
+            fontSize = 14,
+            fontStyle = FontStyle.Bold
+        };
+
+        
+        Rect headerRect = new Rect(0, 0, position.width, 120);
+        EditorGUI.DrawRect(headerRect, new Color(0.1f, 0.1f, 0.2f, 1f));
+
+        
+        Rect logoRect = new Rect(position.width / 2 - 30, 10, 60, 60);
+
+        EditorGUI.DrawRect(logoRect, accentColor);
+        GUI.Label(logoRect, "NE", new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 36,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = Color.white }
+        });
+
+        
+        GUILayout.Space(80);
+        EditorGUILayout.LabelField("Node Engine Setup", headerStyle);
+
+        
+        GUILayout.BeginHorizontal();
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.LabelField($"Local Version: {localVersion}", versionStyle);
+        if (isCheckingForUpdates)
+        {
+            EditorGUILayout.LabelField("Checking for updates...", versionStyle);
+        }
+        else if (!string.IsNullOrEmpty(remoteVersion) && remoteVersion != "Error")
+        {
+            Color versionColor = updateAvailable ? warningColor : successColor;
+            EditorGUILayout.LabelField($"Latest Version: {remoteVersion}", new GUIStyle(versionStyle)
+            {
+                normal = { textColor = versionColor }
+            });
+
+            if (updateAvailable)
+            {
+                EditorGUILayout.LabelField("Update Available!", new GUIStyle(versionStyle)
+                {
+                    normal = { textColor = warningColor },
+                    fontStyle = FontStyle.Bold
+                });
+            }
+        }
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
+
+        
+        Rect accentLineRect = new Rect(0, 120, position.width, 3);
+        EditorGUI.DrawRect(accentLineRect, accentColor);
+
+        
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
+        
         EditorGUILayout.Space(20);
-        GUIStyle headerStyle = new GUIStyle(EditorStyles.largeLabel) { fontSize = 18, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
-        EditorGUILayout.LabelField("Node Engine Setup", headerStyle);
-        EditorGUILayout.Space(10);
-
-        GUIStyle descStyle = new GUIStyle(EditorStyles.wordWrappedLabel) { fontSize = 12, richText = true };
-        EditorGUILayout.LabelField("This setup will copy the necessary resources from the package to your project and fix all references.", descStyle);
-        EditorGUILayout.Space(20);
-
-        EditorGUILayout.LabelField("Setup Options", EditorStyles.boldLabel);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.LabelField("Setup Options", sectionHeaderStyle);
         EditorGUILayout.Space(10);
 
         copyResources = EditorGUILayout.ToggleLeft(" Copy Resources and Fix References", copyResources);
         EditorGUILayout.HelpBox("Copies files from the package to 'Assets/Resources/NodeEngine' and updates all internal GUID references.", MessageType.Info);
 
-        // New toggle for Graph Examples
         copyGraphExamples = EditorGUILayout.ToggleLeft(" Copy Graph Examples", copyGraphExamples);
         EditorGUILayout.HelpBox("Copies example graphs from the package to the 'Assets' root folder.", MessageType.Info);
 
-        EditorGUILayout.Space(30);
+        EditorGUILayout.Space(10);
 
-        // Enable the button if either option is selected
+        
         GUI.enabled = copyResources || copyGraphExamples;
+        Color originalBgColor = GUI.backgroundColor;
+        GUI.backgroundColor = accentColor;
         if (GUILayout.Button("Run Setup", GUILayout.Height(40)))
         {
             RunSetup();
         }
+        GUI.backgroundColor = originalBgColor;
         GUI.enabled = true;
 
-        EditorGUILayout.Space(20);
+        EditorGUILayout.EndVertical();
 
-        EditorGUILayout.LabelField("Setup Status", EditorStyles.boldLabel);
+        
+        EditorGUILayout.Space(20);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.LabelField("Setup Status", sectionHeaderStyle);
+        EditorGUILayout.Space(10);
+
         bool isSetupComplete = EditorPrefs.GetBool(SETUP_COMPLETE_KEY, false);
         string statusText = isSetupComplete ? "✅ Setup Complete" : "❌ Setup Required";
-        Color statusColor = isSetupComplete ? Color.green : Color.yellow;
+        Color statusColor = isSetupComplete ? successColor : warningColor;
 
-        GUIStyle statusStyle = new GUIStyle(EditorStyles.label) { normal = { textColor = statusColor }, fontStyle = FontStyle.Bold };
+        GUIStyle statusStyle = new GUIStyle(EditorStyles.label)
+        {
+            normal = { textColor = statusColor },
+            fontStyle = FontStyle.Bold,
+            fontSize = 16
+        };
         EditorGUILayout.LabelField(statusText, statusStyle);
 
         if (isSetupComplete)
         {
             EditorGUILayout.HelpBox("Node Engine is ready to use! You can access nodes through the Space key context menu.", MessageType.Info);
-            if (GUILayout.Button("Open NodeEngine Folder"))
+
+            GUI.backgroundColor = accentColor;
+            if (GUILayout.Button("Open NodeEngine Folder", GUILayout.Height(30)))
             {
                 OpenNodeEngineFolder();
             }
+            GUI.backgroundColor = originalBgColor;
         }
 
-        EditorGUILayout.Space(20);
+        EditorGUILayout.EndVertical();
 
+        
+        if (updateAvailable)
+        {
+            EditorGUILayout.Space(20);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Update Available", sectionHeaderStyle);
+            EditorGUILayout.Space(10);
+
+            EditorGUILayout.HelpBox($"A new version ({remoteVersion}) of Node Engine is available. You are currently using version {localVersion}.", MessageType.Warning);
+
+            GUI.backgroundColor = warningColor;
+            if (GUILayout.Button("Get Latest Version", GUILayout.Height(30)))
+            {
+                Application.OpenURL("https://github.com/pppoe252110/Node-Engine/releases");
+            }
+            GUI.backgroundColor = originalBgColor;
+
+            EditorGUILayout.EndVertical();
+        }
+
+        
+        EditorGUILayout.Space(20);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         showPackageResources = EditorGUILayout.Foldout(showPackageResources, "Package Resources", true);
         if (showPackageResources)
@@ -125,8 +371,8 @@ public class NodesSetupWindow : EditorWindow
         }
         EditorGUILayout.EndVertical();
 
+        
         EditorGUILayout.Space(20);
-
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, "Advanced Options", true);
         if (showAdvancedOptions)
@@ -134,13 +380,21 @@ public class NodesSetupWindow : EditorWindow
             EditorGUILayout.Space(10);
             EditorGUILayout.HelpBox("Use these options to reset or manually manage the setup.", MessageType.Warning);
 
+            GUI.backgroundColor = warningColor;
             if (GUILayout.Button("Force Re-Setup"))
             {
                 ResetSetupStatus();
                 RunSetup();
             }
+            GUI.backgroundColor = originalBgColor;
 
-            if (GUILayout.Button("Show NodeEngine in Explorer")) ShowInExplorer();
+            if (GUILayout.Button("Show NodeEngine in Explorer"))
+                ShowInExplorer();
+
+            if (GUILayout.Button("Check for Updates"))
+            {
+                CheckForUpdatesAsync().Forget();
+            }
 
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Manual Path Configuration", EditorStyles.miniBoldLabel);
@@ -166,7 +420,6 @@ public class NodesSetupWindow : EditorWindow
 
             if (copyGraphExamples)
             {
-                // Adjust progress bar based on whether resources were also copied
                 float progress = copyResources ? 0.7f : 0.8f;
                 EditorUtility.DisplayProgressBar("Node Engine Setup", "Copying GraphExamples...", progress);
                 CopyGraphExamples();
@@ -201,10 +454,8 @@ public class NodesSetupWindow : EditorWindow
         string targetRelativePath = TARGET_RESOURCE_PATH;
         string targetFullPath = Path.Combine(Application.dataPath, targetRelativePath.Substring("Assets/".Length));
 
-        // Ensure the target directory exists
         Directory.CreateDirectory(targetFullPath);
 
-        // --- Step 1: Get a map of original file paths to their original GUIDs from the package ---
         Dictionary<string, string> originalGuids = new Dictionary<string, string>();
         string[] sourceFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories).Where(f => !f.EndsWith(".meta")).ToArray();
 
@@ -222,7 +473,6 @@ public class NodesSetupWindow : EditorWindow
             }
         }
 
-        // --- Step 2: Copy files (excluding .meta) ---
         foreach (string sourceFile in sourceFiles)
         {
             string relativePath = sourceFile.Substring(sourcePath.Length + 1);
@@ -232,10 +482,8 @@ public class NodesSetupWindow : EditorWindow
             File.Copy(sourceFile, targetFile, true);
         }
 
-        // --- Step 3: Let Unity import the new files to generate new GUIDs ---
         AssetDatabase.Refresh();
 
-        // --- Step 4: Get a map of file paths to their NEW GUIDs ---
         Dictionary<string, string> newGuids = new Dictionary<string, string>();
         foreach (var entry in originalGuids.Keys)
         {
@@ -247,7 +495,6 @@ public class NodesSetupWindow : EditorWindow
             }
         }
 
-        // --- Step 5: Create the final mapping from old GUID to new GUID ---
         Dictionary<string, string> guidReplacementMap = new Dictionary<string, string>();
         foreach (var entry in originalGuids)
         {
@@ -263,7 +510,6 @@ public class NodesSetupWindow : EditorWindow
             }
         }
 
-        // --- Step 6: Find all prefabs in the target folder and replace the GUIDs ---
         string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { targetRelativePath });
         foreach (string prefabGuid in prefabGuids)
         {
@@ -289,12 +535,10 @@ public class NodesSetupWindow : EditorWindow
             }
         }
 
-        // Final refresh to ensure all changes are picked up
         AssetDatabase.Refresh();
         Debug.Log("Resource copy and reference fixing complete.");
     }
 
-    // New method to copy GraphExamples from package to Assets root
     private void CopyGraphExamples()
     {
         string sourcePath = FindPackageGraphExamplesPath();
@@ -304,9 +548,8 @@ public class NodesSetupWindow : EditorWindow
             return;
         }
 
-        string targetPath = Application.dataPath; // This points to the Assets folder
+        string targetPath = Application.dataPath;
 
-        // Get all files in the GraphExamples directory
         string[] sourceFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
             .Where(f => !f.EndsWith(".meta")).ToArray();
 
@@ -316,30 +559,20 @@ public class NodesSetupWindow : EditorWindow
             return;
         }
 
-        // Copy each file to the target directory
         foreach (string sourceFile in sourceFiles)
         {
-            // Get the relative path from the source directory
             string relativePath = sourceFile.Substring(sourcePath.Length + 1);
-
-            // Create the target file path
             string targetFile = Path.Combine(targetPath, relativePath);
-
-            // Ensure the target directory exists
             string targetDir = Path.GetDirectoryName(targetFile);
             if (!Directory.Exists(targetDir))
                 Directory.CreateDirectory(targetDir);
-
-            // Copy the file, overwrite if it exists
             File.Copy(sourceFile, targetFile, true);
-
             Debug.Log($"Copied GraphExample: {relativePath}");
         }
 
         Debug.Log($"Copied {sourceFiles.Length} GraphExample files to Assets folder.");
     }
 
-    // New method to find the GraphExamples folder in the package
     private string FindPackageGraphExamplesPath()
     {
         string packageCacheRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Library", "PackageCache");
@@ -350,7 +583,6 @@ public class NodesSetupWindow : EditorWindow
 
         if (packageFolders.Length > 0)
         {
-            // The first one is usually fine
             string graphExamplesPath = Path.Combine(packageFolders[0], "GraphExamples");
             if (Directory.Exists(graphExamplesPath)) return graphExamplesPath;
         }
@@ -368,7 +600,6 @@ public class NodesSetupWindow : EditorWindow
 
         if (packageFolders.Length > 0)
         {
-            // The first one is usually fine
             string resourcesPath = Path.Combine(packageFolders[0], "Resources");
             if (Directory.Exists(resourcesPath)) return resourcesPath;
         }
@@ -426,7 +657,7 @@ public class NodesSetupWindow : EditorWindow
         string folderPath = TARGET_RESOURCE_PATH;
         if (AssetDatabase.IsValidFolder(folderPath))
         {
-            Object folder = AssetDatabase.LoadAssetAtPath<Object>(folderPath);
+            UnityEngine.Object folder = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(folderPath);
             Selection.activeObject = folder;
             EditorGUIUtility.PingObject(folder);
         }
@@ -452,5 +683,15 @@ public class NodesSetupWindow : EditorWindow
         {
             EditorUtility.DisplayDialog("Not Found", "NodeEngine folder not found. Please run the setup first.", "OK");
         }
+    }
+
+    [System.Serializable]
+    private class PackageInfo
+    {
+        public string name;
+        public string version;
+        public string description;
+        public string unity;
+        public string unityRelease;
     }
 }

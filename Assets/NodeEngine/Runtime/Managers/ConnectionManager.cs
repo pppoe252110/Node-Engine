@@ -117,7 +117,7 @@ public class ConnectionManager : MonoBehaviour
     {
         if (fromConnector == null || toConnector == null) return false;
 
-        // FIX: Validate attributes and prevent loops at creation time
+        
         var fromAttr = fromConnector.Field?.GetAttribute();
         var toAttr = toConnector.Field?.GetAttribute();
 

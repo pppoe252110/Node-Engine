@@ -63,6 +63,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
         }
 
         Instance = this;
+        transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
     }
 
@@ -117,7 +118,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
             version = 2
         };
 
-        // Save all nodes
+        
         foreach (var (nodeId, nodeLogic) in NodeSpawnerService.Instance.GetAllNodes())
         {
             if (nodeLogic == null || nodeLogic.Node == null) continue;
@@ -135,24 +136,24 @@ public class GraphSaveLoadSystem : MonoBehaviour
             saveData.nodes.Add(nodeSaveData);
         }
 
-        // FIX: Improved connection saving with validation and duplicate prevention
+        
         SaveAllConnections(saveData);
 
         return saveData;
     }
 
-    // FIX: Added validation to skip invalid connections and prevent duplicates
+    
     private void SaveAllConnections(GraphSaveData saveData)
     {
-        var savedConnections = new HashSet<string>();  // Track unique connections
+        var savedConnections = new HashSet<string>();  
 
-        // Save connections from ConnectionManager
+        
         foreach (var connection in ConnectionManager.Instance.GetAllConnections())
         {
-            // FIX: Skip invalid connections (null/unknown attributes, self-loops)
+            
             if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
                 string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
-                connection.fromNodeId == connection.toNodeId)  // Prevent self-loops
+                connection.fromNodeId == connection.toNodeId)  
             {
                 continue;
             }
@@ -171,7 +172,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
             }
         }
 
-        // Also save visual connections from LineRenderersController (with same validation)
+        
         SaveVisualConnections(saveData, savedConnections);
     }
 
@@ -179,7 +180,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
     {
         if (LineRenderersController.Instance == null) return;
 
-        // Use reflection or add a method to LineRenderersController to get connections
+        
         var controllerType = typeof(LineRenderersController);
         var connectionsField = controllerType.GetField("_connections",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -191,9 +192,9 @@ public class GraphSaveLoadSystem : MonoBehaviour
             {
                 foreach (var connection in connections)
                 {
-                    // FIX: Added validation for visual connections (same as above)
+                    
                     if (connection.IsValid && connection.ConnectorA != null && connection.ConnectorB != null &&
-                        connection.ConnectorA.Node.Guid != connection.ConnectorB.Node.Guid)  // Prevent self-loops
+                        connection.ConnectorA.Node.Guid != connection.ConnectorB.Node.Guid)  
                     {
                         var fromAttr = connection.ConnectorA.Field?.GetAttribute();
                         var toAttr = connection.ConnectorB.Field?.GetAttribute();
@@ -259,17 +260,14 @@ public class GraphSaveLoadSystem : MonoBehaviour
             }
         }
 
-        // FIX: Added validation during loading to skip invalid connections
+        
         ConnectNodes(saveData, loadedNodeIds);
     }
 
     private void ConnectNodes(GraphSaveData saveData, HashSet<int> loadedNodeIds)
     {
-        Debug.Log($"Attempting to connect {saveData.connections.Count} saved connections");
-
         foreach (var connection in saveData.connections)
         {
-            // FIX: Skip invalid connections (same checks as saving)
             if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
                 string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
                 connection.fromNodeId == connection.toNodeId ||
@@ -277,8 +275,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
             {
                 continue;
             }
-
-            Debug.Log($"Connecting saved: {connection.fromNodeId}.{connection.fromConnectorName} -> {connection.toNodeId}.{connection.toConnectorName}");
 
             bool success = ConnectNodesByAttributeNames(
                 connection.fromNodeId,
@@ -305,19 +301,19 @@ public class GraphSaveLoadSystem : MonoBehaviour
             return false;
         }
 
-        // Find the FROM connector (output)
+        
         Connector fromConnector = FindConnectorByAttributeName(fromNode.Node.outputConnectors, fromConnectorName);
         if (fromConnector == null)
         {
-            // Try input connectors as fallback (though outputs are more common for "from")
+            
             fromConnector = FindConnectorByAttributeName(fromNode.Node.inputConnectors, fromConnectorName);
         }
 
-        // Find the TO connector (input)  
+        
         Connector toConnector = FindConnectorByAttributeName(toNode.Node.inputConnectors, toConnectorName);
         if (toConnector == null)
         {
-            // Try output connectors as fallback
+            
             toConnector = FindConnectorByAttributeName(toNode.Node.outputConnectors, toConnectorName);
         }
 
@@ -342,8 +338,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
             Debug.LogError($"Cannot connect connector to itself: {fromConnectorName} -> {toConnectorName}");
             return false;
         }
-
-        Debug.Log($"Connecting: {fromNode.Node.GetType().Name}.{fromConnectorName} -> {toNode.Node.GetType().Name}.{toConnectorName}");
 
         return ConnectionManager.Instance.CreateConnectionWithConnectors(fromConnector, toConnector);
     }

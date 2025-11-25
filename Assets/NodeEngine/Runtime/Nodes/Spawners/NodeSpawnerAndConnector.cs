@@ -57,31 +57,31 @@ public class NodeSpawnerAndConnector : MonoBehaviour
     {
         bool allSuccess = true;
 
-        // UpdateNode.Update (void) -> ForLoopNode1.Execute (void)
+        
         if (!TryConnectWithFallback(updateNode, forLoopNode1, "Update", "Execute", typeof(void), typeof(void)))
             allSuccess = false;
 
-        // IntVariableNode.Value (int) -> ForLoopNode1.Count (int)
+        
         if (!TryConnectWithFallback(intNode, forLoopNode1, "Value", "Count", typeof(int), typeof(int)))
             allSuccess = false;
 
-        // ForLoopNode1.Body (void) -> ForLoopNode2.Execute (void)
+        
         if (!TryConnectWithFallback(forLoopNode1, forLoopNode2, "Body", "Execute", typeof(void), typeof(void)))
             allSuccess = false;
 
-        // ForLoopNode1.Index (int) -> ForLoopNode1.Count (int)
+        
         if (!TryConnectWithFallback(forLoopNode1, forLoopNode2, "Index", "Count", typeof(int), typeof(int)))
             allSuccess = false;
 
-        // ForLoopNode2.Index (int) -> ToStringNode.Input (object)
+        
         if (!TryConnectWithFallback(forLoopNode2, toStringNode, "Index", "Input", typeof(int), typeof(object)))
             allSuccess = false;
 
-        // ToStringNode.Output (string) -> DebugNode.LogString (string)
+        
         if (!TryConnectWithFallback(toStringNode, debugNode, "Output", "LogString", typeof(string), typeof(string)))
             allSuccess = false;
 
-        // ForLoopNode2.Body (void) -> DebugNode.Input (void)
+        
         if (!TryConnectWithFallback(forLoopNode2, debugNode, "Body", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 

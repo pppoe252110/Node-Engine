@@ -2,7 +2,8 @@
     "name": "NodeEngine.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:9b28c38733faf2d4f909ad0b9adc266b"
+        "GUID:9b28c38733faf2d4f909ad0b9adc266b",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
