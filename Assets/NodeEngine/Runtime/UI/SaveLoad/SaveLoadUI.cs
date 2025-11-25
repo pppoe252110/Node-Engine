@@ -46,7 +46,7 @@ public class SaveLoadUI : MonoBehaviour
         GraphSaveLoadSystem.Instance.OnGraphSaved += OnGraphSaved;
         GraphSaveLoadSystem.Instance.OnGraphLoaded += OnGraphLoaded;
 
-        // Initialize panel as closed with no interaction
+        
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;

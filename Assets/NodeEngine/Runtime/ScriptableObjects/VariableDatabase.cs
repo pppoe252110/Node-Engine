@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "VariableDatabase", menuName = "ScriptableObjects/VariableDatabase", order = 2)]
+[CreateAssetMenu(fileName = "VariableDatabase", menuName = "Node Engine/VariableDatabase", order = 2)]
 public class VariableDatabase : ScriptableObject
 {
     [SerializeField] private VariableUIEntry[] _entries;

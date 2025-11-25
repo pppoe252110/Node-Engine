@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "NodesDatabase", menuName = "ScriptableObjects/NodesDatabase", order = 1)]
+[CreateAssetMenu(fileName = "NodesDatabase", menuName = "Node Engine/NodesDatabase", order = 1)]
 public class NodesDatabase : ScriptableObject
 {
     [SerializeField] private SerializableNode[] _serializableNodes = new SerializableNode[0];

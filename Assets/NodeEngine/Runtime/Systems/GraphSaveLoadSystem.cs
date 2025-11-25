@@ -307,16 +307,16 @@ public class GraphSaveLoadSystem : MonoBehaviour
 
     private void LoadNodeData(NodeBase node, NodeInstanceData nodeSaveData)
     {
-        // Try to get the field values from the nodeSaveData
+        
         if (!string.IsNullOrEmpty(nodeSaveData.fieldValuesJson))
         {
             try
             {
-                // Deserialize the list of FieldValueData
+                
                 var fieldValuesList = JsonUtility.FromJson<FieldValueDataList>(nodeSaveData.fieldValuesJson);
                 if (fieldValuesList?.values != null)
                 {
-                    // Handle VariableNode special case
+                    
                     if (node is VariableNode variableNode)
                     {
                         var variableValueData = fieldValuesList.values.FirstOrDefault();
