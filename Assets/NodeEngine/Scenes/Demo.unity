@@ -865,10 +865,10 @@ RectTransform:
   - {fileID: 1132634242}
   m_Father: {fileID: 1212196769}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 479.99902, y: -35}
-  m_SizeDelta: {x: -960.001, y: -70.00001}
+  m_AnchoredPosition: {x: -434.75003, y: -34.99994}
+  m_SizeDelta: {x: 869.49994, y: -70.00001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &255223162
 CanvasRenderer:
@@ -2869,7 +2869,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 146, y: -19}
+  m_AnchoredPosition: {x: 104, y: -35}
   m_SizeDelta: {x: 200, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &670512430
@@ -5498,7 +5498,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1982755720}
   m_HandleRect: {fileID: 1982755719}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -7544,6 +7544,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f16ea32e1e16e9945a032639ddb2ba37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NodeEngine.Runtime::SaveLoadUI
+  fadeDuration: 0.3
+  canvasGroup: {fileID: 1697865193}
   _saveLoadPanel: {fileID: 1697865191}
   _openButton: {fileID: 2078660551}
   _saveNameInput: {fileID: 1066522915}
@@ -10321,7 +10323,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 23, y: -19}
+  m_AnchoredPosition: {x: 23, y: -35}
   m_SizeDelta: {x: 38, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2063429395
