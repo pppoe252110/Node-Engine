@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,10 +15,10 @@ public class ConnectorColorDatabaseEditor : Editor
     private List<string> availableTypes = new List<string>();
     private int selectedAvailableTypeIndex = 0;
 
-    // Cached data - populated after scanning via button, persisted across editor sessions
+    
     private Dictionary<string, int> typeUsageCounts = new Dictionary<string, int>();
     private List<Type> allUsedTypes = new List<Type>();
-    private bool hasScanned = false; // Flag to avoid rescanning if already done
+    private bool hasScanned = false; 
 
     private const string CacheKeyUsageCounts = "ConnectorColorDatabase_UsageCounts";
     private const string CacheKeyAllUsedTypes = "ConnectorColorDatabase_AllUsedTypes";
@@ -30,13 +30,13 @@ public class ConnectorColorDatabaseEditor : Editor
     private void OnEnable()
     {
         database = (ConnectorColorDatabase)target;
-        LoadCachedData(); // Load persisted cache if available
-        RefreshAvailableTypes(); // This will be empty initially if not scanned
+        LoadCachedData(); 
+        RefreshAvailableTypes(); 
     }
 
     private void OnDisable()
     {
-        SaveCachedData(); // Persist cache when editor closes
+        SaveCachedData(); 
     }
 
     private void LoadCachedData()
@@ -44,14 +44,14 @@ public class ConnectorColorDatabaseEditor : Editor
         hasScanned = EditorPrefs.GetBool(CacheKeyHasScanned, false);
         if (hasScanned)
         {
-            // Load usage counts
+            
             string usageJson = EditorPrefs.GetString(CacheKeyUsageCounts, "");
             if (!string.IsNullOrEmpty(usageJson))
             {
                 typeUsageCounts = JsonUtility.FromJson<SerializableDictionary<string, int>>(usageJson).ToDictionary();
             }
 
-            // Load all used types (as type names, since Type can't be serialized directly)
+            
             string typesJson = EditorPrefs.GetString(CacheKeyAllUsedTypes, "");
             if (!string.IsNullOrEmpty(typesJson))
             {
@@ -66,11 +66,11 @@ public class ConnectorColorDatabaseEditor : Editor
         EditorPrefs.SetBool(CacheKeyHasScanned, hasScanned);
         if (hasScanned)
         {
-            // Save usage counts
+            
             var serializableUsage = new SerializableDictionary<string, int>(typeUsageCounts);
             EditorPrefs.SetString(CacheKeyUsageCounts, JsonUtility.ToJson(serializableUsage));
 
-            // Save all used types as names
+            
             var typeNames = allUsedTypes.Select(t => t.AssemblyQualifiedName).ToList();
             var serializableTypes = new SerializableList<string>(typeNames);
             EditorPrefs.SetString(CacheKeyAllUsedTypes, JsonUtility.ToJson(serializableTypes));
@@ -79,10 +79,10 @@ public class ConnectorColorDatabaseEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        // Draw the header with a nice background
+        
         DrawHeader();
 
-        // Main content area
+        
         EditorGUILayout.BeginVertical(GUI.skin.box);
         {
             DrawAutoFillSection();
@@ -157,12 +157,12 @@ public class ConnectorColorDatabaseEditor : Editor
         {
             EditorGUILayout.LabelField("Type Color Mappings", EditorStyles.boldLabel);
 
-            // Search and Add section
+            
             DrawAddTypeSection();
 
             EditorGUILayout.Space();
 
-            // Type list
+            
             if (database.ColorMappings.Count == 0)
             {
                 EditorGUILayout.HelpBox("No type mappings. Click 'Find All Types' or add types manually above.", MessageType.Info);
@@ -183,7 +183,7 @@ public class ConnectorColorDatabaseEditor : Editor
 
             EditorGUILayout.BeginHorizontal();
             {
-                // Search filter
+                
                 string newSearch = EditorGUILayout.TextField("Search:", searchFilter, GUILayout.ExpandWidth(true));
                 if (newSearch != searchFilter)
                 {
@@ -191,7 +191,7 @@ public class ConnectorColorDatabaseEditor : Editor
                     RefreshAvailableTypes();
                 }
 
-                // Clear search button
+                
                 if (!string.IsNullOrEmpty(searchFilter) && GUILayout.Button("✕", GUILayout.Width(25)))
                 {
                     searchFilter = "";
@@ -202,11 +202,11 @@ public class ConnectorColorDatabaseEditor : Editor
 
             EditorGUILayout.BeginHorizontal();
             {
-                // Type dropdown
+                
                 string[] availableTypeNames = availableTypes.ToArray();
                 selectedAvailableTypeIndex = EditorGUILayout.Popup("Type:", selectedAvailableTypeIndex, availableTypeNames, GUILayout.ExpandWidth(true));
 
-                // Add button
+                
                 GUI.enabled = availableTypes.Count > 0;
                 if (GUILayout.Button("➕ Add", GUILayout.Width(60)))
                 {
@@ -244,26 +244,26 @@ public class ConnectorColorDatabaseEditor : Editor
 
         EditorGUILayout.BeginVertical("Box");
         {
-            // First row: Color and Type name
+            
             EditorGUILayout.BeginHorizontal();
             {
-                // Color field with preview
+                
                 EditorGUILayout.BeginVertical(GUILayout.Width(60));
                 {
                     mapping.color = EditorGUILayout.ColorField(GUIContent.none, mapping.color, false, true, false, GUILayout.Height(30), GUILayout.Width(50));
 
-                    // Small color preview
+                    
                     Rect colorRect = GUILayoutUtility.GetRect(50, 3);
                     EditorGUI.DrawRect(colorRect, mapping.color);
                 }
                 EditorGUILayout.EndVertical();
 
-                // Type name
+                
                 EditorGUILayout.BeginVertical();
                 {
                     EditorGUILayout.LabelField(mapping.typeName, EditorStyles.boldLabel);
 
-                    // Usage info (from cached data if available, else show unknown)
+                    
                     int usageCount = typeUsageCounts.TryGetValue(mapping.typeName, out int count) ? count : 0;
                     string usageText = usageCount == 0 ? "Usage: Unknown (scan to update)" : (usageCount == 1 ? "1 usage" : $"{usageCount} usages");
                     EditorGUILayout.LabelField(usageText, EditorStyles.miniLabel);
@@ -272,7 +272,7 @@ public class ConnectorColorDatabaseEditor : Editor
 
                 GUILayout.FlexibleSpace();
 
-                // Move buttons
+                
                 EditorGUILayout.BeginVertical();
                 {
                     GUI.enabled = index > 0;
@@ -291,7 +291,7 @@ public class ConnectorColorDatabaseEditor : Editor
                 }
                 EditorGUILayout.EndVertical();
 
-                // Remove button
+                
                 if (GUILayout.Button("🗑️", GUILayout.Width(30), GUILayout.Height(30)))
                 {
                     database.ColorMappings.RemoveAt(index);
@@ -354,7 +354,7 @@ public class ConnectorColorDatabaseEditor : Editor
 
     private void AutoFillTypes()
     {
-        // Perform the scan here with progress bar
+        
         EditorUtility.DisplayProgressBar("Scanning for Types", "Finding all used types...", 0f);
         allUsedTypes = FindAllUsedTypes();
         typeUsageCounts = ComputeUsageCounts(allUsedTypes);
@@ -475,19 +475,19 @@ public class ConnectorColorDatabaseEditor : Editor
     {
         return type.Name switch
         {
-            "Int32" => new Color(1f, 0.2f, 0.2f),     // Vibrant Red
-            "Single" => new Color(0.2f, 0.9f, 0.2f),  // Electric Green
-            "Boolean" => new Color(0.1f, 0.5f, 1f),   // Deep Blue
-            "String" => new Color(1f, 0.8f, 0.1f),    // Golden Yellow
-            "Void" => new Color(0.8f, 0.2f, 0.8f),    // Royal Purple
-            "Vector3" => new Color(1f, 0.5f, 0f),     // Bright Orange
-            "GameObject" => new Color(0f, 0.8f, 1f),  // Electric Cyan
-            "Object" => new Color(0.9f, 0.1f, 0.5f),  // Hot Pink
+            "Int32" => new Color(1f, 0.2f, 0.2f),     
+            "Single" => new Color(0.2f, 0.9f, 0.2f),  
+            "Boolean" => new Color(0.1f, 0.5f, 1f),   
+            "String" => new Color(1f, 0.8f, 0.1f),    
+            "Void" => new Color(0.8f, 0.2f, 0.8f),    
+            "Vector3" => new Color(1f, 0.5f, 0f),     
+            "GameObject" => new Color(0f, 0.8f, 1f),  
+            "Object" => new Color(0.9f, 0.1f, 0.5f),  
             _ => database.FallbackColor
         };
     }
 
-    // Helper classes for serializing dictionaries and lists to JSON
+    
     [Serializable]
     private class SerializableDictionary<TKey, TValue>
     {

@@ -1,4 +1,4 @@
-﻿using TMPro;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +14,7 @@ public class NodesListGroup : MonoBehaviour
     public string GroupName { get; private set; }
     public bool IsExpanded { get; private set; } = false;
 
-    // Event for when expansion state changes
+    
     public System.Action<NodesListGroup, bool> OnExpansionChanged;
 
     private void Awake()
@@ -58,13 +58,13 @@ public class NodesListGroup : MonoBehaviour
     {
         if (groupNameText != null)
         {
-            // The arrow character is already set in the inspector
-            // We just need to show/hide the items and potentially rotate the arrow
+            
+            
             string arrow = IsExpanded ? "▼" : "►";
             Container.gameObject.SetActive(IsExpanded);
-            // If you want to keep the arrow static in inspector and just rotate it:
-            // We'll use the text from inspector and just update expansion state visually
-            // Alternatively, you can set the text directly:
+            
+            
+            
             expandCollapseButtonText.text = arrow;
             groupNameText.text = GroupName;
         }
@@ -78,7 +78,7 @@ public class NodesListGroup : MonoBehaviour
         }
     }
 
-    // Call this when items are added to the group
+    
     public void RegisterItem(Transform itemTransform)
     {
         if (itemsContainer != null)

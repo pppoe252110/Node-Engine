@@ -35,7 +35,7 @@ public abstract class ExecutableNodeBase : NodeBase
         TriggerOutput();
     }
 
-    // Helper method to setup execution flow
+    
     protected void SetupDefaultExecutionFlow()
     {
         _executeInputField = new NodeField<ConnectorValueVoid>(true)
@@ -46,7 +46,7 @@ public abstract class ExecutableNodeBase : NodeBase
             .SetHandler(OnExecuteOutput)
             .SetDefaultValue(new ConnectorValueVoid());
 
-        // Add to fields list - input first, output last (standard convention)
+        
         inputFields.Insert(0, _executeInputField);
         outputFields.Add(_executeOutputField);
     }

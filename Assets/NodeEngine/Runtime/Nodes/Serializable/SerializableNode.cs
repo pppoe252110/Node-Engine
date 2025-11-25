@@ -17,7 +17,7 @@ public class SerializableNode
 
             if (instance is VariableNode varNode)
             {
-                // Set the type (use reflection or direct cast)
+                
                 var field = typeof(VariableNode).GetField("_variableType", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 field?.SetValue(varNode, variableType);
             }

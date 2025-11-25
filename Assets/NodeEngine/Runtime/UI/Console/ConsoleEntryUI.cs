@@ -19,11 +19,11 @@ public class ConsoleEntryUI : MonoBehaviour
     {
         messageText.text = entry.DisplayMessage;
         messageText.color = entry.Color;
-        timeText.text = entry.TimeString;  // Now uses the first timestamp
+        timeText.text = entry.TimeString;  
         countText.text = entry.count > 1 ? entry.count.ToString() : "";
         countText.gameObject.SetActive(entry.count > 1);
 
-        // Set icon based on log type
+        
         typeIcon.sprite = entry.logType switch
         {
             LogType.Warning => warningIcon,

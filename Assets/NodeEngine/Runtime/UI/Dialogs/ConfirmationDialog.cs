@@ -50,7 +50,7 @@ public class ConfirmationDialog : MonoBehaviour
 
     private void Update()
     {
-        // Close on Escape key
+        
         if (Keyboard.current.escapeKey.wasReleasedThisFrame)
         {
             Complete(false);

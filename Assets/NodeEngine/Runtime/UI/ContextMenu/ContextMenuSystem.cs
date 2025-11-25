@@ -21,10 +21,10 @@ public class ContextMenuSystem : MonoBehaviour
     private GameObject currentDialog;
     private CancellationTokenSource cancellationTokenSource;
 
-    // Singleton instance
+    
     public static ContextMenuSystem Instance { get; private set; }
 
-    // Public properties
+    
     public bool IsContextMenuOpen => currentContextMenu != null;
     public bool IsDialogOpen => currentDialog != null;
 
@@ -76,39 +76,39 @@ public class ContextMenuSystem : MonoBehaviour
         var rectTransform = currentContextMenu.GetComponent<RectTransform>();
         if (rectTransform == null) return;
 
-        // Set pivot to bottom left (0,0) so the menu expands up and right
+        
         rectTransform.pivot = Vector2.zero;
 
-        // For Screen Space - Overlay canvas, simply set the position
+        
         rectTransform.position = screenPosition;
 
-        // Optional: Ensure the menu stays within screen bounds
+        
         ClampToScreenBounds(rectTransform);
     }
 
     private void ClampToScreenBounds(RectTransform rectTransform)
     {
-        // Get the menu's size in screen coordinates
+        
         Vector2 menuSize = rectTransform.rect.size;
 
-        // For Screen Space - Overlay, the position is already in screen coordinates
+        
         Vector2 screenPos = rectTransform.position;
 
-        // Check if menu goes off screen to the right
+        
         if (screenPos.x + menuSize.x > Screen.width)
         {
-            // Move left to fit
+            
             screenPos.x = Screen.width - menuSize.x;
         }
 
-        // Check if menu goes off screen to the top
+        
         if (screenPos.y + menuSize.y > Screen.height)
         {
-            // Move down to fit
+            
             screenPos.y = Screen.height - menuSize.y;
         }
 
-        // Apply the clamped position
+        
         rectTransform.position = screenPos;
     }
 
@@ -176,7 +176,7 @@ public class ContextMenuSystem : MonoBehaviour
         }
         catch (System.OperationCanceledException)
         {
-            // Task cancellation is expected
+            
         }
     }
 
@@ -278,11 +278,11 @@ public class ContextMenuSystem : MonoBehaviour
 
         try
         {
-            //bool confirmed = await ShowDeleteConfirmationDialog(targetNode.Node.NodeName);
-            //if (confirmed && targetNode != null)
-            //{
+            
+            
+            
             targetNode.DeleteNode();
-            //}
+            
         }
         catch (System.Exception e)
         {

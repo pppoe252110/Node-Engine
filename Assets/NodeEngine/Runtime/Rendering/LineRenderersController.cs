@@ -9,7 +9,7 @@ public class LineRenderersController : MonoBehaviour
     private static LineRenderersController _instance;
 
     [SerializeField] private RectTransform _inheritTransform;
-    [SerializeField] private Material _lineRendererMaterial; // Reference to the base material
+    [SerializeField] private Material _lineRendererMaterial; 
 
     private List<ConnectionData> _connections = new List<ConnectionData>();
 
@@ -51,7 +51,7 @@ public class LineRenderersController : MonoBehaviour
         if (Instance._lineRendererMaterial == null)
         {
             Debug.LogError("LineRenderer material is not assigned in LineRenderersController");
-            // Create a fallback material
+            
             var fallbackMaterial = new Material(Shader.Find("UI/Default"));
             fallbackMaterial.SetColor("_Color1", colorA);
             fallbackMaterial.SetColor("_Color2", colorB);
@@ -89,7 +89,7 @@ public class LineRenderersController : MonoBehaviour
     {
         var lineRenderer = connection.LineRenderer;
 
-        // Update material properties
+        
         lineRenderer.material.SetVector("_Point1",
             new Vector2(connection.ConnectorA.AnchoredPositionPoint.x / Screen.width,
                        connection.ConnectorA.AnchoredPositionPoint.y / Screen.height));
@@ -97,7 +97,7 @@ public class LineRenderersController : MonoBehaviour
             new Vector2(connection.ConnectorB.AnchoredPositionPoint.x / Screen.width,
                        connection.ConnectorB.AnchoredPositionPoint.y / Screen.height));
 
-        // Update bezier points
+        
         lineRenderer.points = BezierFromTwoPoints.GetPoints(
             lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorA.DragPoint),
             lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorB.DragPoint),
@@ -122,7 +122,7 @@ public class LineRenderersController : MonoBehaviour
         public bool IsValid => ConnectorA != null && ConnectorB != null && LineRenderer != null;
     }
 
-    // Cleanup all connections
+    
     public static void ClearAllConnections()
     {
         if (Instance == null) return;

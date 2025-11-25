@@ -1,4 +1,4 @@
-﻿[NodePath("Control Flow/For Loop")]
+[NodePath("Control Flow/For Loop")]
 public class ForLoopNode : ExecutableNodeBase
 {
     private ConnectorValueVoid _execute;
@@ -45,7 +45,7 @@ public class ForLoopNode : ExecutableNodeBase
 
         _bodyField = new NodeField<ConnectorValueVoid>(false).SetHandler(Body).SetDefaultValue(bodyVoid);
         _endField = new NodeField<ConnectorValueVoid>(false).SetHandler(End).SetDefaultValue(endVoid);
-        _indexField = new NodeField<ConnectorValueInt>(false).SetHandler(Index).SetDefaultValue(new ConnectorValueInt(0));  // Store the Index field
+        _indexField = new NodeField<ConnectorValueInt>(false).SetHandler(Index).SetDefaultValue(new ConnectorValueInt(0));  
 
         inputFields = new()
         {

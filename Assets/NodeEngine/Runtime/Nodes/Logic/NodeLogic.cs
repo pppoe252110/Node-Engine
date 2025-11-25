@@ -10,8 +10,8 @@ public class NodeLogic : MonoBehaviour
     [SerializeField] private NodeBase _node;
 
     [Header("Connectors")]
-    [SerializeField] private NodeSpawner _nodeSpawner;  // New: Delegates connector spawning
-    [SerializeField] private NodeDeleter _nodeDeleter;  // New: Delegates node deletion
+    [SerializeField] private NodeSpawner _nodeSpawner;  
+    [SerializeField] private NodeDeleter _nodeDeleter;  
 
     [Header("Properties")]
     [SerializeField] private Image _image;
@@ -39,26 +39,26 @@ public class NodeLogic : MonoBehaviour
         _nodeIcon.sprite = _node.NodeSprite;
         _nodeIcon.color = _node.NodeSprite ? Color.white : Color.clear;
 
-        // Handle VariableNode: Spawn UI and output connectors (no input connectors, as they use UI)
+        
         if (_node is VariableNode varNode && VariableDatabase != null)
         {
             _nodeSpawner.SpawnVariableUI(varNode, VariableDatabase, _image);
-            // Spawn only output connectors for VariableNode
+            
             _nodeSpawner.GenerateOutputConnectors(_node, _node.outputFields, _node.outputConnectors);
         }
         else
         {
-            // For non-VariableNodes: Spawn standard input and output connectors
+            
             _nodeSpawner.SpawnConnectors(_node, _node.inputFields, _node.outputFields, _node.inputConnectors, _node.outputConnectors);
         }
 
-        // Set node size and material (adjust for VariableNode if needed)
+        
         _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, 57 + (Mathf.Max(_node.inputFields.Count, _node.outputFields.Count)) * 25);
         _image.material = new Material(_image.material);
 
         RecalculateMaterial();
 
-        // Add to processor
+        
         NodeLogicProcessor.Instance?.AddNode(this);
     }
 
@@ -70,7 +70,7 @@ public class NodeLogic : MonoBehaviour
             return;
         }
 
-        // Delegate deletion to NodeDeleter
+        
         _nodeDeleter.DeleteNode(_node, _node.inputConnectors, _node.outputConnectors, NodeLogicProcessor.Instance);
     }
 

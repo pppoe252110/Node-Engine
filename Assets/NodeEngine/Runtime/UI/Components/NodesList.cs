@@ -58,13 +58,13 @@ public class NodesList : MonoBehaviour
         _groupHeaders.Clear();
         _groupContainers.Clear();
 
-        // Clear existing items
+        
         foreach (Transform child in _nodesListParent)
         {
             Destroy(child.gameObject);
         }
 
-        // Group nodes by their path
+        
         for (int i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
@@ -82,17 +82,17 @@ public class NodesList : MonoBehaviour
 
             _groupedItems[groupName].Add((item: item, originalIndex: i));
 
-            // Register item with group container
+            
             if (_groupContainers.ContainsKey(groupName))
             {
                 item.transform.SetParent(_groupContainers[groupName]);
             }
         }
 
-        // Sort groups alphabetically
+        
         var sortedGroups = _groupedItems.OrderBy(g => g.Key).ToList();
 
-        // Reorganize hierarchy to maintain group->item structure
+        
         ReorganizeHierarchy(sortedGroups);
 
         ApplySearchFilter();
@@ -104,7 +104,7 @@ public class NodesList : MonoBehaviour
         var pathAttribute = nodeType.GetCustomAttributes(typeof(NodePathAttribute), false)
                                   .FirstOrDefault() as NodePathAttribute;
 
-        // Always use the NodeName from the database for the item display name
+        
         string itemName = node.NodeName;
 
         if (pathAttribute != null && !string.IsNullOrEmpty(pathAttribute.Path))
@@ -114,26 +114,26 @@ public class NodesList : MonoBehaviour
 
             if (lastSlash >= 0)
             {
-                // Split into group and item name
+                
                 string groupName = path.Substring(0, lastSlash);
                 return (groupName, itemName);
             }
             else
             {
-                // No slash - use as item name, group is "Other"
+                
                 return ("Other", itemName);
             }
         }
         else
         {
-            // No path attribute - use the NodeName property directly
+            
             return ("Other", itemName);
         }
     }
 
     private void CreateGroupHeader(string groupName)
     {
-        // Create group header
+        
         var groupUI = Instantiate(_nodesListGroupPrefab, _nodesListParent);
         groupUI.SetGroupName(groupName);
         groupUI.OnExpansionChanged += OnGroupExpansionChanged;
@@ -144,8 +144,8 @@ public class NodesList : MonoBehaviour
 
     private void OnGroupExpansionChanged(NodesListGroup group, bool isExpanded)
     {
-        // The group already handles its own items visibility
-        // We just need to ensure the layout updates properly
+        
+        
         LayoutRebuilder.ForceRebuildLayoutImmediate(_nodesListView);
     }
 
@@ -156,11 +156,11 @@ public class NodesList : MonoBehaviour
             var groupHeader = _groupHeaders[group.Key];
             var groupContainer = _groupContainers[group.Key];
 
-            // Set hierarchy order: Header -> Container
+            
             groupHeader.transform.SetAsLastSibling();
             groupContainer.transform.SetAsLastSibling();
 
-            // Sort items within group alphabetically
+            
             var sortedItems = group.Value.OrderBy(x => x.item.nodeName.text).ToList();
 
             foreach (var tuple in sortedItems)
@@ -197,13 +197,13 @@ public class NodesList : MonoBehaviour
                 }
             }
 
-            // Show/hide group header based on whether it has visible items
+            
             if (_groupHeaders.ContainsKey(group.Key))
             {
                 bool shouldShowGroup = hasVisibleItemsInGroup;
                 _groupHeaders[group.Key].gameObject.SetActive(shouldShowGroup);
 
-                // Also show/hide the container
+                
                 if (_groupContainers.ContainsKey(group.Key))
                 {
                     _groupContainers[group.Key].gameObject.SetActive(shouldShowGroup && _groupHeaders[group.Key].IsExpanded);
@@ -240,7 +240,7 @@ public class NodesList : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Clean up event subscriptions
+        
         foreach (var group in _groupHeaders.Values)
         {
             if (group != null)

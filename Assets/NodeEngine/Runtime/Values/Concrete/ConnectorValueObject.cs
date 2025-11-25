@@ -1,4 +1,4 @@
-﻿// Values\ConnectorValueObject.cs
+
 using System;
 using UnityEngine;
 
@@ -19,7 +19,7 @@ public class ConnectorValueObject : ConnectorValueBase, IFastConnectorValue<obje
         SetValue(value);
     }
 
-    // Fast interface implementation
+    
     public void SetValue(object value)
     {
         _value = value;
@@ -29,18 +29,18 @@ public class ConnectorValueObject : ConnectorValueBase, IFastConnectorValue<obje
     public object GetValue() => _value;
     public override object GetInnerValue() => _value;
 
-    // Bridge interface implementation (self-bridging)
+    
     public IConnectorValue WrappedValue => this;
     public Type ValueType => _storedType;
     public void SetValueFast(object value) => SetValue(value);
     public object GetValueFast() => _value;
 
-    // Type information
+    
     public Type GetStoredType() => _storedType;
     public bool IsNull => _value == null;
     public bool IsValueType => _storedType?.IsValueType ?? false;
 
-    // Type checking and casting
+    
     public bool IsType<T>() => _value is T;
     public bool IsType(Type type) => type?.IsAssignableFrom(_storedType) ?? false;
 
@@ -64,7 +64,7 @@ public class ConnectorValueObject : ConnectorValueBase, IFastConnectorValue<obje
         }
     }
 
-    // Specialized getters for common types
+    
     public T GetValueAs<T>() where T : class => _value as T;
     public T GetValueCast<T>() => (T)_value;
 
@@ -72,7 +72,7 @@ public class ConnectorValueObject : ConnectorValueBase, IFastConnectorValue<obje
     public override bool Equals(object obj) => obj is ConnectorValueObject other && Equals(_value, other._value);
     public override int GetHashCode() => _value?.GetHashCode() ?? 0;
 
-    // Override bridge creation for optimal performance
+    
     protected override IConnectorValueBridge CreateFastBridge()
     {
         return new FastConnectorBridge<object>(this);

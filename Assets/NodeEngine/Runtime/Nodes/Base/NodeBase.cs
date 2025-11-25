@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -48,7 +48,7 @@ public abstract class NodeBase : INode, ICloneable
     {
         if (fromConnectors == null) fromConnectors = new List<Connector>();
 
-        // Cycle detection: Skip if already processing this node
+        
         if (_processingNodes.Contains(this) || IsProcessing)
         {
             return;
@@ -59,15 +59,15 @@ public abstract class NodeBase : INode, ICloneable
 
         try
         {
-            // Process inputs: Update data values from connected outputs (passive propagation)
+            
             foreach (var connector in inputConnectors)
             {
-                if (!fromConnectors.Contains(connector) && connector.ValueType != typeof(void))  // Only data inputs
+                if (!fromConnectors.Contains(connector) && connector.ValueType != typeof(void))  
                 {
                     connector.Field.ProceedValue();
                     fromConnectors.Add(connector);
 
-                    // Recurse to connected upstream nodes for value updates
+                    
                     foreach (var connected in connector.Connections)
                     {
                         connected.Node.Process(fromConnectors);
@@ -75,19 +75,19 @@ public abstract class NodeBase : INode, ICloneable
                 }
             }
 
-            // Process data outputs to ensure they have current values
+            
             foreach (var connector in outputConnectors)
             {
-                if (connector.ValueType != typeof(void))  // Data outputs
+                if (connector.ValueType != typeof(void))  
                 {
                     connector.Field.ProceedValue();
                 }
             }
 
-            // Skip ALL void event propagation for ExecutableNode to prevent re-triggering execution or extra calls
+            
             if (this is ExecutableNodeBase) return;
 
-            // Propagate void events from outputs (fire downstream)
+            
             foreach (var connector in outputConnectors)
             {
                 if (connector.ValueType == typeof(void))

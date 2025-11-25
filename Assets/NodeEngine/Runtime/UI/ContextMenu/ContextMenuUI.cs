@@ -15,7 +15,7 @@ public class ContextMenuUI : MonoBehaviour
     [SerializeField] private Color cancelButtonColor = new Color(0.5f, 0.5f, 0.5f, 1f);
     [SerializeField] private Color buttonTextColor = Color.white;
 
-    // Events for button clicks
+    
     public System.Action onDeleteClicked;
     public System.Action onCancelClicked;
 
@@ -34,21 +34,21 @@ public class ContextMenuUI : MonoBehaviour
     {
         if (button == null) return;
 
-        // Set button colors
+        
         var buttonColors = button.colors;
         buttonColors.normalColor = color;
         buttonColors.highlightedColor = new Color(color.r + 0.2f, color.g + 0.2f, color.b + 0.2f, 1f);
         buttonColors.pressedColor = new Color(color.r - 0.2f, color.g - 0.2f, color.b - 0.2f, 1f);
         button.colors = buttonColors;
 
-        // Set button text
+        
         if (text != null)
         {
             text.text = label;
             text.color = buttonTextColor;
         }
 
-        // Add click listener
+        
         button.onClick.AddListener(action);
     }
 

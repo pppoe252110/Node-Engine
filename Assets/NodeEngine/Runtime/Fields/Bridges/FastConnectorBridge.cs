@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,7 +9,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
 {
     private readonly IConnectorValue _wrappedValue;
 
-    // 🚀 Cached delegates for maximum performance
+    
     private static Action<IConnectorValue, T> _staticSetter;
     private static Func<IConnectorValue, T> _staticGetter;
     private static bool _isCompiled;
@@ -18,20 +18,20 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
     public IConnectorValue WrappedValue => _wrappedValue;
     public Type ValueType => typeof(T);
 
-    // 🚀 DEFAULT CONSTRUCTOR: For backward compatibility
+    
     public FastConnectorBridge(IConnectorValue wrappedValue)
     {
         _wrappedValue = wrappedValue ?? throw new ArgumentNullException(nameof(wrappedValue));
         EnsureCompiled();
     }
 
-    // 🚀 OPTIMIZED CONSTRUCTOR: For direct delegate injection
+    
     public FastConnectorBridge(IConnectorValue wrappedValue, Action<IConnectorValue, T> setter, Func<IConnectorValue, T> getter)
     {
         _wrappedValue = wrappedValue ?? throw new ArgumentNullException(nameof(wrappedValue));
         _staticSetter = setter;
         _staticGetter = getter;
-        _isCompiled = true; // Mark as compiled since we're providing delegates
+        _isCompiled = true; 
     }
 
     private static void EnsureCompiled()
@@ -42,7 +42,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
         {
             if (_isCompiled) return;
 
-            // 🚀 Try direct field access first (fastest)
+            
             if (TryCreateDirectAccessors(out var directSetter, out var directGetter))
             {
                 _staticSetter = directSetter;
@@ -50,7 +50,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
             }
             else
             {
-                // Fallback to expression trees
+                
                 _staticSetter = CreateSetter();
                 _staticGetter = CreateGetter();
             }
@@ -59,7 +59,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
         }
     }
 
-    // 🚀 ULTRA-FAST DIRECT FIELD ACCESS
+    
     private static bool TryCreateDirectAccessors(out Action<IConnectorValue, T> setter, out Func<IConnectorValue, T> getter)
     {
         setter = null;
@@ -67,7 +67,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
 
         try
         {
-            // Look for common field patterns in connector values
+            
             var field = typeof(IConnectorValue).GetField("_value",
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
 
@@ -78,7 +78,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
                 return true;
             }
 
-            // Check for specific connector value types
+            
             var connectorType = typeof(IConnectorValue).Assembly.GetTypes()
                 .FirstOrDefault(t => typeof(IConnectorValue).IsAssignableFrom(t) &&
                                    t.GetField("_value", BindingFlags.NonPublic | BindingFlags.Instance)?.FieldType == typeof(T));
@@ -93,7 +93,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
         }
         catch
         {
-            // If direct access fails, fall back to expression trees
+            
         }
 
         return false;
@@ -103,7 +103,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
     {
         var wrappedType = typeof(IConnectorValue);
 
-        // Try to find SetValue method
+        
         var setValueMethod = wrappedType.GetMethod("SetValue", BindingFlags.Public | BindingFlags.Instance);
         if (setValueMethod != null && setValueMethod.GetParameters().Length == 1)
         {
@@ -113,7 +113,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
             return Expression.Lambda<Action<IConnectorValue, T>>(call, connectorParam, valueParam).Compile();
         }
 
-        // Fallback to field access
+        
         var valueField = wrappedType.GetField("_value", BindingFlags.NonPublic | BindingFlags.Instance) ??
                         wrappedType.GetField("value", BindingFlags.NonPublic | BindingFlags.Instance) ??
                         wrappedType.GetField("m_value", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -134,7 +134,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
     {
         var wrappedType = typeof(IConnectorValue);
 
-        // Try to find GetValue method
+        
         var getValueMethod = wrappedType.GetMethod("GetValue", BindingFlags.Public | BindingFlags.Instance);
         if (getValueMethod != null && getValueMethod.ReturnType == typeof(T) && getValueMethod.GetParameters().Length == 0)
         {
@@ -143,7 +143,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
             return Expression.Lambda<Func<IConnectorValue, T>>(call, connectorParam).Compile();
         }
 
-        // Fallback to field access
+        
         var valueField = wrappedType.GetField("_value", BindingFlags.NonPublic | BindingFlags.Instance) ??
                         wrappedType.GetField("value", BindingFlags.NonPublic | BindingFlags.Instance) ??
                         wrappedType.GetField("m_value", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -158,7 +158,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
         return null;
     }
 
-    // 🚀 OPTIMIZED METHOD IMPLEMENTATIONS
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetValue(T value)
     {
@@ -186,7 +186,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
         }
         catch
         {
-            // Safe fallback
+            
             if (value is T typedValue)
                 SetValue(typedValue);
         }
@@ -195,7 +195,7 @@ public class FastConnectorBridge<T> : ITypedConnectorBridge<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public object GetValueFast() => GetValue();
 
-    // 🚀 FALLBACK METHODS
+    
     private void FallbackSetValue(T value)
     {
         if (_wrappedValue is IFastConnectorValue<T> fastValue)

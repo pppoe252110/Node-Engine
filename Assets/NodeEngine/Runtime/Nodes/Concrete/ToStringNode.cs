@@ -38,7 +38,7 @@ public class ToStringNode : NodeBase
     {
         base.Process(fromConnectors);
 
-        // Force output update
+        
         if (_output != null && _input != null)
         {
             var inputValue = _input.GetValue();

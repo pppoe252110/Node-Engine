@@ -1,4 +1,4 @@
-﻿// Core interfaces
+
 public interface IConnectorValue
 {
     object GetInnerValue();

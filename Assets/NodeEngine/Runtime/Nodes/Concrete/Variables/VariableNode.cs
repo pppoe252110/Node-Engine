@@ -50,7 +50,7 @@ public abstract class VariableNode : NodeBase
         }
     }
 
-    // Separate methods for each type with correct attributes
+    
     [NodeValue("Value", typeof(int))]
     public void OutputInt(ConnectorValueInt value)
     {
@@ -81,18 +81,18 @@ public abstract class VariableNode : NodeBase
         {
             var val = UIElement.GetValue();
 
-            // Update the value based on the current field type
+            
             switch (_outputField)
             {
                 case NodeField<ConnectorValueInt> intField:
-                    // Get the actual ConnectorValueInt instance from the field
+                    
                     var intValue = intField.GetObjectValue() as ConnectorValueInt;
 
                     if (intValue != null && val is int intVal)
                     {
                         intValue.SetValue(intVal);
 
-                        // Force propagation to connected inputs
+                        
                         intField.ProceedValue();
                     }
                     else

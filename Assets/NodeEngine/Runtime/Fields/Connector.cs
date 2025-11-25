@@ -35,7 +35,7 @@ public class Connector : MonoBehaviour
         if (_colorDatabase != null)
             return _colorDatabase.GetColorForType(ValueType);
 
-        return Color.gray; // Ultimate fallback
+        return Color.gray; 
     }
 
     public void SetData(NodeValueAttribute attribute)

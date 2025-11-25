@@ -92,7 +92,7 @@ public class ConnectorDragLogic : MonoBehaviour
         _dragLineRenderer.material = CreateLineMaterial(_dragConnector.Color);
         _isDragging = true;
 
-        UpdateDragLine(); // Initial points
+        UpdateDragLine(); 
     }
 
     private Material CreateLineMaterial(Color color)
@@ -128,15 +128,15 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private bool IsValidConnection(Connector targetConnector)
     {
-        return _dragConnector.Node != targetConnector.Node &&           // Prevent self-connection
-               targetConnector.ConnectionsCount == 0 &&                // Only one connection per input
-               IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType); // Type check
+        return _dragConnector.Node != targetConnector.Node &&           
+               targetConnector.ConnectionsCount == 0 &&                
+               IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType); 
     }
 
     private void CreateConnection(Connector targetConnector)
     {
         LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
-        _dragLineRenderer = null; // Controller now owns the line
+        _dragLineRenderer = null; 
 
         _dragConnector.AddConnection(targetConnector);
         targetConnector.AddConnection(_dragConnector);

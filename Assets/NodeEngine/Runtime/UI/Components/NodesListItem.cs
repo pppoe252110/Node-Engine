@@ -6,7 +6,7 @@ public class NodesListItem : MonoBehaviour
 {
     [SerializeField] private Button button;
     [SerializeField] public TextMeshProUGUI nodeName;
-    private int _originalIndex; // Store the original index
+    private int _originalIndex; 
     private NodesList _list;
 
     internal void SetUp(NodesList list, int originalIndex)
@@ -19,7 +19,7 @@ public class NodesListItem : MonoBehaviour
 
     public void AddNode()
     {
-        // Pass the original index instead of the visible index
+        
         _list.SpawnNodeFromOriginalIndex(_originalIndex);
     }
 

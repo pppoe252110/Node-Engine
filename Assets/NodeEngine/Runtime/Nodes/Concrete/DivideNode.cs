@@ -15,7 +15,7 @@ public class DivideNode : NodeBase
         _result = result;
         float denominator = _b.GetValue();
 
-        // Prevent division by zero
+        
         if (denominator == 0)
         {
             _result.SetValue(0);

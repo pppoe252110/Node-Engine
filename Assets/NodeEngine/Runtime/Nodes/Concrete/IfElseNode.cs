@@ -17,12 +17,12 @@ public class IfElseNode : ExecutableNodeBase
     {
         if (_condition.GetValue())
         {
-            //_trueTrigger.SetValueFast(_trueTrigger);
+            
             _trueTrigger.Execute();
         }
         else
         {
-            //_falseTrigger.SetValueFast(_falseTrigger);
+            
             _falseTrigger.Execute();
         }
     }

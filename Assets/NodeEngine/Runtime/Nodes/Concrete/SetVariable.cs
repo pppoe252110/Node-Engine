@@ -3,7 +3,7 @@ using System.Collections.Generic;
 [NodePath("Variables/Set")]
 public class SetVariableNode : ExecutableNodeBase
 {
-    private static Dictionary<string, object> _variables = new();  // Simple global storage
+    private static Dictionary<string, object> _variables = new();  
 
     private ConnectorValueObject _value;
     private ConnectorValueString _name;

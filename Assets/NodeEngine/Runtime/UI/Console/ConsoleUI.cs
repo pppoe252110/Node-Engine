@@ -14,7 +14,7 @@ public class ConsoleUI : MonoBehaviour
     [SerializeField] private TMP_InputField searchInput;
     [SerializeField] private Button clearButton;
     [SerializeField] private Button collapseButton;
-    [SerializeField] private TextMeshProUGUI collapseButtonText; // <-- CORRECTED: Added a field for the button's text
+    [SerializeField] private TextMeshProUGUI collapseButtonText; 
     [SerializeField] private Toggle errorToggle;
     [SerializeField] private Toggle warningToggle;
     [SerializeField] private Toggle logToggle;
@@ -30,7 +30,7 @@ public class ConsoleUI : MonoBehaviour
     [Header("Fading")]
     [SerializeField] private float fadeDuration = 0.3f;
 
-    // FIX: Removed 'readonly' from allEntries to allow reassignment in collapse/expand methods.
+    
     private List<ConsoleEntry> allEntries = new List<ConsoleEntry>();
     private readonly List<ConsoleEntry> filteredEntries = new List<ConsoleEntry>();
     private bool isCollapsed = false;
@@ -39,13 +39,13 @@ public class ConsoleUI : MonoBehaviour
     private bool showWarnings = true;
     private bool showLogs = true;
 
-    // Pooling for UI entries
+    
     private readonly Queue<ConsoleEntryUI> entryPool = new Queue<ConsoleEntryUI>();
     private readonly List<ConsoleEntryUI> activeEntries = new List<ConsoleEntryUI>();
 
-    // Throttling for refreshes
+    
     private float lastRefreshTime;
-    private const float refreshInterval = 0.05f; // Reduced for more responsive UI
+    private const float refreshInterval = 0.05f; 
 
     private bool isConsoleVisible = false;
 
@@ -60,7 +60,7 @@ public class ConsoleUI : MonoBehaviour
         }
         Instance = this;
 
-        // Ensure canvasGroup exists
+        
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
 
         Application.logMessageReceived += HandleLog;
@@ -77,7 +77,7 @@ public class ConsoleUI : MonoBehaviour
         warningToggle.onValueChanged.AddListener(OnFilterChanged);
         logToggle.onValueChanged.AddListener(OnFilterChanged);
 
-        // Initialize entry pool
+        
         for (int i = 0; i < initialPoolSize; i++)
         {
             ConsoleEntryUI entry = Instantiate(entryPrefab, entriesParent);
@@ -86,7 +86,7 @@ public class ConsoleUI : MonoBehaviour
         }
 
         UpdateCollapseButtonText();
-        SetConsoleVisibility(false); // Start hidden
+        SetConsoleVisibility(false); 
     }
 
     public void ToggleConsoleVisibility()
@@ -104,7 +104,7 @@ public class ConsoleUI : MonoBehaviour
 
         if (isVisible)
         {
-            ForceRefresh(); // Refresh content when console becomes visible
+            ForceRefresh(); 
         }
     }
 
@@ -136,7 +136,7 @@ public class ConsoleUI : MonoBehaviour
         }
     }
 
-    private void OnFilterChanged(bool _) // The 'isOn' value is not needed, we just check all toggles
+    private void OnFilterChanged(bool _) 
     {
         showErrors = errorToggle.isOn;
         showWarnings = warningToggle.isOn;
@@ -183,19 +183,19 @@ public class ConsoleUI : MonoBehaviour
         allEntries.Add(newEntry);
         RefreshUI();
 
-        // Auto-scroll to bottom when new messages arrive
+        
         StartCoroutine(ScrollToBottom());
     }
 
     private IEnumerator ScrollToBottom()
     {
-        yield return new WaitForEndOfFrame(); // Wait for UI to update
+        yield return new WaitForEndOfFrame(); 
         scrollRect.verticalNormalizedPosition = 0f;
     }
 
     public void ForceRefresh()
     {
-        lastRefreshTime = 0f; // Reset timer to bypass throttle
+        lastRefreshTime = 0f; 
         RefreshUI();
     }
 
@@ -212,7 +212,7 @@ public class ConsoleUI : MonoBehaviour
     {
         filteredEntries.Clear();
 
-        // Early exit if no log types are selected
+        
         if (!showErrors && !showWarnings && !showLogs) return;
 
         foreach (var entry in allEntries)
@@ -231,7 +231,7 @@ public class ConsoleUI : MonoBehaviour
             filteredEntries.Add(entry);
         }
 
-        // Limit to max displayed entries (keep the most recent)
+        
         if (filteredEntries.Count > maxDisplayedEntries)
         {
             filteredEntries.RemoveRange(0, filteredEntries.Count - maxDisplayedEntries);
@@ -240,7 +240,7 @@ public class ConsoleUI : MonoBehaviour
 
     private void UpdateEntryUIs()
     {
-        // Deactivate excess entries that are no longer needed
+        
         while (activeEntries.Count > filteredEntries.Count)
         {
             var entryToReturn = activeEntries[activeEntries.Count - 1];
@@ -249,18 +249,18 @@ public class ConsoleUI : MonoBehaviour
             activeEntries.RemoveAt(activeEntries.Count - 1);
         }
 
-        // Activate or create entries for the filtered list
+        
         for (int i = 0; i < filteredEntries.Count; i++)
         {
             ConsoleEntryUI entryUI;
             if (i < activeEntries.Count)
             {
-                // Reuse an existing active entry
+                
                 entryUI = activeEntries[i];
             }
             else
             {
-                // Need a new entry, get from pool or instantiate
+                
                 if (entryPool.Count > 0)
                 {
                     entryUI = entryPool.Dequeue();
@@ -273,7 +273,7 @@ public class ConsoleUI : MonoBehaviour
                 activeEntries.Add(entryUI);
             }
 
-            // Ensure the entry is at the correct position in the hierarchy
+            
             entryUI.transform.SetSiblingIndex(i);
             entryUI.Initialize(filteredEntries[i]);
         }
@@ -304,7 +304,7 @@ public class ConsoleUI : MonoBehaviour
 
     private void UpdateCollapseButtonText()
     {
-        // CORRECTED: Directly set the text on the serialized field.
+        
         if (collapseButtonText != null)
         {
             collapseButtonText.text = isCollapsed ? "Collapse: ON" : "Collapse: OFF";
@@ -359,7 +359,7 @@ public class ConsoleUI : MonoBehaviour
     {
         allEntries.Clear();
         filteredEntries.Clear();
-        RefreshUI(); // This will trigger UpdateEntryUIs to deactivate everything
+        RefreshUI(); 
     }
 
     private void OnDestroy()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using UnityEngine;
 
@@ -32,7 +32,7 @@ public class VariableNodeField : NodeFieldBase
         return this;
     }
 
-    // ✅ NEW: Data-only propagation for VariableNodeField
+    
     public override void UpdateValueFromSource(IConnectorValue sourceValue)
     {
         if (sourceValue == null) return;
@@ -42,7 +42,7 @@ public class VariableNodeField : NodeFieldBase
             var innerValue = sourceValue.GetInnerValue();
             SetValue(innerValue);
 
-            // Invoke handler but don't propagate further
+            
             _valueHandler?.Invoke(_currentValue);
 
             Debug.Log($"[VariableNodeField] Updated to: {innerValue}");
@@ -55,7 +55,7 @@ public class VariableNodeField : NodeFieldBase
 
     public override void ProceedValue()
     {
-        // Propagate to connected fields
+        
         if (Connector?.Connections?.Count > 0)
         {
             foreach (var connectedConnector in Connector.Connections)
@@ -63,7 +63,7 @@ public class VariableNodeField : NodeFieldBase
                 var field = connectedConnector?.Field;
                 if (field != null && !connectedConnector.Node.IsProcessing)
                 {
-                    // Use data-only propagation
+                    
                     field.UpdateValueFromSource(_currentValue);
                 }
             }
@@ -76,7 +76,7 @@ public class VariableNodeField : NodeFieldBase
     public override NodeValueAttribute GetAttribute() => _valueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
     public override object GetObjectValue() => _currentValue?.GetInnerValue();
 
-    // Method to update the value
+    
     public void SetValue(object newValue)
     {
         if (_currentValue != null)

@@ -22,7 +22,7 @@ public class ClampNode : NodeBase
         float minVal = _min.GetValue();
         float maxVal = _max.GetValue();
 
-        // Ensure min <= max
+        
         if (minVal > maxVal)
         {
             float temp = minVal;

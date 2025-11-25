@@ -3,8 +3,8 @@ using UnityEngine;
 [NodePath("Transform/Move")]
 public class MoveGameObjectNode : ExecutableNodeBase
 {
-    private ConnectorValueObject _target;  // GameObject
-    private ConnectorValueObject _position;  // Vector3
+    private ConnectorValueObject _target;  
+    private ConnectorValueObject _position;  
     private ConnectorValueFloat _speed;
 
     [NodeValue("Target", typeof(GameObject))]

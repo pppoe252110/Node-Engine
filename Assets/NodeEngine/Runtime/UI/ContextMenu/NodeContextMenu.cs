@@ -16,7 +16,7 @@ public class NodeContextMenu : MonoBehaviour, IPointerClickHandler
     {
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            // Check if we're clicking on a connector first
+            
             if (!IsMouseOverConnector(eventData))
             {
                 ShowContextMenu(eventData.position).Forget();
@@ -30,14 +30,14 @@ public class NodeContextMenu : MonoBehaviour, IPointerClickHandler
 
     private bool IsMouseOverConnector(PointerEventData eventData)
     {
-        // Method 1: Check hovered objects (most common case)
+        
         foreach (var hoveredObject in eventData.hovered)
         {
             if (IsObjectConnector(hoveredObject))
                 return true;
         }
 
-        // Method 2: Perform an additional raycast to be sure
+        
         var results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
 
@@ -54,11 +54,11 @@ public class NodeContextMenu : MonoBehaviour, IPointerClickHandler
     {
         if (obj == null) return false;
 
-        // Check if the object itself is a connector
+        
         if (obj.TryGetComponent<Connector>(out _))
             return true;
 
-        // Check if any parent is a connector
+        
         Transform current = obj.transform;
         while (current != null)
         {

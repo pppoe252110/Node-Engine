@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -7,38 +7,38 @@ using UnityEngine;
 
 public static class ConnectorBridgeFactory
 {
-    // Statistics
+    
     public static int TotalBridgeRequests { get; private set; }
     public static int BridgesActuallyCreated { get; private set; }
     public static int PoolHits { get; private set; }
     public static int DirectAccessHits { get; private set; }
 
-    // 🚀 PRIMARY POOL: Instance-based for exact matches
+    
     private static readonly Dictionary<IConnectorValue, IConnectorValueBridge> _bridgePool =
         new Dictionary<IConnectorValue, IConnectorValueBridge>();
 
-    // 🚀 TYPE CACHE: Thread-safe bridge type compilation
+    
     private static readonly Dictionary<Type, Type> _bridgeTypeCache = new Dictionary<Type, Type>();
     private static readonly object _typeCacheLock = new object();
 
-    // 🚀 COMMON TYPES: Pre-optimized for direct access
+    
     private static readonly HashSet<Type> _commonTypes = new HashSet<Type>
     {
         typeof(int), typeof(float), typeof(bool), typeof(string),
         typeof(Vector3), typeof(GameObject), typeof(void), typeof(object)
     };
 
-    // 🚀 DIRECT ACCESS BRIDGES: Ultra-fast for common types
+    
     private static readonly Dictionary<Type, Func<IConnectorValue, IConnectorValueBridge>> _directBridgeFactories =
         new Dictionary<Type, Func<IConnectorValue, IConnectorValueBridge>>();
 
-    // 🚀 WEAK REFERENCES: Prevent memory leaks for long-lived objects
+    
     private static readonly Dictionary<WeakReference, IConnectorValueBridge> _weakBridgePool =
         new Dictionary<WeakReference, IConnectorValueBridge>();
     private static int _lastCleanupFrame = 0;
     private const int CLEANUP_FRAME_INTERVAL = 60;
 
-    // 🚀 PERFORMANCE TRACKING
+    
     private static readonly System.Diagnostics.Stopwatch _perfStopwatch = new System.Diagnostics.Stopwatch();
     private static long _totalBridgeCreationTime = 0;
 
@@ -64,51 +64,51 @@ public static class ConnectorBridgeFactory
         InitializeDirectBridgeFactories();
     }
 
-    // 🚀 DIRECT BRIDGE FACTORIES: Pre-compiled for maximum performance
+    
     private static void InitializeDirectBridgeFactories()
     {
-        // int
+        
         _directBridgeFactories[typeof(int)] = value =>
             new FastConnectorBridge<int>(value,
                 (v, x) => { if (v is ConnectorValueInt cv) cv.SetValue(x); },
                 v => (v is ConnectorValueInt cv) ? cv.GetValue() : default(int)
             );
 
-        // float
+        
         _directBridgeFactories[typeof(float)] = value =>
             new FastConnectorBridge<float>(value,
                 (v, x) => { if (v is ConnectorValueFloat cv) cv.SetValue(x); },
                 v => (v is ConnectorValueFloat cv) ? cv.GetValue() : default(float)
             );
 
-        // bool
+        
         _directBridgeFactories[typeof(bool)] = value =>
             new FastConnectorBridge<bool>(value,
                 (v, x) => { if (v is ConnectorValueBool cv) cv.SetValue(x); },
                 v => (v is ConnectorValueBool cv) ? cv.GetValue() : default(bool)
             );
 
-        // string
+        
         _directBridgeFactories[typeof(string)] = value =>
             new FastConnectorBridge<string>(value,
                 (v, x) => { if (v is ConnectorValueString cv) cv.SetValue(x); },
                 v => (v is ConnectorValueString cv) ? cv.GetValue() : string.Empty
             );
 
-        // object
+        
         _directBridgeFactories[typeof(object)] = value =>
             new FastConnectorBridge<object>(value,
                 (v, x) => { if (v is ConnectorValueObject cv) cv.SetValue(x); },
                 v => (v is ConnectorValueObject cv) ? cv.GetValue() : null
             );
 
-        // void
+        
         _directBridgeFactories[typeof(IExecutableConnector)] = value =>
             new ExecutableConnectorBridge((IExecutableConnector)value);
 
     }
 
-    // 🚀 MAIN METHOD: Ultra-optimized bridge creation
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IConnectorValueBridge CreateBridge(IConnectorValue value)
     {
@@ -119,14 +119,14 @@ public static class ConnectorBridgeFactory
 
         try
         {
-            // 🚀 STEP 1: Check instance pool (fastest path)
+            
             if (_bridgePool.TryGetValue(value, out var pooledBridge))
             {
                 PoolHits++;
                 return pooledBridge;
             }
 
-            // 🚀 STEP 2: Check weak reference pool
+            
             var weakPooled = GetFromWeakPool(value);
             if (weakPooled != null)
             {
@@ -134,22 +134,22 @@ public static class ConnectorBridgeFactory
                 return weakPooled;
             }
 
-            // 🚀 STEP 3: NEW! Check for executable interface FIRST
-            // This ensures actions are handled by their specialized bridge.
+            
+            
             if (value is IExecutableConnector executable)
             {
-                DirectAccessHits++; // This is a direct access path
+                DirectAccessHits++; 
                 var br = new ExecutableConnectorBridge(executable);
                 _bridgePool[value] = br;
                 BridgesActuallyCreated++;
                 return br;
             }
 
-            // If not an executable, get the inner value's type for standard processing
+            
             var innerValue = value.GetInnerValue();
             var innerType = innerValue?.GetType() ?? typeof(object);
 
-            // 🚀 STEP 4: Try direct access for other common types
+            
             if (_directBridgeFactories.TryGetValue(innerType, out var directFactory))
             {
                 DirectAccessHits++;
@@ -159,7 +159,7 @@ public static class ConnectorBridgeFactory
                 return br;
             }
 
-            // 🚀 STEP 5: Generic bridge creation with caching
+            
             var bridgeType = GetOrCreateBridgeType(innerType);
             var bridge = (IConnectorValueBridge)Activator.CreateInstance(bridgeType, value);
 
@@ -173,7 +173,7 @@ public static class ConnectorBridgeFactory
             _perfStopwatch.Stop();
             _totalBridgeCreationTime += _perfStopwatch.ElapsedMilliseconds;
 
-            // 🚀 Periodic cleanup
+            
             if (Time.frameCount - _lastCleanupFrame > CLEANUP_FRAME_INTERVAL)
             {
                 CleanupWeakReferences();
@@ -181,7 +181,7 @@ public static class ConnectorBridgeFactory
             }
         }
     }
-    // 🚀 THREAD-SAFE BRIDGE TYPE CREATION
+    
     private static Type GetOrCreateBridgeType(Type innerType)
     {
         if (_bridgeTypeCache.TryGetValue(innerType, out var bridgeType))
@@ -198,7 +198,7 @@ public static class ConnectorBridgeFactory
         }
     }
 
-    // 🚀 WEAK REFERENCE POOL MANAGEMENT
+    
     private static IConnectorValueBridge GetFromWeakPool(IConnectorValue value)
     {
         var toRemove = new List<WeakReference>();
@@ -241,7 +241,7 @@ public static class ConnectorBridgeFactory
             _weakBridgePool.Remove(deadRef);
     }
 
-    // 🚀 MEMORY MANAGEMENT
+    
     public static void RemoveBridge(IConnectorValue value)
     {
         if (value != null && _bridgePool.TryGetValue(value, out var bridge))
@@ -268,7 +268,7 @@ public static class ConnectorBridgeFactory
 
     private static bool IsValueFromNode(IConnectorValue value, NodeBase node)
     {
-        return false; // Implement based on your architecture
+        return false; 
     }
 
 #if UNITY_EDITOR

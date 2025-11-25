@@ -29,13 +29,13 @@ public class DebugNode : ExecutableNodeBase
 
     public override void Setup()
     {
-        // Add other input fields
+        
         inputFields = new()
         {
             new NodeField<ConnectorValueString>(true).SetHandler(LogString).SetDefaultValue(new ConnectorValueString(""))
         };
 
-        // Setup execution flow first
+        
         base.Setup();
     }
 }

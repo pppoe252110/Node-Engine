@@ -41,7 +41,7 @@ public class InputFieldVariableUI : VariableUIElement
                 _inputField.characterLimit = 0;
                 break;
             case VariableType.Vector3:
-                _inputField.contentType = TMP_InputField.ContentType.Standard; // Allow any input for Vector3
+                _inputField.contentType = TMP_InputField.ContentType.Standard; 
                 _inputField.characterLimit = 50;
                 if (_inputField.placeholder != null)
                     _inputField.placeholder.GetComponent<TMP_Text>().text = "x; y; z  (use semicolons)";
@@ -69,7 +69,7 @@ public class InputFieldVariableUI : VariableUIElement
                     {
                         newValue = i;
                         isValid = true;
-                        // Reformat text to ensure it's clean (e.g., "051" -> "51")
+                        
                         _inputField.SetTextWithoutNotify(i.ToString(_culture));
                     }
                     break;
@@ -78,18 +78,18 @@ public class InputFieldVariableUI : VariableUIElement
                     {
                         newValue = f;
                         isValid = true;
-                        _inputField.SetTextWithoutNotify(f.ToString("0.00", _culture));  // Consistent decimal places
+                        _inputField.SetTextWithoutNotify(f.ToString("0.00", _culture));  
                     }
                     break;
                 case VariableType.String:
                     newValue = value;
                     isValid = true;
-                    // No reformat needed
+                    
                     break;
                 case VariableType.Vector3:
-                    // Existing Vector3 parsing logic
+                    
                     ParseVector3Value(value);
-                    if (_value is Vector3)  // Assume ParseVector3Value sets _value if valid
+                    if (_value is Vector3)  
                     {
                         isValid = true;
                         FormatVector3Value();
@@ -108,7 +108,7 @@ public class InputFieldVariableUI : VariableUIElement
         }
         else
         {
-            // Invalid input: Reset text to current value's string
+            
             FormatCurrentValue();
         }
 
@@ -117,18 +117,18 @@ public class InputFieldVariableUI : VariableUIElement
 
     private void ParseVector3Value(string value)
     {
-        // Use semicolons as separators to avoid conflict with decimal commas
-        string[] separators = new string[] { ";", "|", " " }; // Try multiple separators
+        
+        string[] separators = new string[] { ";", "|", " " }; 
         string[] parts = value.Split(separators, System.StringSplitOptions.RemoveEmptyEntries);
 
         if (parts.Length >= 3)
         {
-            // Take first 3 parts
+            
             string xStr = parts[0].Trim();
             string yStr = parts[1].Trim();
             string zStr = parts[2].Trim();
 
-            // Replace comma decimal separator with period for parsing
+            
             xStr = xStr.Replace(",", ".");
             yStr = yStr.Replace(",", ".");
             zStr = zStr.Replace(",", ".");
@@ -144,7 +144,7 @@ public class InputFieldVariableUI : VariableUIElement
         }
         else if (parts.Length == 1)
         {
-            // Single value - use for all components
+            
             string singleValue = parts[0].Trim().Replace(",", ".");
             if (float.TryParse(singleValue, NumberStyles.Float, _culture, out float uniformValue))
             {
@@ -154,7 +154,7 @@ public class InputFieldVariableUI : VariableUIElement
             }
         }
 
-        // If parsing failed, set to default
+        
         SetDefaultValue();
     }
 
@@ -209,7 +209,7 @@ public class InputFieldVariableUI : VariableUIElement
     {
         if (_value is float floatValue)
         {
-            // Format with period as decimal separator, but allow user to input commas
+            
             _inputField.SetTextWithoutNotify(floatValue.ToString("0.00", _culture));
         }
     }
@@ -218,7 +218,7 @@ public class InputFieldVariableUI : VariableUIElement
     {
         if (_value is Vector3 vectorValue)
         {
-            // Use semicolons as separators, periods for decimals
+            
             string formatted = $"{vectorValue.x:0.00}; {vectorValue.y:0.00}; {vectorValue.z:0.00}";
             _inputField.SetTextWithoutNotify(formatted);
         }
@@ -246,10 +246,10 @@ public class InputFieldVariableUI : VariableUIElement
 
     public override object GetValue() => _value;
 
-    // Handle locale-specific decimal separators
+    
     private string ConvertToInvariantFormat(string input)
     {
-        // Replace comma decimal separator with period for parsing
+        
         return input.Replace(",", ".");
     }
 
@@ -260,7 +260,7 @@ public class InputFieldVariableUI : VariableUIElement
 
     private void OnEndEdit(string value)
     {
-        // Re-format when user finishes editing
+        
         FormatCurrentValue();
     }
 

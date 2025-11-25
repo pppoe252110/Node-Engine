@@ -29,12 +29,12 @@ public class NodesDatabase : ScriptableObject
            .Where(t => t.IsSubclassOf(typeof(NodeBase)) && !t.IsAbstract)
            .ToArray();
 
-        // Convert existing array to a list for easier manipulation
+        
         var existingNodes = _serializableNodes?.ToList() ?? new System.Collections.Generic.List<SerializableNode>();
 
         foreach (var type in subclassTypes)
         {
-            // Check if a node with this type already exists
+            
             bool typeAlreadyExists = existingNodes.Any(node =>
                 node != null &&
                 node.nodeType != null &&
@@ -42,14 +42,14 @@ public class NodesDatabase : ScriptableObject
 
             if (!typeAlreadyExists)
             {
-                // Add the new type if it doesn't exist
+                
                 var newNode = new SerializableNode();
                 newNode.Initialize(type, type.Name.Replace("Node", ""));
                 existingNodes.Add(newNode);
             }
         }
 
-        // Convert back to array
+        
         _serializableNodes = existingNodes.ToArray();
     }
 }

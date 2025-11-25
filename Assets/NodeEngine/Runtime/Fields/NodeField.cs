@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using UnityEngine;
 
@@ -7,13 +7,13 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 {
     public delegate void ValueHandlerFunc(T value);
 
-    // Private fields
+    
     private T _currentValue;
     private readonly bool _isInput;
     private IConnectorValueBridge _fastBridge;
     private bool _hasFastBridge;
 
-    // Public properties for better encapsulation
+    
     public event ValueHandlerFunc CurrentValueHandler;
     public T CurrentValue => _currentValue;
     public bool HasFastBridge => _hasFastBridge;
@@ -27,7 +27,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void InitializeFastBridge()
     {
-        // 🚀 OPTIMIZATION: Skip bridge for void (no data to bridge)
+        
         if (typeof(T) == typeof(ConnectorValueVoid))
         {
             _hasFastBridge = false;
@@ -42,7 +42,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         }
     }
 
-    // Fluent interface methods
+    
     public NodeField<T> SetHandler(ValueHandlerFunc handler)
     {
         CurrentValueHandler = handler;
@@ -52,11 +52,11 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
     public NodeField<T> SetDefaultValue(T value)
     {
         _currentValue = value;
-        InitializeFastBridge(); // Re-initialize bridge when value is provided
+        InitializeFastBridge(); 
         return this;
     }
 
-    // ✅ Data-only propagation (no execution)
+    
     public override void UpdateValueFromSource(IConnectorValue sourceValue)
     {
         if (sourceValue == null) return;
@@ -66,7 +66,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
             var innerValue = sourceValue.GetInnerValue();
             UpdateCurrentValue(innerValue);
 
-            // ✅ Invoke handler to update the value, but don't propagate further
+            
             CurrentValueHandler?.Invoke(_currentValue);
         }
         catch (Exception e)
@@ -123,7 +123,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessDataInput(Connector connectedConnector)
     {
-        // DATA FLOW: Process connected node and get value
+        
         if (!connectedConnector.Node.IsProcessing)
         {
             connectedConnector.Node.Process();
@@ -139,7 +139,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessVoidInput(Connector connectedConnector)
     {
-        // VOID INPUT FLOW: Execute connected node
+        
         if (Connector.Node is ExecutableNodeBase executableNode && !executableNode.IsProcessing)
         {
             executableNode.Process();
@@ -166,7 +166,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessDataOutput()
     {
-        // DATA OUTPUT: Use data-only propagation
+        
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;
@@ -179,13 +179,13 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessVoidOutput()
     {
-        // 🚀 OPTIMIZATION: Void output - direct execution (no bridge)
+        
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;
             if (field != null && !connectedConnector.Node.IsProcessing)
             {
-                field.ProceedValue();  // Trigger execution directly
+                field.ProceedValue();  
             }
         }
     }
@@ -213,7 +213,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         }
     }
 
-    // Helper method for manual value setting
+    
     private void SetValueManually(IConnectorValue target, object value)
     {
         switch (target)
@@ -255,7 +255,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         return _currentValue;
     }
 
-    // New helper methods for better API
+    
     public bool TryGetValueAs<U>(out U result) where U : class
     {
         result = _currentValue as U;
