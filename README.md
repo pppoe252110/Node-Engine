@@ -35,6 +35,8 @@ The In-Game Node Engine is a **player-facing visual scripting system** that empo
 - 🎨 **Visual programming** - Intuitive drag-and-drop interface accessible to non-programmers
 - 🔧 **Modding & customization** - Players can create custom game mechanics and content
 - 🧩 **Extensible architecture** - Easily add new node types to fit your game's needs
+<img width="1918" height="882" alt="image" src="https://github.com/user-attachments/assets/6c14af94-4fc4-4615-b5f6-c43e431b6bb2" />
+<img width="1917" height="881" alt="image" src="https://github.com/user-attachments/assets/7e37b673-802f-438e-b7de-9ca81e1ce16a" />
 
 ## ✨ Features
 
@@ -161,6 +163,7 @@ The Node Engine includes a robust save/load system that allows players to:
 - **Compatibility**: Saved graphs are compatible across different Unity versions
 - **Backup**: Automatic backup system prevents data loss
 - **Versioning**: Save files include version information for future compatibility
+<img width="1918" height="882" alt="image" src="https://github.com/user-attachments/assets/23ea0681-59d4-4ef5-b6f9-eab61b018624" />
 
 ## 🎮 Controls
 
