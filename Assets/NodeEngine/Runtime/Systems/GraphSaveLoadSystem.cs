@@ -48,7 +48,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
 {
     public static GraphSaveLoadSystem Instance { get; private set; }
 
-    [Header("References")]
     [SerializeField] private NodesDatabase _nodesDatabase;
 
     public event Action<string> OnGraphSaved;
@@ -61,7 +60,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
         transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
@@ -74,17 +72,15 @@ public class GraphSaveLoadSystem : MonoBehaviour
         try
         {
             var saveData = CreateSaveData();
-
             string json = JsonUtility.ToJson(saveData, true);
             string filePath = GetSavePath(saveName);
-
             File.WriteAllText(filePath, json);
-
+            Debug.Log($"SAVED: {saveData.nodes.Count} nodes, {saveData.connections.Count} connections");
             OnGraphSaved?.Invoke(saveName);
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to save graph: {e.Message}");
+            Debug.LogError($"Save failed: {e.Message}");
         }
     }
 
@@ -95,18 +91,21 @@ public class GraphSaveLoadSystem : MonoBehaviour
         try
         {
             string filePath = GetSavePath(saveName);
-            if (!File.Exists(filePath)) return;
+            if (!File.Exists(filePath))
+            {
+                Debug.LogError($"File not found: {filePath}");
+                return;
+            }
 
             string json = File.ReadAllText(filePath);
             var saveData = JsonUtility.FromJson<GraphSaveData>(json);
-
+            Debug.Log($"LOADING: {saveData.nodes.Count} nodes, {saveData.connections.Count} connections");
             LoadFromSaveData(saveData);
-
             OnGraphLoaded?.Invoke(saveName);
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to load graph: {e.Message}");
+            Debug.LogError($"Load failed: {e.Message}");
         }
     }
 
@@ -118,107 +117,118 @@ public class GraphSaveLoadSystem : MonoBehaviour
             version = 2
         };
 
-        
         foreach (var (nodeId, nodeLogic) in NodeSpawnerService.Instance.GetAllNodes())
         {
             if (nodeLogic == null || nodeLogic.Node == null) continue;
 
             var databaseId = FindDatabaseIdForNode(nodeLogic.Node);
-
             var nodeSaveData = new NodeInstanceData
             {
                 instanceId = nodeLogic.Node.Guid,
                 databaseId = databaseId,
                 position = nodeLogic.transform.localPosition,
             };
-
             SaveNodeData(nodeLogic.Node, nodeSaveData);
             saveData.nodes.Add(nodeSaveData);
         }
 
-        
         SaveAllConnections(saveData);
-
         return saveData;
     }
 
-    
     private void SaveAllConnections(GraphSaveData saveData)
     {
-        var savedConnections = new HashSet<string>();  
+        var savedConnections = new HashSet<string>();
 
-        
-        foreach (var connection in ConnectionManager.Instance.GetAllConnections())
+        SaveConnectorConnections(saveData, savedConnections);
+        SaveVisualConnections(saveData, savedConnections);
+
+        Debug.Log($"CONNECTIONS SAVED: {saveData.connections.Count}");
+    }
+
+    private void SaveConnectorConnections(GraphSaveData saveData, HashSet<string> savedConnections)
+    {
+        foreach (var (nodeId, nodeLogic) in NodeSpawnerService.Instance.GetAllNodes())
         {
-            
-            if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
-                string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
-                connection.fromNodeId == connection.toNodeId)  
-            {
-                continue;
-            }
+            if (nodeLogic?.Node == null) continue;
 
-            string key = $"{connection.fromNodeId}_{connection.toNodeId}_{connection.fromConnectorName}_{connection.toConnectorName}";
-            if (!savedConnections.Contains(key))
+            foreach (var outputConnector in nodeLogic.Node.outputConnectors)
             {
-                saveData.connections.Add(new ConnectionSaveData
+                foreach (var connectedConnector in outputConnector.Connections)
                 {
-                    fromNodeId = connection.fromNodeId,
-                    toNodeId = connection.toNodeId,
-                    fromConnectorName = connection.fromConnectorName,
-                    toConnectorName = connection.toConnectorName
-                });
-                savedConnections.Add(key);
+                    if (connectedConnector?.Node == null) continue;
+
+                    var fromAttr = outputConnector.Field?.GetAttribute();
+                    var toAttr = connectedConnector.Field?.GetAttribute();
+
+                    if (fromAttr != null && toAttr != null)
+                    {
+                        SaveConnection(saveData, savedConnections,
+                            nodeLogic.Node.Guid, connectedConnector.Node.Guid,
+                            fromAttr.attributeName, toAttr.attributeName);
+                    }
+                }
             }
         }
-
-        
-        SaveVisualConnections(saveData, savedConnections);
     }
 
     private void SaveVisualConnections(GraphSaveData saveData, HashSet<string> savedConnections)
     {
         if (LineRenderersController.Instance == null) return;
 
-        
-        var controllerType = typeof(LineRenderersController);
-        var connectionsField = controllerType.GetField("_connections",
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-        if (connectionsField != null)
+        try
         {
-            var connections = connectionsField.GetValue(LineRenderersController.Instance) as List<LineRenderersController.ConnectionData>;
-            if (connections != null)
-            {
-                foreach (var connection in connections)
-                {
-                    
-                    if (connection.IsValid && connection.ConnectorA != null && connection.ConnectorB != null &&
-                        connection.ConnectorA.Node.Guid != connection.ConnectorB.Node.Guid)  
-                    {
-                        var fromAttr = connection.ConnectorA.Field?.GetAttribute();
-                        var toAttr = connection.ConnectorB.Field?.GetAttribute();
+            var controllerType = typeof(LineRenderersController);
+            var connectionsField = controllerType.GetField("_connections",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-                        if (fromAttr != null && toAttr != null &&
-                            !string.IsNullOrEmpty(fromAttr.attributeName) && fromAttr.attributeName != "Unknown" &&
-                            !string.IsNullOrEmpty(toAttr.attributeName) && toAttr.attributeName != "Unknown")
+            if (connectionsField != null)
+            {
+                var connections = connectionsField.GetValue(LineRenderersController.Instance) as List<LineRenderersController.ConnectionData>;
+                if (connections != null)
+                {
+                    foreach (var connection in connections)
+                    {
+                        if (connection.IsValid && connection.ConnectorA != null && connection.ConnectorB != null)
                         {
-                            string key = $"{connection.ConnectorA.Node.Guid}_{connection.ConnectorB.Node.Guid}_{fromAttr.attributeName}_{toAttr.attributeName}";
-                            if (!savedConnections.Contains(key))
+                            var fromAttr = connection.ConnectorA.Field?.GetAttribute();
+                            var toAttr = connection.ConnectorB.Field?.GetAttribute();
+
+                            if (fromAttr != null && toAttr != null)
                             {
-                                saveData.connections.Add(new ConnectionSaveData
-                                {
-                                    fromNodeId = connection.ConnectorA.Node.Guid,
-                                    toNodeId = connection.ConnectorB.Node.Guid,
-                                    fromConnectorName = fromAttr.attributeName,
-                                    toConnectorName = toAttr.attributeName
-                                });
-                                savedConnections.Add(key);
+                                SaveConnection(saveData, savedConnections,
+                                    connection.ConnectorA.Node.Guid, connection.ConnectorB.Node.Guid,
+                                    fromAttr.attributeName, toAttr.attributeName);
                             }
                         }
                     }
                 }
             }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"Visual connections save failed: {e.Message}");
+        }
+    }
+
+    private void SaveConnection(GraphSaveData saveData, HashSet<string> savedConnections,
+        int fromNodeId, int toNodeId, string fromConnectorName, string toConnectorName)
+    {
+        if (fromNodeId == toNodeId) return;
+        if (string.IsNullOrEmpty(fromConnectorName) || fromConnectorName == "Unknown") return;
+        if (string.IsNullOrEmpty(toConnectorName) || toConnectorName == "Unknown") return;
+
+        string key = $"{fromNodeId}_{toNodeId}_{fromConnectorName}_{toConnectorName}";
+        if (!savedConnections.Contains(key))
+        {
+            saveData.connections.Add(new ConnectionSaveData
+            {
+                fromNodeId = fromNodeId,
+                toNodeId = toNodeId,
+                fromConnectorName = fromConnectorName,
+                toConnectorName = toConnectorName
+            });
+            savedConnections.Add(key);
         }
     }
 
@@ -227,8 +237,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
         var nodes = _nodesDatabase.GetNodes();
         for (int i = 0; i < nodes.Length; i++)
         {
-            if (nodes[i].GetType() == node.GetType() &&
-                nodes[i].NodeName == node.NodeName)
+            if (nodes[i].GetType() == node.GetType() && nodes[i].NodeName == node.NodeName)
             {
                 return $"{node.GetType().Name}_{node.NodeName}";
             }
@@ -239,7 +248,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
     private void LoadFromSaveData(GraphSaveData saveData)
     {
         ClearCurrentGraph();
-
         var loadedNodeIds = new HashSet<int>();
         var databaseNodes = _nodesDatabase.GetNodes().ToDictionary(
             n => $"{n.GetType().Name}_{n.NodeName}",
@@ -251,7 +259,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
             if (databaseNodes.TryGetValue(nodeSaveData.databaseId, out var databaseNode))
             {
                 var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(databaseNode), nodeSaveData.position, nodeSaveData.instanceId);
-
                 if (nodeLogic != null)
                 {
                     LoadNodeData(nodeLogic.Node, nodeSaveData);
@@ -260,7 +267,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
             }
         }
 
-        
         ConnectNodes(saveData, loadedNodeIds);
     }
 
@@ -268,26 +274,32 @@ public class GraphSaveLoadSystem : MonoBehaviour
     {
         foreach (var connection in saveData.connections)
         {
-            if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
-                string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
-                connection.fromNodeId == connection.toNodeId ||
-                !loadedNodeIds.Contains(connection.fromNodeId) || !loadedNodeIds.Contains(connection.toNodeId))
+            if (IsValidConnectionForLoading(connection, loadedNodeIds))
             {
-                continue;
-            }
-
-            bool success = ConnectNodesByAttributeNames(
-                connection.fromNodeId,
-                connection.toNodeId,
-                connection.fromConnectorName,
-                connection.toConnectorName
-            );
-
-            if (!success)
-            {
-                Debug.LogError($"Failed to connect: {connection.fromNodeId}.{connection.fromConnectorName} -> {connection.toNodeId}.{connection.toConnectorName}");
+                if (!ConnectNodesByAttributeNames(connection.fromNodeId, connection.toNodeId,
+                    connection.fromConnectorName, connection.toConnectorName))
+                {
+                    Debug.LogWarning($"Can't connect {connection.fromConnectorName} to {connection.toConnectorName}");
+                }
             }
         }
+    }
+
+    private bool IsValidConnectionForLoading(ConnectionSaveData connection, HashSet<int> loadedNodeIds)
+    {
+        if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
+            string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
+            connection.fromNodeId == connection.toNodeId)
+        {
+            return false;
+        }
+
+        if (!loadedNodeIds.Contains(connection.fromNodeId) || !loadedNodeIds.Contains(connection.toNodeId))
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private bool ConnectNodesByAttributeNames(int fromNodeId, int toNodeId, string fromConnectorName, string toConnectorName)
@@ -295,49 +307,12 @@ public class GraphSaveLoadSystem : MonoBehaviour
         var fromNode = NodeSpawnerService.Instance.GetNodeById(fromNodeId);
         var toNode = NodeSpawnerService.Instance.GetNodeById(toNodeId);
 
-        if (fromNode == null || toNode == null)
-        {
-            Debug.LogError($"Cannot connect: nodes not found. From: {fromNodeId}, To: {toNodeId}");
-            return false;
-        }
+        if (fromNode == null || toNode == null) return false;
 
-        
         Connector fromConnector = FindConnectorByAttributeName(fromNode.Node.outputConnectors, fromConnectorName);
-        if (fromConnector == null)
-        {
-            
-            fromConnector = FindConnectorByAttributeName(fromNode.Node.inputConnectors, fromConnectorName);
-        }
-
-        
         Connector toConnector = FindConnectorByAttributeName(toNode.Node.inputConnectors, toConnectorName);
-        if (toConnector == null)
-        {
-            
-            toConnector = FindConnectorByAttributeName(toNode.Node.outputConnectors, toConnectorName);
-        }
 
-        if (fromConnector == null)
-        {
-            Debug.LogError($"FROM connector not found: Node {fromNodeId}, Attribute '{fromConnectorName}'. " +
-                          $"Available outputs: {GetConnectorNames(fromNode.Node.outputConnectors)}, " +
-                          $"Inputs: {GetConnectorNames(fromNode.Node.inputConnectors)}");
-            return false;
-        }
-
-        if (toConnector == null)
-        {
-            Debug.LogError($"TO connector not found: Node {toNodeId}, Attribute '{toConnectorName}'. " +
-                          $"Available inputs: {GetConnectorNames(toNode.Node.inputConnectors)}, " +
-                          $"Outputs: {GetConnectorNames(toNode.Node.outputConnectors)}");
-            return false;
-        }
-
-        if (fromConnector == toConnector)
-        {
-            Debug.LogError($"Cannot connect connector to itself: {fromConnectorName} -> {toConnectorName}");
-            return false;
-        }
+        if (fromConnector == null || toConnector == null) return false;
 
         return ConnectionManager.Instance.CreateConnectionWithConnectors(fromConnector, toConnector);
     }
@@ -355,32 +330,22 @@ public class GraphSaveLoadSystem : MonoBehaviour
         return null;
     }
 
-    private string GetConnectorNames(List<Connector> connectors)
-    {
-        var names = new List<string>();
-        foreach (var connector in connectors)
-        {
-            var attribute = connector.Field?.GetAttribute();
-            names.Add(attribute?.attributeName ?? "Unknown");
-        }
-        return string.Join(", ", names);
-    }
-
     private void ClearCurrentGraph()
     {
         NodeSpawnerService.Instance.ClearAllNodes();
-        ConnectionManager.Instance.ClearAllConnections();
+        if (ConnectionManager.Instance != null)
+        {
+            ConnectionManager.Instance.ClearAllConnections();
+        }
     }
 
     public void QuickSave() => SaveGraph("quicksave");
     public void QuickLoad() => LoadGraph("quicksave");
 
-
     public List<string> GetSaveFiles()
     {
         var saveFiles = new List<string>();
         string saveDirectory = Application.dataPath;
-
         if (!Directory.Exists(saveDirectory)) return saveFiles;
 
         var files = Directory.GetFiles(saveDirectory, "*.json");
@@ -388,7 +353,6 @@ public class GraphSaveLoadSystem : MonoBehaviour
         {
             saveFiles.Add(Path.GetFileNameWithoutExtension(file));
         }
-
         return saveFiles;
     }
 
@@ -397,14 +361,11 @@ public class GraphSaveLoadSystem : MonoBehaviour
         try
         {
             string filePath = GetSavePath(saveName);
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
+            if (File.Exists(filePath)) File.Delete(filePath);
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to delete save file: {e.Message}");
+            Debug.LogError($"Delete failed: {e.Message}");
         }
     }
 
@@ -413,14 +374,11 @@ public class GraphSaveLoadSystem : MonoBehaviour
         try
         {
             var saveFiles = GetSaveFiles();
-            foreach (var saveFile in saveFiles)
-            {
-                DeleteSaveFile(saveFile);
-            }
+            foreach (var saveFile in saveFiles) DeleteSaveFile(saveFile);
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to delete all saves: {e.Message}");
+            Debug.LogError($"Delete all failed: {e.Message}");
         }
     }
 
@@ -445,29 +403,30 @@ public class GraphSaveLoadSystem : MonoBehaviour
 
     private void LoadNodeData(NodeBase node, NodeInstanceData nodeSaveData)
     {
-        
         if (!string.IsNullOrEmpty(nodeSaveData.fieldValuesJson))
         {
             try
             {
-                
                 var fieldValuesList = JsonUtility.FromJson<FieldValueDataList>(nodeSaveData.fieldValuesJson);
                 if (fieldValuesList?.values != null)
                 {
-                    
                     if (node is VariableNode variableNode)
                     {
                         var variableValueData = fieldValuesList.values.FirstOrDefault();
-                        if (variableValueData != null && variableNode.UIElement is InputFieldVariableUI inputField)
+                        if (variableValueData != null && variableNode.UIElement != null)
                         {
-                            inputField.UpdateValue(variableValueData.value);
+                            if (variableNode.UIElement is InputFieldVariableUI inputField)
+                            {
+                                inputField.UpdateValue(variableValueData.value);
+                            }
+                            variableNode.UpdateOutputValue();
                         }
                     }
                 }
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load node data: {e.Message}");
+                Debug.LogError($"Node data load failed: {e.Message}");
             }
         }
     }

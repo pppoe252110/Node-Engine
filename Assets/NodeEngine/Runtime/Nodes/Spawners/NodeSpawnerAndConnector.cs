@@ -7,9 +7,13 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 {
     [Header("Dependencies")]
     [SerializeField] private NodesDatabase _nodesDatabase;
+    [SerializeField] private bool _enabled = false;
 
     private void Update()
     {
+        if (!_enabled)
+            return;
+
         if (Keyboard.current.quoteKey.wasReleasedThisFrame)
         {
             SpawnAndConnectNodes();
@@ -85,11 +89,7 @@ public class NodeSpawnerAndConnector : MonoBehaviour
         if (!TryConnectWithFallback(forLoopNode2, debugNode, "Body", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 
-        if (allSuccess)
-        {
-            Debug.Log("All node connections established successfully");
-        }
-        else
+        if (!allSuccess)
         {
             Debug.LogWarning("Some node connections failed");
         }

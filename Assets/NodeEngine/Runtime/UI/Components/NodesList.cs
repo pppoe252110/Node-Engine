@@ -58,13 +58,13 @@ public class NodesList : MonoBehaviour
         _groupHeaders.Clear();
         _groupContainers.Clear();
 
-        
+
         foreach (Transform child in _nodesListParent)
         {
             Destroy(child.gameObject);
         }
 
-        
+
         for (int i = 0; i < nodes.Length; i++)
         {
             var node = nodes[i];
@@ -82,17 +82,17 @@ public class NodesList : MonoBehaviour
 
             _groupedItems[groupName].Add((item: item, originalIndex: i));
 
-            
+
             if (_groupContainers.ContainsKey(groupName))
             {
                 item.transform.SetParent(_groupContainers[groupName]);
             }
         }
 
-        
+
         var sortedGroups = _groupedItems.OrderBy(g => g.Key).ToList();
 
-        
+
         ReorganizeHierarchy(sortedGroups);
 
         ApplySearchFilter();
@@ -104,7 +104,7 @@ public class NodesList : MonoBehaviour
         var pathAttribute = nodeType.GetCustomAttributes(typeof(NodePathAttribute), false)
                                   .FirstOrDefault() as NodePathAttribute;
 
-        
+
         string itemName = node.NodeName;
 
         if (pathAttribute != null && !string.IsNullOrEmpty(pathAttribute.Path))
@@ -114,26 +114,25 @@ public class NodesList : MonoBehaviour
 
             if (lastSlash >= 0)
             {
-                
+
                 string groupName = path.Substring(0, lastSlash);
                 return (groupName, itemName);
             }
             else
             {
-                
+
                 return ("Other", itemName);
             }
         }
         else
         {
-            
+
             return ("Other", itemName);
         }
     }
 
     private void CreateGroupHeader(string groupName)
     {
-        
         var groupUI = Instantiate(_nodesListGroupPrefab, _nodesListParent);
         groupUI.SetGroupName(groupName);
         groupUI.OnExpansionChanged += OnGroupExpansionChanged;
@@ -144,8 +143,6 @@ public class NodesList : MonoBehaviour
 
     private void OnGroupExpansionChanged(NodesListGroup group, bool isExpanded)
     {
-        
-        
         LayoutRebuilder.ForceRebuildLayoutImmediate(_nodesListView);
     }
 
@@ -156,11 +153,11 @@ public class NodesList : MonoBehaviour
             var groupHeader = _groupHeaders[group.Key];
             var groupContainer = _groupContainers[group.Key];
 
-            
+
             groupHeader.transform.SetAsLastSibling();
             groupContainer.transform.SetAsLastSibling();
 
-            
+
             var sortedItems = group.Value.OrderBy(x => x.item.nodeName.text).ToList();
 
             foreach (var tuple in sortedItems)
@@ -197,13 +194,13 @@ public class NodesList : MonoBehaviour
                 }
             }
 
-            
+
             if (_groupHeaders.ContainsKey(group.Key))
             {
                 bool shouldShowGroup = hasVisibleItemsInGroup;
                 _groupHeaders[group.Key].gameObject.SetActive(shouldShowGroup);
 
-                
+
                 if (_groupContainers.ContainsKey(group.Key))
                 {
                     _groupContainers[group.Key].gameObject.SetActive(shouldShowGroup && _groupHeaders[group.Key].IsExpanded);
@@ -229,7 +226,7 @@ public class NodesList : MonoBehaviour
         if (originalIndex >= 0 && originalIndex < nodes.Length)
         {
             var targetNode = nodes[originalIndex];
-            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(targetNode), _nodesListView.position);
+            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(targetNode), _nodesListView.position, -1, true);
         }
 
         _nodesListView.gameObject.SetActive(false);
@@ -237,7 +234,6 @@ public class NodesList : MonoBehaviour
 
     private void OnDestroy()
     {
-        
         foreach (var group in _groupHeaders.Values)
         {
             if (group != null)

@@ -208,7 +208,6 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         }
         else
         {
-            Debug.LogError("DADA");
             SetValueManually(_currentValue, newValue);
         }
     }

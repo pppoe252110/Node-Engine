@@ -9,6 +9,13 @@ public class ConnectorDragLogic : MonoBehaviour
     [SerializeField] private NodeBase _node;
     [SerializeField] private NodeDrag _nodeDrag;
 
+    
+    
+    
+    
+    
+    
+
     private UILineRenderer _dragLineRenderer;
     private Connector _dragConnector;
     private bool _isDragging = false;
@@ -37,13 +44,23 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private void UpdateDragLine()
     {
+        if (LineRenderersController.Instance == null)
+        {
+            Debug.LogError("LineRenderersController instance not found!");
+            return;
+        }
+
         var startPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint);
         var endPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value);
 
-        _dragLineRenderer.points = BezierFromTwoPoints.GetPoints(startPoint, endPoint, 0.5f, 10);
+        float pixelDistance = Vector2.Distance(startPoint, endPoint);
+
+        int pointsCount = LineRenderersController.Instance.CalculateDynamicPointsCount(pixelDistance);
+        float dynamicCurveIntensity = LineRenderersController.Instance.CalculateDynamicCurveIntensity(pixelDistance);
+
+        _dragLineRenderer.points = BezierFromTwoPoints.GetPoints(startPoint, endPoint, dynamicCurveIntensity, pointsCount);
         _dragLineRenderer.SetAllDirty();
     }
-
     private void OnNodeClick(PointerEventData eventData, GameObject clickedObject)
     {
         if (eventData.button == PointerEventData.InputButton.Right)
@@ -91,7 +108,7 @@ public class ConnectorDragLogic : MonoBehaviour
         _dragLineRenderer.material = CreateLineMaterial(_dragConnector.Color);
         _isDragging = true;
 
-        UpdateDragLine(); 
+        UpdateDragLine();
     }
 
     private Material CreateLineMaterial(Color color)
@@ -127,12 +144,12 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private bool IsValidConnection(Connector targetConnector)
     {
-        return _dragConnector.Node != targetConnector.Node &&           
-               targetConnector.ConnectionsCount == 0 &&                
-               IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType); 
+        return _dragConnector.Node != targetConnector.Node &&
+               targetConnector.ConnectionsCount == 0 &&
+               IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType);
     }
 
-    
+
     private void CreateConnection(Connector targetConnector)
     {
         LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
@@ -144,7 +161,7 @@ public class ConnectorDragLogic : MonoBehaviour
         _dragConnector.UpdateFilled();
         targetConnector.UpdateFilled();
 
-        
+
         if (ConnectionManager.Instance != null)
         {
             var fromAttr = _dragConnector.Field?.GetAttribute();

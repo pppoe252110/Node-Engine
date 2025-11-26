@@ -33,7 +33,7 @@ public class NodeSpawnerService : MonoBehaviour
 
 
 
-    public NodeLogic SpawnNode(NodeBase nodeInstance, Vector2 position, int nodeId = -1)
+    public NodeLogic SpawnNode(NodeBase nodeInstance, Vector2 position, int nodeId = -1, bool isWorldPosition = false)
     {
         if (nodeInstance == null)
         {
@@ -50,7 +50,12 @@ public class NodeSpawnerService : MonoBehaviour
         }
 
         var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
-        nodeLogic.transform.localPosition = position;
+        
+        if (isWorldPosition)
+            nodeLogic.transform.position = position;
+        else
+            nodeLogic.transform.localPosition = position;
+        
         nodeLogic.VariableDatabase = _variableDatabase;
 
         nodeLogic.SetNodeBase(nodeInstance);
