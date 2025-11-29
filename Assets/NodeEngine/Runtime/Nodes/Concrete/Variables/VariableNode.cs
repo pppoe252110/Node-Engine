@@ -7,22 +7,46 @@ public abstract class VariableNode : NodeBase
     public VariableUIElement UIElement { get; set; }
     protected NodeFieldBase _outputField;
 
+    // Cached connector values
+    private ConnectorValueInt _cachedIntValue;
+    private ConnectorValueFloat _cachedFloatValue;
+    private ConnectorValueBool _cachedBoolValue;
+    private ConnectorValueString _cachedStringValue;
+    private ConnectorValueVector3 _cachedVector3Value;
+    private ConnectorValueObject _cachedObjectValue;
+
     public override void Setup()
     {
+        // Initialize cached values with defaults
+        InitializeCachedValues();
+
         _outputField = CreateTypedOutputField();
         outputFields = new() { _outputField };
-
-        // Don't call UpdateOutputValue here - wait for connections
     }
 
-    public void InitializeOutputValue()
+    private void InitializeCachedValues()
     {
-        UpdateOutputValue();
-    }
-
-    protected override void Initialized()
-    {
-        UpdateOutputValue();
+        switch (VariableType)
+        {
+            case VariableType.Int:
+                _cachedIntValue = new ConnectorValueInt(0);
+                break;
+            case VariableType.Single:
+                _cachedFloatValue = new ConnectorValueFloat(0f);
+                break;
+            case VariableType.Bool:
+                _cachedBoolValue = new ConnectorValueBool(false);
+                break;
+            case VariableType.String:
+                _cachedStringValue = new ConnectorValueString("");
+                break;
+            case VariableType.Vector3:
+                _cachedVector3Value = new ConnectorValueVector3(Vector3.zero);
+                break;
+            default:
+                _cachedObjectValue = new ConnectorValueObject(null);
+                break;
+        }
     }
 
     private NodeFieldBase CreateTypedOutputField()
@@ -32,91 +56,108 @@ public abstract class VariableNode : NodeBase
             case VariableType.Int:
                 return new NodeField<ConnectorValueInt>(false)
                     .SetHandler(OutputInt)
-                    .SetDefaultValue(new ConnectorValueInt(0));
+                    .SetDefaultValue(_cachedIntValue);
 
             case VariableType.Single:
                 return new NodeField<ConnectorValueFloat>(false)
                     .SetHandler(OutputFloat)
-                    .SetDefaultValue(new ConnectorValueFloat(0f));
+                    .SetDefaultValue(_cachedFloatValue);
 
             case VariableType.Bool:
                 return new NodeField<ConnectorValueBool>(false)
                     .SetHandler(OutputBool)
-                    .SetDefaultValue(new ConnectorValueBool(false));
+                    .SetDefaultValue(_cachedBoolValue);
 
             case VariableType.String:
                 return new NodeField<ConnectorValueString>(false)
                     .SetHandler(OutputString)
-                    .SetDefaultValue(new ConnectorValueString(""));
+                    .SetDefaultValue(_cachedStringValue);
 
             case VariableType.Vector3:
                 return new NodeField<ConnectorValueVector3>(false)
                     .SetHandler(OutputVector3)
-                    .SetDefaultValue(new ConnectorValueVector3(Vector3.zero));
+                    .SetDefaultValue(_cachedVector3Value);
 
             default:
                 return new NodeField<ConnectorValueObject>(false)
                     .SetHandler(OutputObject)
-                    .SetDefaultValue(new ConnectorValueObject(null));
+                    .SetDefaultValue(_cachedObjectValue);
         }
     }
 
     [NodeValue("Value", typeof(int))]
     public void OutputInt(ConnectorValueInt value)
     {
-        if (UIElement != null && UIElement.GetValue() is int uiVal)
-        {
-            value.SetInnerValue(uiVal);
-        }
+        // Just pass the cached value without updating it
+        value.SetInnerValue(_cachedIntValue.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(float))]
     public void OutputFloat(ConnectorValueFloat value)
     {
-        if (UIElement != null && UIElement.GetValue() is float uiVal)
-        {
-            value.SetInnerValue(uiVal);
-        }
+        value.SetInnerValue(_cachedFloatValue.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(bool))]
     public void OutputBool(ConnectorValueBool value)
     {
-        if (UIElement != null && UIElement.GetValue() is bool uiVal)
-        {
-            value.SetInnerValue(uiVal);
-        }
+        value.SetInnerValue(_cachedBoolValue.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(string))]
     public void OutputString(ConnectorValueString value)
     {
-        if (UIElement != null && UIElement.GetValue() is string uiVal)
-        {
-            value.SetInnerValue(uiVal);
-        }
+        value.SetInnerValue(_cachedStringValue.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(Vector3))]
     public void OutputVector3(ConnectorValueVector3 value)
     {
-        if (UIElement != null && UIElement.GetValue() is Vector3 uiVal)
-        {
-            value.SetInnerValue(uiVal);
-        }
+        value.SetInnerValue(_cachedVector3Value.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(object))]
     public void OutputObject(ConnectorValueObject value)
     {
-        if (UIElement != null)
-        {
-            value.SetInnerValue(UIElement.GetValue());
-        }
+        value.SetInnerValue(_cachedObjectValue.GetInnerValue());
     }
 
     public void UpdateOutputValue()
     {
+        // Update the cached value from UI element first
+        if (UIElement != null)
+        {
+            object uiValue = UIElement.GetValue();
+
+            switch (VariableType)
+            {
+                case VariableType.Int:
+                    if (uiValue is int intVal)
+                        _cachedIntValue.SetInnerValue(intVal);
+                    break;
+                case VariableType.Single:
+                    if (uiValue is float floatVal)
+                        _cachedFloatValue.SetInnerValue(floatVal);
+                    break;
+                case VariableType.Bool:
+                    if (uiValue is bool boolVal)
+                        _cachedBoolValue.SetInnerValue(boolVal);
+                    break;
+                case VariableType.String:
+                    if (uiValue is string stringVal)
+                        _cachedStringValue.SetInnerValue(stringVal);
+                    break;
+                case VariableType.Vector3:
+                    if (uiValue is Vector3 vectorVal)
+                        _cachedVector3Value.SetInnerValue(vectorVal);
+                    break;
+                default:
+                    _cachedObjectValue.SetInnerValue(uiValue);
+                    break;
+            }
+        }
+
+        // Then proceed with the updated cached value
         _outputField?.ProceedValue();
     }
 }

@@ -17,7 +17,7 @@ public class DebugNode : ExecutableNodeBase
 
         if (ConsoleUI.Instance != null)
         {
-            ConsoleUI.Instance.LogMessage($"[Debug] {text}");
+            //ConsoleUI.Instance.LogMessage($"[Debug] {text}");
         }
         else
         {
