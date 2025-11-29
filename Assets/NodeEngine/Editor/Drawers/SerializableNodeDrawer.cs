@@ -12,7 +12,6 @@ public class SerializableNodeDrawer : PropertyDrawer
     private const float EXPANDED_HEIGHT = 80f;
     private const float ICON_SIZE = 24f;
 
-    
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         EditorGUI.BeginProperty(position, label, property);
@@ -34,21 +33,17 @@ public class SerializableNodeDrawer : PropertyDrawer
         EditorGUI.EndProperty();
     }
 
-    
     private void DrawHeader(Rect headerRect, SerializedProperty property, SerializedProperty nodeNameProp, SerializedProperty nodeTypeProp, SerializedProperty nodeIconProp)
     {
         
         EditorGUI.DrawRect(new Rect(headerRect.x, headerRect.y, headerRect.width, headerRect.height), new Color(0.2f, 0.2f, 0.2f, 0.8f));
 
-        
         var foldoutRect = new Rect(headerRect.x + 16, headerRect.y + 11f, 15f, 15f);
         property.isExpanded = EditorGUI.Foldout(foldoutRect, property.isExpanded, GUIContent.none, true);
 
-        
         var iconRect = new Rect(foldoutRect.xMax, headerRect.y + (HEADER_HEIGHT - ICON_SIZE) / 2, ICON_SIZE, ICON_SIZE);
         DrawIcon(iconRect, nodeIconProp);
 
-        
         float textStartX = iconRect.xMax + 4;
         var nameRect = new Rect(textStartX, headerRect.y + 6f, headerRect.width - textStartX, 16f);
         string displayName = string.IsNullOrEmpty(nodeNameProp.stringValue) ? "Unnamed Node" : nodeNameProp.stringValue;
@@ -68,17 +63,14 @@ public class SerializableNodeDrawer : PropertyDrawer
         float fieldStartX = headerRect.x + PADDING + 16;
         float fieldWidth = headerRect.width - PADDING * 2 - 24;
 
-        
         var nameFieldRect = new Rect(fieldStartX, currentY, fieldWidth, LINE_HEIGHT);
         EditorGUI.PropertyField(nameFieldRect, nodeNameProp, new GUIContent("Name"));
         currentY += LINE_HEIGHT + 2f;
 
-        
         var typeFieldRect = new Rect(fieldStartX, currentY, fieldWidth, LINE_HEIGHT);
         DrawTypeDropdown(typeFieldRect, nodeTypeProp);
         currentY += LINE_HEIGHT + 2f;
 
-        
         if (nodeTypeProp.stringValue.Contains("VariableNode"))
         {
             var variableTypeProp = property.FindPropertyRelative("variableType");
@@ -87,7 +79,6 @@ public class SerializableNodeDrawer : PropertyDrawer
             currentY += LINE_HEIGHT + 2f;
         }
 
-        
         var iconFieldRect = new Rect(fieldStartX, currentY, fieldWidth, LINE_HEIGHT);
         EditorGUI.PropertyField(iconFieldRect, nodeIconProp, new GUIContent("Icon"));
     }

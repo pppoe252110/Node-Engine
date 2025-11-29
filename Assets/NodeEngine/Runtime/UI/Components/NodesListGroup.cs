@@ -14,7 +14,6 @@ public class NodesListGroup : MonoBehaviour
     public string GroupName { get; private set; }
     public bool IsExpanded { get; private set; } = false;
 
-    
     public System.Action<NodesListGroup, bool> OnExpansionChanged;
 
     private void Awake()
@@ -59,11 +58,8 @@ public class NodesListGroup : MonoBehaviour
         if (groupNameText != null)
         {
             
-            
             string arrow = IsExpanded ? "▼" : "►";
             Container.gameObject.SetActive(IsExpanded);
-            
-            
             
             expandCollapseButtonText.text = arrow;
             groupNameText.text = GroupName;
@@ -78,7 +74,6 @@ public class NodesListGroup : MonoBehaviour
         }
     }
 
-    
     public void RegisterItem(Transform itemTransform)
     {
         if (itemsContainer != null)

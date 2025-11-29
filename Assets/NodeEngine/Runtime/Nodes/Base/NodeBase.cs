@@ -36,14 +36,13 @@ public abstract class NodeBase : INode
         outputConnectors = new();
         _guid = guid;
         Setup();
-        // FIXED: Removed InitializeConnectorValues() call here (moved to NodeLogic after connectors are set)
+        
         Initialized();
     }
 
-    // FIXED: Made public so it can be called from NodeLogic after connectors are set
     public void InitializeConnectorValues()
     {
-        // Initialize input connectors
+        
         foreach (var field in inputFields)
         {
             if (field.Connector != null && field.Connector.GetConnectorValue() == null)
@@ -57,7 +56,6 @@ public abstract class NodeBase : INode
             }
         }
 
-        // Initialize output connectors
         foreach (var field in outputFields)
         {
             if (field.Connector != null && field.Connector.GetConnectorValue() == null)
@@ -72,7 +70,6 @@ public abstract class NodeBase : INode
         }
     }
 
-    // FIXED: Added helper method (copied from full codebase)
     private IConnectorValue CreateConnectorValue(Type type)
     {
         if (type == typeof(int))
@@ -88,7 +85,6 @@ public abstract class NodeBase : INode
         if (type == typeof(void))
             return ConnectorValueVoid.Instance;
 
-        // Default to object
         return new ConnectorValueObject(null);
     }
 
@@ -118,7 +114,7 @@ public abstract class NodeBase : INode
 
         try
         {
-            // Process non-void inputs
+            
             foreach (var connector in inputConnectors)
             {
                 if (!fromConnectors.Contains(connector) && connector.ValueType != typeof(void))
@@ -133,7 +129,6 @@ public abstract class NodeBase : INode
                 }
             }
 
-            // Process non-void outputs
             foreach (var connector in outputConnectors)
             {
                 if (connector.ValueType != typeof(void))
@@ -142,10 +137,8 @@ public abstract class NodeBase : INode
                 }
             }
 
-            // Skip execution for ExecutableNodeBase
             if (this is ExecutableNodeBase) return;
 
-            // Process void outputs
             foreach (var connector in outputConnectors)
             {
                 if (connector.ValueType == typeof(void))

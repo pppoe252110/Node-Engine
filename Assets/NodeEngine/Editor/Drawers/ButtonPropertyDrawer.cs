@@ -14,7 +14,6 @@ public class ButtonPropertyDrawer : PropertyDrawer
             var targetObject = property.serializedObject.targetObject;
             var methodName = string.IsNullOrEmpty(buttonAttribute.MethodName) ? property.name : buttonAttribute.MethodName;
 
-            
             var method = targetObject.GetType().GetMethod(methodName,
                 BindingFlags.Instance |
                 BindingFlags.Public |

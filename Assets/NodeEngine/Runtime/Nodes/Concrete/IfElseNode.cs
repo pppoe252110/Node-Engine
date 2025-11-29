@@ -31,12 +31,12 @@ public class IfElseNode : ExecutableNodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueBool>(true).SetHandler(Condition).SetDefaultValue(new ConnectorValueBool(false))
+            new NodeField<ConnectorValueBool>().SetHandler(Condition).SetDefaultValue(new ConnectorValueBool(false))
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueVoid>(false).SetHandler(TrueTrigger).SetDefaultValue(new ConnectorValueVoid()),
-            new NodeField<ConnectorValueVoid>(false).SetHandler(FalseTrigger).SetDefaultValue(new ConnectorValueVoid())
+            new NodeField<ConnectorValueVoid>().SetHandler(TrueTrigger).SetDefaultValue(new ConnectorValueVoid()),
+            new NodeField<ConnectorValueVoid>().SetHandler(FalseTrigger).SetDefaultValue(new ConnectorValueVoid())
         };
     }
 }

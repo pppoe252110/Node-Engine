@@ -30,7 +30,7 @@ public class Connector : MonoBehaviour
     public void SetConnectorValue(IConnectorValue value)
     {
         _connectorValue = value;
-        UpdateVisuals(); // Update visuals when the value is set
+        UpdateVisuals(); 
     }
 
     public IConnectorValue GetConnectorValue()

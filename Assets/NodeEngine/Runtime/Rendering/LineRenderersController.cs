@@ -100,7 +100,6 @@ public class LineRenderersController : MonoBehaviour
     {
         var lineRenderer = connection.LineRenderer;
 
-
         lineRenderer.material.SetVector("_Point1",
             new Vector2(connection.ConnectorA.AnchoredPositionPoint.x / Screen.width,
                        connection.ConnectorA.AnchoredPositionPoint.y / Screen.height));
@@ -108,13 +107,11 @@ public class LineRenderersController : MonoBehaviour
             new Vector2(connection.ConnectorB.AnchoredPositionPoint.x / Screen.width,
                        connection.ConnectorB.AnchoredPositionPoint.y / Screen.height));
 
-
         Vector2 startPoint = lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorA.DragPoint);
         Vector2 endPoint = lineRenderer.rectTransform.InverseTransformPoint(connection.ConnectorB.DragPoint);
 
         float pixelDistance = Vector2.Distance(startPoint, endPoint);
         int pointsCount = CalculateDynamicPointsCount(pixelDistance);
-
 
         float dynamicCurveIntensity = CalculateDynamicCurveIntensity(pixelDistance);
 
@@ -131,7 +128,6 @@ public class LineRenderersController : MonoBehaviour
     {
 
         int calculatedPoints = Mathf.RoundToInt(pixelDistance * _pointsPerPixel);
-
 
         return Mathf.Clamp(calculatedPoints, _minPoints, _maxPoints);
     }
@@ -153,7 +149,6 @@ public class LineRenderersController : MonoBehaviour
         _maxPoints = Mathf.Max(_minPoints, maxPoints);
         _curveIntensity = Mathf.Clamp01(curveIntensity);
     }
-
 
     public readonly struct ConnectionData
     {
@@ -182,7 +177,6 @@ public class LineRenderersController : MonoBehaviour
         }
         Instance._connections.Clear();
     }
-
 
     [ContextMenu("Debug Line Quality")]
     public void DebugLineQuality()

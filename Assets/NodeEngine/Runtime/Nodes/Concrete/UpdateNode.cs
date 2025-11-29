@@ -10,7 +10,7 @@ public class UpdateNode : NodeBase
     {
         outputFields = new()
         {
-            new NodeField<ConnectorValueVoid>(false).SetHandler(UpdateVoid).SetDefaultValue(new ConnectorValueVoid())
+            new NodeField<ConnectorValueVoid>().SetHandler(UpdateVoid).SetDefaultValue(new ConnectorValueVoid())
         };
     }
 }

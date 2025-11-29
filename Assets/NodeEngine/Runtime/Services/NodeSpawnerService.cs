@@ -31,8 +31,6 @@ public class NodeSpawnerService : MonoBehaviour
         Instance = this;
     }
 
-
-
     public NodeLogic SpawnNode(NodeBase nodeInstance, Vector2 position, int nodeId = -1, bool isWorldPosition = false)
     {
         if (nodeInstance == null)

@@ -21,10 +21,8 @@ public class ContextMenuSystem : MonoBehaviour
     private GameObject currentDialog;
     private CancellationTokenSource cancellationTokenSource;
 
-    
     public static ContextMenuSystem Instance { get; private set; }
 
-    
     public bool IsContextMenuOpen => currentContextMenu != null;
     public bool IsDialogOpen => currentDialog != null;
 
@@ -76,13 +74,10 @@ public class ContextMenuSystem : MonoBehaviour
         var rectTransform = currentContextMenu.GetComponent<RectTransform>();
         if (rectTransform == null) return;
 
-        
         rectTransform.pivot = Vector2.zero;
 
-        
         rectTransform.position = screenPosition;
 
-        
         ClampToScreenBounds(rectTransform);
     }
 
@@ -91,24 +86,20 @@ public class ContextMenuSystem : MonoBehaviour
         
         Vector2 menuSize = rectTransform.rect.size;
 
-        
         Vector2 screenPos = rectTransform.position;
 
-        
         if (screenPos.x + menuSize.x > Screen.width)
         {
             
             screenPos.x = Screen.width - menuSize.x;
         }
 
-        
         if (screenPos.y + menuSize.y > Screen.height)
         {
             
             screenPos.y = Screen.height - menuSize.y;
         }
 
-        
         rectTransform.position = screenPos;
     }
 
@@ -278,8 +269,6 @@ public class ContextMenuSystem : MonoBehaviour
 
         try
         {
-            
-            
             
             targetNode.DeleteNode();
             

@@ -17,7 +17,7 @@ public class DebugNode : ExecutableNodeBase
 
         if (ConsoleUI.Instance != null)
         {
-            //ConsoleUI.Instance.LogMessage($"[Debug] {text}");
+            ConsoleUI.Instance.LogMessage($"[Debug] {text}");
         }
         else
         {
@@ -31,7 +31,7 @@ public class DebugNode : ExecutableNodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueString>(true).SetHandler(LogString).SetDefaultValue(new ConnectorValueString(""))
+            new NodeField<ConnectorValueString>().SetHandler(LogString).SetDefaultValue(new ConnectorValueString(""))
         };
         
         base.Setup();

@@ -20,12 +20,12 @@ public class AddNode : NodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueFloat>(true).SetHandler(A).SetDefaultValue(new ConnectorValueFloat(0)),
-            new NodeField<ConnectorValueFloat>(true).SetHandler(B).SetDefaultValue(new ConnectorValueFloat(0))
+            new NodeField<ConnectorValueFloat>().SetHandler(A).SetDefaultValue(new ConnectorValueFloat(0)),
+            new NodeField<ConnectorValueFloat>().SetHandler(B).SetDefaultValue(new ConnectorValueFloat(0))
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueFloat>(false).SetHandler(Result).SetDefaultValue(new ConnectorValueFloat(0))
+            new NodeField<ConnectorValueFloat>().SetHandler(Result).SetDefaultValue(new ConnectorValueFloat(0))
         };
     }
 }

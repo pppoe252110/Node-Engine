@@ -44,7 +44,6 @@ public class NodeLogic : MonoBehaviour
         _nodeIcon.sprite = _node.NodeSprite;
         _nodeIcon.color = _node.NodeSprite ? Color.white : Color.clear;
 
-
         if (_node is VariableNode varNode && VariableDatabase != null)
         {
             _nodeUIManager.CreateVariableUI(varNode, VariableDatabase, _image);
@@ -56,9 +55,7 @@ public class NodeLogic : MonoBehaviour
             _nodeUIManager.CreateConnectors(_node, _node.inputFields, _node.outputFields, _node.inputConnectors, _node.outputConnectors);
         }
 
-        // FIXED: Call InitializeConnectorValues after connectors are created
         _node.InitializeConnectorValues();
-
 
         _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, 57 + (Mathf.Max(_node.inputFields.Count, _node.outputFields.Count)) * 25);
         _image.material = new Material(_image.material);
@@ -88,7 +85,6 @@ public class NodeLogic : MonoBehaviour
             }
         }
 
-        
         return nodeType.Name.Replace("Node", "");
     }
 
@@ -99,7 +95,6 @@ public class NodeLogic : MonoBehaviour
             Debug.LogWarning("Node is null in DeleteNode");
             return;
         }
-
 
         NodeSpawnerService.Instance.DeleteNode(this);
     }

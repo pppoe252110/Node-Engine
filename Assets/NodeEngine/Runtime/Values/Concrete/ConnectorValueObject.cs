@@ -18,7 +18,6 @@ public class ConnectorValueObject : ConnectorValueBase<object>
         SetValue(value);
     }
 
-    
     public void SetValue(object value)
     {
         _value = value;
@@ -28,18 +27,15 @@ public class ConnectorValueObject : ConnectorValueBase<object>
     public object GetValue() => _value;
     public override object GetInnerValue() => _value;
 
-    
     public IConnectorValue WrappedValue => this;
     public Type ValueType => _storedType;
     public void SetValueFast(object value) => SetValue(value);
     public object GetValueFast() => _value;
 
-    
     public Type GetStoredType() => _storedType;
     public bool IsNull => _value == null;
     public bool IsValueType => _storedType?.IsValueType ?? false;
 
-    
     public bool IsType<T>() => _value is T;
     public bool IsType(Type type) => type?.IsAssignableFrom(_storedType) ?? false;
 
@@ -63,7 +59,6 @@ public class ConnectorValueObject : ConnectorValueBase<object>
         }
     }
 
-    
     public T GetValueAs<T>() where T : class => _value as T;
     public T GetValueCast<T>() => (T)_value;
 

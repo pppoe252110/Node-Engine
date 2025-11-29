@@ -15,7 +15,6 @@ public class ConnectorColorDatabaseEditor : Editor
     private List<string> availableTypes = new List<string>();
     private int selectedAvailableTypeIndex = 0;
 
-    
     private Dictionary<string, int> typeUsageCounts = new Dictionary<string, int>();
     private List<Type> allUsedTypes = new List<Type>();
     private bool hasScanned = false; 
@@ -51,7 +50,6 @@ public class ConnectorColorDatabaseEditor : Editor
                 typeUsageCounts = JsonUtility.FromJson<SerializableDictionary<string, int>>(usageJson).ToDictionary();
             }
 
-            
             string typesJson = EditorPrefs.GetString(CacheKeyAllUsedTypes, "");
             if (!string.IsNullOrEmpty(typesJson))
             {
@@ -70,7 +68,6 @@ public class ConnectorColorDatabaseEditor : Editor
             var serializableUsage = new SerializableDictionary<string, int>(typeUsageCounts);
             EditorPrefs.SetString(CacheKeyUsageCounts, JsonUtility.ToJson(serializableUsage));
 
-            
             var typeNames = allUsedTypes.Select(t => t.AssemblyQualifiedName).ToList();
             var serializableTypes = new SerializableList<string>(typeNames);
             EditorPrefs.SetString(CacheKeyAllUsedTypes, JsonUtility.ToJson(serializableTypes));
@@ -82,7 +79,6 @@ public class ConnectorColorDatabaseEditor : Editor
         
         DrawHeader();
 
-        
         EditorGUILayout.BeginVertical(GUI.skin.box);
         {
             DrawAutoFillSection();
@@ -157,12 +153,10 @@ public class ConnectorColorDatabaseEditor : Editor
         {
             EditorGUILayout.LabelField("Type Color Mappings", EditorStyles.boldLabel);
 
-            
             DrawAddTypeSection();
 
             EditorGUILayout.Space();
 
-            
             if (database.ColorMappings.Count == 0)
             {
                 EditorGUILayout.HelpBox("No type mappings. Click 'Find All Types' or add types manually above.", MessageType.Info);
@@ -191,7 +185,6 @@ public class ConnectorColorDatabaseEditor : Editor
                     RefreshAvailableTypes();
                 }
 
-                
                 if (!string.IsNullOrEmpty(searchFilter) && GUILayout.Button("✕", GUILayout.Width(25)))
                 {
                     searchFilter = "";
@@ -206,7 +199,6 @@ public class ConnectorColorDatabaseEditor : Editor
                 string[] availableTypeNames = availableTypes.ToArray();
                 selectedAvailableTypeIndex = EditorGUILayout.Popup("Type:", selectedAvailableTypeIndex, availableTypeNames, GUILayout.ExpandWidth(true));
 
-                
                 GUI.enabled = availableTypes.Count > 0;
                 if (GUILayout.Button("➕ Add", GUILayout.Width(60)))
                 {
@@ -252,18 +244,15 @@ public class ConnectorColorDatabaseEditor : Editor
                 {
                     mapping.color = EditorGUILayout.ColorField(GUIContent.none, mapping.color, false, true, false, GUILayout.Height(30), GUILayout.Width(50));
 
-                    
                     Rect colorRect = GUILayoutUtility.GetRect(50, 3);
                     EditorGUI.DrawRect(colorRect, mapping.color);
                 }
                 EditorGUILayout.EndVertical();
 
-                
                 EditorGUILayout.BeginVertical();
                 {
                     EditorGUILayout.LabelField(mapping.typeName, EditorStyles.boldLabel);
 
-                    
                     int usageCount = typeUsageCounts.TryGetValue(mapping.typeName, out int count) ? count : 0;
                     string usageText = usageCount == 0 ? "Usage: Unknown (scan to update)" : (usageCount == 1 ? "1 usage" : $"{usageCount} usages");
                     EditorGUILayout.LabelField(usageText, EditorStyles.miniLabel);
@@ -272,7 +261,6 @@ public class ConnectorColorDatabaseEditor : Editor
 
                 GUILayout.FlexibleSpace();
 
-                
                 EditorGUILayout.BeginVertical();
                 {
                     GUI.enabled = index > 0;
@@ -291,7 +279,6 @@ public class ConnectorColorDatabaseEditor : Editor
                 }
                 EditorGUILayout.EndVertical();
 
-                
                 if (GUILayout.Button("🗑️", GUILayout.Width(30), GUILayout.Height(30)))
                 {
                     database.ColorMappings.RemoveAt(index);
@@ -487,7 +474,6 @@ public class ConnectorColorDatabaseEditor : Editor
         };
     }
 
-    
     [Serializable]
     private class SerializableDictionary<TKey, TValue>
     {

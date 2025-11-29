@@ -10,10 +10,10 @@ public class ToStringNode : NodeBase
     public void Input(ConnectorValueObject input)
     {
         _input = input;
-        // NEW: Trigger output computation and propagation when input changes
+        
         if (outputFields.Count > 0)
         {
-            outputFields[0].ProceedValue();  // Proceed the "Output" field
+            outputFields[0].ProceedValue();  
         }
     }
 
@@ -31,11 +31,11 @@ public class ToStringNode : NodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueObject>(true).SetHandler(Input).SetDefaultValue(new ConnectorValueObject(null))
+            new NodeField<ConnectorValueObject>().SetHandler(Input).SetDefaultValue(new ConnectorValueObject(null))
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueString>(false).SetHandler(Output).SetDefaultValue(new ConnectorValueString(""))
+            new NodeField<ConnectorValueString>().SetHandler(Output).SetDefaultValue(new ConnectorValueString(""))
         };
     }
 }

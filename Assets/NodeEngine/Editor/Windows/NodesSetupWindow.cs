@@ -80,7 +80,6 @@ public class NodesSetupWindow : EditorWindow
         
         GetLocalVersion();
 
-        
         CheckForUpdatesAsync().Forget();
     }
 
@@ -123,7 +122,6 @@ public class NodesSetupWindow : EditorWindow
             }
         }
 
-        
         string packageCacheRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Library", "PackageCache");
         if (Directory.Exists(packageCacheRoot))
         {
@@ -156,7 +154,6 @@ public class NodesSetupWindow : EditorWindow
                     var packageJson = JsonUtility.FromJson<PackageInfo>(jsonContent);
                     remoteVersion = packageJson.version;
 
-                    
                     if (!string.IsNullOrEmpty(localVersion) && !string.IsNullOrEmpty(remoteVersion))
                     {
                         updateAvailable = CompareVersions(localVersion, remoteVersion) < 0;
@@ -226,11 +223,9 @@ public class NodesSetupWindow : EditorWindow
             fontStyle = FontStyle.Bold
         };
 
-        
         Rect headerRect = new Rect(0, 0, position.width, 120);
         EditorGUI.DrawRect(headerRect, new Color(0.1f, 0.1f, 0.2f, 1f));
 
-        
         Rect logoRect = new Rect(position.width / 2 - 30, 10, 60, 60);
 
         EditorGUI.DrawRect(logoRect, accentColor);
@@ -242,11 +237,9 @@ public class NodesSetupWindow : EditorWindow
             normal = { textColor = Color.white }
         });
 
-        
         GUILayout.Space(80);
         EditorGUILayout.LabelField("Node Engine Setup", headerStyle);
 
-        
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
         EditorGUILayout.LabelField($"Local Version: {localVersion}", versionStyle);
@@ -274,14 +267,11 @@ public class NodesSetupWindow : EditorWindow
         GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
 
-        
         Rect accentLineRect = new Rect(0, 120, position.width, 3);
         EditorGUI.DrawRect(accentLineRect, accentColor);
 
-        
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-        
         EditorGUILayout.Space(20);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField("Setup Options", sectionHeaderStyle);
@@ -295,7 +285,6 @@ public class NodesSetupWindow : EditorWindow
 
         EditorGUILayout.Space(10);
 
-        
         GUI.enabled = copyResources || copyGraphExamples;
         Color originalBgColor = GUI.backgroundColor;
         GUI.backgroundColor = accentColor;
@@ -308,7 +297,6 @@ public class NodesSetupWindow : EditorWindow
 
         EditorGUILayout.EndVertical();
 
-        
         EditorGUILayout.Space(20);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField("Setup Status", sectionHeaderStyle);
@@ -340,7 +328,6 @@ public class NodesSetupWindow : EditorWindow
 
         EditorGUILayout.EndVertical();
 
-        
         if (updateAvailable)
         {
             EditorGUILayout.Space(20);
@@ -360,7 +347,6 @@ public class NodesSetupWindow : EditorWindow
             EditorGUILayout.EndVertical();
         }
 
-        
         EditorGUILayout.Space(20);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         showPackageResources = EditorGUILayout.Foldout(showPackageResources, "Package Resources", true);
@@ -371,7 +357,6 @@ public class NodesSetupWindow : EditorWindow
         }
         EditorGUILayout.EndVertical();
 
-        
         EditorGUILayout.Space(20);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         showAdvancedOptions = EditorGUILayout.Foldout(showAdvancedOptions, "Advanced Options", true);

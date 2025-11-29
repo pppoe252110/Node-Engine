@@ -14,7 +14,6 @@ public static class TypeConverter
             return null;
         }
 
-        // If the value is already of the target type, return it
         if (targetType.IsAssignableFrom(value.GetType()))
         {
             return value;
@@ -22,7 +21,7 @@ public static class TypeConverter
 
         try
         {
-            // Handle specific type conversions
+            
             if (targetType == typeof(string))
             {
                 return value.ToString();
@@ -52,7 +51,7 @@ public static class TypeConverter
             if (targetType == typeof(Vector3))
             {
                 if (value is Vector3 vector3Value) return vector3Value;
-                // Try to parse from string format "(x,y,z)"
+                
                 string str = value.ToString();
                 if (str.StartsWith("(") && str.EndsWith(")"))
                 {
@@ -68,14 +67,12 @@ public static class TypeConverter
                 return Vector3.zero;
             }
 
-            // Use System.Convert for other types
             return System.Convert.ChangeType(value, targetType);
         }
         catch (Exception e)
         {
             Debug.LogWarning($"Failed to convert {value} to {targetType}: {e.Message}");
 
-            // Return default value for value types, null for reference types
             if (targetType.IsValueType)
             {
                 return Activator.CreateInstance(targetType);

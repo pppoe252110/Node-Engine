@@ -3,10 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-// =================================================================================
-// PART 1: The NON-GENERIC NodeField
-// This is used for execution flow (void).
-// =================================================================================
 [Serializable]
 public class NodeField : NodeFieldBase
 {
@@ -21,7 +17,7 @@ public class NodeField : NodeFieldBase
 
     public override Type GetValueType() => typeof(void);
     public override NodeValueAttribute GetAttribute() => CurrentValueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
-    public override object GetObjectValue() => null; // Execution flow has no object value
+    public override object GetObjectValue() => null; 
 
 public override void ProceedValue()
 {
@@ -32,17 +28,14 @@ private void ProceedValue(HashSet<NodeBase> processedNodes)
 {
     if (Connector?.Node == null) return;
     
-    // Prevent infinite recursion
     if (processedNodes.Contains(Connector.Node))
         return;
         
     processedNodes.Add(Connector.Node);
 
-    // 1. Trigger our own handler
     var value = Connector?.GetConnectorValue() ?? ConnectorValueVoid.Instance;
     CurrentValueHandler?.Invoke(value);
 
-    // 2. Propagate the execution signal to all connected fields.
     if (Connector != null)
     {
         foreach (var connectedConnector in Connector.Connections)
@@ -50,7 +43,7 @@ private void ProceedValue(HashSet<NodeBase> processedNodes)
             var field = connectedConnector?.Field;
             if (field != null && !connectedConnector.Node.IsProcessing && connectedConnector.Node != Connector.Node)
             {
-                // Pass the processedNodes set to track which nodes we've already visited
+                
                 if (field is NodeField executionField)
                 {
                     executionField.ProceedValue(processedNodes);
@@ -64,25 +57,18 @@ private void ProceedValue(HashSet<NodeBase> processedNodes)
     }
 }
 
-
-    // This method is not used for execution flow.
     public override void UpdateValueFromSource(IConnectorValue sourceValue) { }
 }
 
-
-// =================================================================================
-// PART 2: The GENERIC NodeField<T>
-// This is used for data types like int, float, bool, Vector3, etc.
-// =================================================================================
 [Serializable]
 public class NodeField<T> : NodeFieldBase<T>
 {
     public delegate void ValueHandlerFunc(T value);
     public event ValueHandlerFunc CurrentValueHandler;
 
-    public NodeField(bool isInput)
+    public NodeField()
     {
-        // Initialize with a default value of the correct type
+        
         if (typeof(T) == typeof(ConnectorValueInt))
             _currentValue = (T)(object)new ConnectorValueInt(0);
         else if (typeof(T) == typeof(ConnectorValueFloat))
@@ -193,7 +179,7 @@ public class NodeField<T> : NodeFieldBase<T>
 
     private void ProcessDataInput(Connector connectedConnector)
     {
-        // Automatic: Call Process() on the connected node to trigger its output computation
+        
         if (!connectedConnector.Node.IsProcessing)
         {
             connectedConnector.Node.Process();
@@ -209,14 +195,13 @@ public class NodeField<T> : NodeFieldBase<T>
 
     private void ProcessVoidInput(Connector connectedConnector)
     {
-        // Simplified: Directly call Execute() on executable nodes (matches old behavior)
+        
         if (Connector.Node is ExecutableNodeBase executableNode && !executableNode.IsProcessing)
         {
             executableNode.Process();
             executableNode.Execute();
         }
     }
-
 
     private void ProcessOutputField()
     {
@@ -237,7 +222,7 @@ public class NodeField<T> : NodeFieldBase<T>
 
     private void ProcessDataOutput()
     {
-        // Propagate data to connected input fields
+        
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;
@@ -250,7 +235,7 @@ public class NodeField<T> : NodeFieldBase<T>
 
     private void ProcessVoidOutput()
     {
-        // Propagate execution to connected input fields
+        
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;

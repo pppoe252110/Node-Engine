@@ -28,9 +28,9 @@ public class MoveGameObjectNode : ExecutableNodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueObject>(true).SetHandler(Target).SetDefaultValue(new ConnectorValueObject(null)),
-            new NodeField<ConnectorValueObject>(true).SetHandler(Position).SetDefaultValue(new ConnectorValueObject(Vector3.zero)),
-            new NodeField<ConnectorValueFloat>(true).SetHandler(Speed).SetDefaultValue(new ConnectorValueFloat(1f))
+            new NodeField<ConnectorValueObject>().SetHandler(Target).SetDefaultValue(new ConnectorValueObject(null)),
+            new NodeField<ConnectorValueObject>().SetHandler(Position).SetDefaultValue(new ConnectorValueObject(Vector3.zero)),
+            new NodeField<ConnectorValueFloat>().SetHandler(Speed).SetDefaultValue(new ConnectorValueFloat(1f))
         };
 
         base.Setup();

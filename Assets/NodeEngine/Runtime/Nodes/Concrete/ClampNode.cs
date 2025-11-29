@@ -22,7 +22,6 @@ public class ClampNode : NodeBase
         float minVal = _min.GetInnerValue();
         float maxVal = _max.GetInnerValue();
 
-        
         if (minVal > maxVal)
         {
             float temp = minVal;
@@ -37,13 +36,13 @@ public class ClampNode : NodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueFloat>(true).SetHandler(Value).SetDefaultValue(new ConnectorValueFloat(0)),
-            new NodeField<ConnectorValueFloat>(true).SetHandler(Min).SetDefaultValue(new ConnectorValueFloat(0)),
-            new NodeField<ConnectorValueFloat>(true).SetHandler(Max).SetDefaultValue(new ConnectorValueFloat(1))
+            new NodeField<ConnectorValueFloat>().SetHandler(Value).SetDefaultValue(new ConnectorValueFloat(0)),
+            new NodeField<ConnectorValueFloat>().SetHandler(Min).SetDefaultValue(new ConnectorValueFloat(0)),
+            new NodeField<ConnectorValueFloat>().SetHandler(Max).SetDefaultValue(new ConnectorValueFloat(1))
         };
         outputFields = new()
         {
-            new NodeField<ConnectorValueFloat>(false).SetHandler(Result).SetDefaultValue(new ConnectorValueFloat(0))
+            new NodeField<ConnectorValueFloat>().SetHandler(Result).SetDefaultValue(new ConnectorValueFloat(0))
         };
     }
 }

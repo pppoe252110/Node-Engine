@@ -58,12 +58,10 @@ public class NodesList : MonoBehaviour
         _groupHeaders.Clear();
         _groupContainers.Clear();
 
-
         foreach (Transform child in _nodesListParent)
         {
             Destroy(child.gameObject);
         }
-
 
         for (int i = 0; i < nodes.Length; i++)
         {
@@ -82,16 +80,13 @@ public class NodesList : MonoBehaviour
 
             _groupedItems[groupName].Add((item: item, originalIndex: i));
 
-
             if (_groupContainers.ContainsKey(groupName))
             {
                 item.transform.SetParent(_groupContainers[groupName]);
             }
         }
 
-
         var sortedGroups = _groupedItems.OrderBy(g => g.Key).ToList();
-
 
         ReorganizeHierarchy(sortedGroups);
 
@@ -103,7 +98,6 @@ public class NodesList : MonoBehaviour
         var nodeType = node.GetType();
         var pathAttribute = nodeType.GetCustomAttributes(typeof(NodePathAttribute), false)
                                   .FirstOrDefault() as NodePathAttribute;
-
 
         string itemName = node.NodeName;
 
@@ -153,10 +147,8 @@ public class NodesList : MonoBehaviour
             var groupHeader = _groupHeaders[group.Key];
             var groupContainer = _groupContainers[group.Key];
 
-
             groupHeader.transform.SetAsLastSibling();
             groupContainer.transform.SetAsLastSibling();
-
 
             var sortedItems = group.Value.OrderBy(x => x.item.nodeName.text).ToList();
 
@@ -194,12 +186,10 @@ public class NodesList : MonoBehaviour
                 }
             }
 
-
             if (_groupHeaders.ContainsKey(group.Key))
             {
                 bool shouldShowGroup = hasVisibleItemsInGroup;
                 _groupHeaders[group.Key].gameObject.SetActive(shouldShowGroup);
-
 
                 if (_groupContainers.ContainsKey(group.Key))
                 {

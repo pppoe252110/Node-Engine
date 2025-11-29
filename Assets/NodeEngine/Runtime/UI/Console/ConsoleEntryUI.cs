@@ -23,7 +23,6 @@ public class ConsoleEntryUI : MonoBehaviour
         countText.text = entry.count > 1 ? entry.count.ToString() : "";
         countText.gameObject.SetActive(entry.count > 1);
 
-        
         typeIcon.sprite = entry.logType switch
         {
             LogType.Warning => warningIcon,

@@ -53,7 +53,6 @@ public class NodesDatabase : ScriptableObject
            .Where(t => t.IsSubclassOf(typeof(NodeBase)) && !t.IsAbstract)
            .ToArray();
 
-
         var existingNodes = _serializableNodes?.ToList() ?? new System.Collections.Generic.List<SerializableNode>();
 
         foreach (var type in subclassTypes)
@@ -72,7 +71,6 @@ public class NodesDatabase : ScriptableObject
                 existingNodes.Add(newNode);
             }
         }
-
 
         _serializableNodes = existingNodes.ToArray();
     }

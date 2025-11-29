@@ -7,7 +7,6 @@ public abstract class VariableNode : NodeBase
     public VariableUIElement UIElement { get; set; }
     protected NodeFieldBase _outputField;
 
-    // Cached connector values
     private ConnectorValueInt _cachedIntValue;
     private ConnectorValueFloat _cachedFloatValue;
     private ConnectorValueBool _cachedBoolValue;
@@ -17,7 +16,7 @@ public abstract class VariableNode : NodeBase
 
     public override void Setup()
     {
-        // Initialize cached values with defaults
+        
         InitializeCachedValues();
 
         _outputField = CreateTypedOutputField();
@@ -54,32 +53,32 @@ public abstract class VariableNode : NodeBase
         switch (VariableType)
         {
             case VariableType.Int:
-                return new NodeField<ConnectorValueInt>(false)
+                return new NodeField<ConnectorValueInt>()
                     .SetHandler(OutputInt)
                     .SetDefaultValue(_cachedIntValue);
 
             case VariableType.Single:
-                return new NodeField<ConnectorValueFloat>(false)
+                return new NodeField<ConnectorValueFloat>()
                     .SetHandler(OutputFloat)
                     .SetDefaultValue(_cachedFloatValue);
 
             case VariableType.Bool:
-                return new NodeField<ConnectorValueBool>(false)
+                return new NodeField<ConnectorValueBool>()
                     .SetHandler(OutputBool)
                     .SetDefaultValue(_cachedBoolValue);
 
             case VariableType.String:
-                return new NodeField<ConnectorValueString>(false)
+                return new NodeField<ConnectorValueString>()
                     .SetHandler(OutputString)
                     .SetDefaultValue(_cachedStringValue);
 
             case VariableType.Vector3:
-                return new NodeField<ConnectorValueVector3>(false)
+                return new NodeField<ConnectorValueVector3>()
                     .SetHandler(OutputVector3)
                     .SetDefaultValue(_cachedVector3Value);
 
             default:
-                return new NodeField<ConnectorValueObject>(false)
+                return new NodeField<ConnectorValueObject>()
                     .SetHandler(OutputObject)
                     .SetDefaultValue(_cachedObjectValue);
         }
@@ -88,7 +87,7 @@ public abstract class VariableNode : NodeBase
     [NodeValue("Value", typeof(int))]
     public void OutputInt(ConnectorValueInt value)
     {
-        // Just pass the cached value without updating it
+        
         value.SetInnerValue(_cachedIntValue.GetInnerValue());
     }
 
@@ -124,7 +123,7 @@ public abstract class VariableNode : NodeBase
 
     public void UpdateOutputValue()
     {
-        // Update the cached value from UI element first
+        
         if (UIElement != null)
         {
             object uiValue = UIElement.GetValue();
@@ -157,7 +156,6 @@ public abstract class VariableNode : NodeBase
             }
         }
 
-        // Then proceed with the updated cached value
         _outputField?.ProceedValue();
     }
 }

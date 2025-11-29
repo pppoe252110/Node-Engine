@@ -37,7 +37,6 @@ public class NodeContextMenu : MonoBehaviour, IPointerClickHandler
                 return true;
         }
 
-        
         var results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
 
@@ -54,11 +53,9 @@ public class NodeContextMenu : MonoBehaviour, IPointerClickHandler
     {
         if (obj == null) return false;
 
-        
         if (obj.TryGetComponent<Connector>(out _))
             return true;
 
-        
         Transform current = obj.transform;
         while (current != null)
         {

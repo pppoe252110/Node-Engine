@@ -26,8 +26,8 @@ public class SetVariableNode : ExecutableNodeBase
     {
         inputFields = new()
         {
-            new NodeField<ConnectorValueObject>(true).SetHandler(Value).SetDefaultValue(new ConnectorValueObject(null)),
-            new NodeField<ConnectorValueString>(true).SetHandler(Name).SetDefaultValue(new ConnectorValueString(""))
+            new NodeField<ConnectorValueObject>().SetHandler(Value).SetDefaultValue(new ConnectorValueObject(null)),
+            new NodeField<ConnectorValueString>().SetHandler(Name).SetDefaultValue(new ConnectorValueString(""))
         };
 
         base.Setup();

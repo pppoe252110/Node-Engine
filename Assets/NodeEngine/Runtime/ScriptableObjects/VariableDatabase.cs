@@ -7,7 +7,6 @@ public class VariableDatabase : ScriptableObject
 
     public VariableUIEntry[] Entries => _entries;
 
-    
     public VariableUIElement GetPrefabForType(VariableType type)
     {
         foreach (var entry in _entries)

@@ -128,7 +128,6 @@ public class InputFieldVariableUI : VariableUIElement
             string yStr = parts[1].Trim();
             string zStr = parts[2].Trim();
 
-            
             xStr = xStr.Replace(",", ".");
             yStr = yStr.Replace(",", ".");
             zStr = zStr.Replace(",", ".");
@@ -154,7 +153,6 @@ public class InputFieldVariableUI : VariableUIElement
             }
         }
 
-        
         SetDefaultValue();
     }
 
@@ -246,7 +244,6 @@ public class InputFieldVariableUI : VariableUIElement
 
     public override object GetValue() => _value;
 
-    
     private string ConvertToInvariantFormat(string input)
     {
         

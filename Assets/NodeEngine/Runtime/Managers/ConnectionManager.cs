@@ -117,7 +117,6 @@ public class ConnectionManager : MonoBehaviour
     {
         if (fromConnector == null || toConnector == null) return false;
 
-        
         var fromAttr = fromConnector.Field?.GetAttribute();
         var toAttr = toConnector.Field?.GetAttribute();
 

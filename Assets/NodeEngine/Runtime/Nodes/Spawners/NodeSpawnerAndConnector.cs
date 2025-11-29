@@ -59,23 +59,18 @@ public class NodeSpawnerAndConnector : MonoBehaviour
     {
         bool allSuccess = true;
 
-        // UpdateNode -> ForLoopNode (execution)
         if (!TryConnectWithFallback(updateNode, forLoopNode, "Update", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 
-        // IntNode -> ForLoopNode (data: count for loop)
         if (!TryConnectWithFallback(intNode, forLoopNode, "Value", "Count", typeof(int), typeof(int)))
             allSuccess = false;
 
-        // ForLoopNode -> ToStringNode (data: index to string)
         if (!TryConnectWithFallback(forLoopNode, toStringNode, "Index", "Input", typeof(int), typeof(object)))
             allSuccess = false;
 
-        // ForLoopNode -> DebugNode (execution: body triggers debug)
         if (!TryConnectWithFallback(forLoopNode, debugNode, "Body", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 
-        // ToStringNode -> DebugNode (data: string to log)
         if (!TryConnectWithFallback(toStringNode, debugNode, "Output", "LogString", typeof(string), typeof(string)))
             allSuccess = false;
 

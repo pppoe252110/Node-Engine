@@ -41,10 +41,8 @@ public class ConsoleUI : MonoBehaviour
     private bool showWarnings = true;
     private bool showLogs = true;
 
-
     private readonly Queue<ConsoleEntryUI> entryPool = new Queue<ConsoleEntryUI>();
     private readonly List<ConsoleEntryUI> activeEntries = new List<ConsoleEntryUI>();
-
 
     private float lastRefreshTime;
     private const float refreshInterval = 0.05f;
@@ -52,7 +50,6 @@ public class ConsoleUI : MonoBehaviour
     private bool isConsoleVisible = false;
     private Coroutine delayedRefreshCoroutine;
 
-    
     private ConsoleEntry lastCollapsedEntry = null;
 
     public static ConsoleUI Instance { get; private set; }
@@ -65,7 +62,6 @@ public class ConsoleUI : MonoBehaviour
             return;
         }
         Instance = this;
-
 
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
 
@@ -82,7 +78,6 @@ public class ConsoleUI : MonoBehaviour
         errorToggle.onValueChanged.AddListener(OnFilterChanged);
         warningToggle.onValueChanged.AddListener(OnFilterChanged);
         logToggle.onValueChanged.AddListener(OnFilterChanged);
-
 
         for (int i = 0; i < initialPoolSize; i++)
         {
@@ -180,7 +175,6 @@ public class ConsoleUI : MonoBehaviour
                 return;
             }
 
-            
             var lastEntry = allEntries.Last();
             if (lastEntry.message == logString && lastEntry.logType == type)
             {
@@ -191,7 +185,6 @@ public class ConsoleUI : MonoBehaviour
             }
         }
 
-        
         var newEntry = new ConsoleEntry
         {
             message = logString,
@@ -371,7 +364,6 @@ public class ConsoleUI : MonoBehaviour
 
         allEntries = new List<ConsoleEntry>(groupedEntries.Values);
 
-        
         if (allEntries.Count > 0)
         {
             lastCollapsedEntry = allEntries.Last();
@@ -401,7 +393,6 @@ public class ConsoleUI : MonoBehaviour
 
         allEntries = expandedEntries;
 
-        
         if (allEntries.Count > 0)
         {
             lastCollapsedEntry = allEntries.Last();

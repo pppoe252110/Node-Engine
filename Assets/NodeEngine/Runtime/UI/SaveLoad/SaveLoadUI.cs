@@ -46,7 +46,6 @@ public class SaveLoadUI : MonoBehaviour
         GraphSaveLoadSystem.Instance.OnGraphSaved += OnGraphSaved;
         GraphSaveLoadSystem.Instance.OnGraphLoaded += OnGraphLoaded;
 
-        
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;

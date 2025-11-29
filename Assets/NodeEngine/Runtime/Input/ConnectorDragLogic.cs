@@ -142,7 +142,6 @@ public class ConnectorDragLogic : MonoBehaviour
                IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType);
     }
 
-
     private void CreateConnection(Connector targetConnector)
     {
         LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
@@ -153,7 +152,6 @@ public class ConnectorDragLogic : MonoBehaviour
 
         _dragConnector.UpdateFilled();
         targetConnector.UpdateFilled();
-
 
         if (ConnectionManager.Instance != null)
         {
