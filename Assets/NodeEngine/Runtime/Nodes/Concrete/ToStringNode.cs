@@ -9,7 +9,6 @@ public class ToStringNode : NodeBase
     [NodeValue("Input", typeof(object))]
     public void Input(ConnectorValueObject input)
     {
-        Debug.LogError("In");
         _input = input;
         // NEW: Trigger output computation and propagation when input changes
         if (outputFields.Count > 0)
@@ -21,7 +20,6 @@ public class ToStringNode : NodeBase
     [NodeValue("Output", typeof(string))]
     public void Output(ConnectorValueString output)
     {
-        Debug.LogError("Out");
         _output = output;
         if (_output != null && _input != null)
         {

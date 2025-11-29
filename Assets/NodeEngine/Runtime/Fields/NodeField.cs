@@ -1,5 +1,3 @@
-// Assets/NodeEngine/Runtime/Fields/NodeField.cs
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -214,6 +212,7 @@ public class NodeField<T> : NodeFieldBase<T>
         // Simplified: Directly call Execute() on executable nodes (matches old behavior)
         if (Connector.Node is ExecutableNodeBase executableNode && !executableNode.IsProcessing)
         {
+            executableNode.Process();
             executableNode.Execute();
         }
     }

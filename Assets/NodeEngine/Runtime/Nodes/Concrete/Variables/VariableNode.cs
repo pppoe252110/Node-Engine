@@ -20,12 +20,6 @@ public abstract class VariableNode : NodeBase
         UpdateOutputValue();
     }
 
-    public override void Process(List<Connector> fromConnectors = null)
-    {
-        base.Process(fromConnectors);
-        Debug.LogError("AAAAAAAAA");
-    }
-
     protected override void Initialized()
     {
         UpdateOutputValue();
@@ -70,7 +64,6 @@ public abstract class VariableNode : NodeBase
     [NodeValue("Value", typeof(int))]
     public void OutputInt(ConnectorValueInt value)
     {
-        Debug.LogError("DADA");
         if (UIElement != null && UIElement.GetValue() is int uiVal)
         {
             value.SetInnerValue(uiVal);
