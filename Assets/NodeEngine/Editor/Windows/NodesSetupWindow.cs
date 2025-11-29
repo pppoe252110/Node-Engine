@@ -15,7 +15,7 @@ public class NodesSetupWindow : EditorWindow
     private const string TARGET_RESOURCE_PATH = "Assets/Resources/NodeEngine";
 
     private const string PACKAGE_VERSION_KEY = "NodeEngine_PackageVersion";
-    private const string GITHUB_PACKAGE_URL = "https://raw.githubusercontent.com/pppoe252110/Node-Engine/main/Assets/NodeEngine/package.json";
+    private const string GITHUB_PACKAGE_URL = "https://raw.githubusercontent.com/pppoe252110/Node-Engine/refs/heads/main/Assets/NodeEngine/package.json";
 
     private bool copyResources = true;
     private bool copyGraphExamples = true;
