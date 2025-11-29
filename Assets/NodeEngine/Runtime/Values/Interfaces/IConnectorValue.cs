@@ -4,7 +4,8 @@ public interface IConnectorValue
     void SetInnerValue(object value);
 }
 
-public interface IConnectorValue<out T> : IConnectorValue
+public interface IConnectorValue<T> : IConnectorValue
 {
     new T GetInnerValue();
+    void SetInnerValue(T value);
 }

@@ -7,15 +7,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class SaveLoadUI : MonoBehaviour
+public class SaveLoadUI : BasePanel
 {
-    [Header("Main Panel")]
-    [SerializeField] private float fadeDuration = 0.3f;
-
-    [SerializeField] private CanvasGroup canvasGroup;
-    [SerializeField] private GameObject _saveLoadPanel;
-    [SerializeField] private Button _openButton;
-
     [Header("Save Section")]
     [SerializeField] private TMP_InputField _saveNameInput;
     [SerializeField] private Button _saveButton;
@@ -49,7 +42,8 @@ public class SaveLoadUI : MonoBehaviour
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = false;
-        _saveLoadPanel.SetActive(false);
+
+        PanelManager.Instance.RegisterPanel(this);
     }
 
     private void OnDestroy()
@@ -67,10 +61,13 @@ public class SaveLoadUI : MonoBehaviour
         UpdateStatusTimers();
     }
 
+    protected override void OnPanelOpenedAction()
+    {
+        RefreshSaveFilesList();
+    }
+
     private void SetupUI()
     {
-        _openButton.onClick.AddListener(TogglePanel);
-
         _saveButton.onClick.AddListener(SaveGraph);
         _quickSaveButton.onClick.AddListener(QuickSave);
         _saveNameInput.onSubmit.AddListener((text) => SaveGraph());
@@ -193,72 +190,6 @@ public class SaveLoadUI : MonoBehaviour
     private void OnGraphLoaded(string saveName)
     {
         UpdateLoadStatus($"Loaded: {saveName}", 3f);
-    }
-
-    public void TogglePanel()
-    {
-        if (_isPanelOpen)
-        {
-            ClosePanel();
-        }
-        else
-        {
-            OpenPanel();
-        }
-    }
-
-    public void OpenPanel()
-    {
-        if (_fadeCoroutine != null)
-        {
-            StopCoroutine(_fadeCoroutine);
-        }
-
-        _saveLoadPanel.SetActive(true);
-        _fadeCoroutine = StartCoroutine(FadePanel(true));
-        _isPanelOpen = true;
-        RefreshSaveFilesList();
-    }
-
-    public void ClosePanel()
-    {
-        if (_fadeCoroutine != null)
-        {
-            StopCoroutine(_fadeCoroutine);
-        }
-
-        _fadeCoroutine = StartCoroutine(FadePanel(false));
-        _isPanelOpen = false;
-    }
-
-    private IEnumerator FadePanel(bool fadeIn)
-    {
-        if (fadeIn)
-        {
-            _saveLoadPanel.SetActive(true);
-        }
-
-        float startAlpha = canvasGroup.alpha;
-        float endAlpha = fadeIn ? 1f : 0f;
-        float elapsedTime = 0f;
-
-        while (elapsedTime < fadeDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, elapsedTime / fadeDuration);
-            yield return null;
-        }
-
-        canvasGroup.alpha = endAlpha;
-        canvasGroup.interactable = fadeIn;
-        canvasGroup.blocksRaycasts = fadeIn;
-
-        if (!fadeIn)
-        {
-            _saveLoadPanel.SetActive(false);
-        }
-
-        _fadeCoroutine = null;
     }
 
     private void UpdateSaveStatus(string message, float displayTime = 0f)

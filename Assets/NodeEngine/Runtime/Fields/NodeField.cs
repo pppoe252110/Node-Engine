@@ -17,45 +17,44 @@ public class NodeField : NodeFieldBase
 
     public override Type GetValueType() => typeof(void);
     public override NodeValueAttribute GetAttribute() => CurrentValueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
-    public override object GetObjectValue() => null; 
 
-public override void ProceedValue()
-{
-    ProceedValue(new HashSet<NodeBase>());
-}
-
-private void ProceedValue(HashSet<NodeBase> processedNodes)
-{
-    if (Connector?.Node == null) return;
-    
-    if (processedNodes.Contains(Connector.Node))
-        return;
-        
-    processedNodes.Add(Connector.Node);
-
-    var value = Connector?.GetConnectorValue() ?? ConnectorValueVoid.Instance;
-    CurrentValueHandler?.Invoke(value);
-
-    if (Connector != null)
+    public override void ProceedValue()
     {
-        foreach (var connectedConnector in Connector.Connections)
+        ProceedValue(new HashSet<NodeBase>());
+    }
+
+    private void ProceedValue(HashSet<NodeBase> processedNodes)
+    {
+        if (Connector?.Node == null) return;
+
+        if (processedNodes.Contains(Connector.Node))
+            return;
+
+        processedNodes.Add(Connector.Node);
+
+        var value = Connector?.GetConnectorValue() ?? ConnectorValueVoid.Instance;
+        CurrentValueHandler?.Invoke(value);
+
+        if (Connector != null)
         {
-            var field = connectedConnector?.Field;
-            if (field != null && !connectedConnector.Node.IsProcessing && connectedConnector.Node != Connector.Node)
+            foreach (var connectedConnector in Connector.Connections)
             {
-                
-                if (field is NodeField executionField)
+                var field = connectedConnector?.Field;
+                if (field != null && !connectedConnector.Node.IsProcessing && connectedConnector.Node != Connector.Node)
                 {
-                    executionField.ProceedValue(processedNodes);
-                }
-                else
-                {
-                    field.ProceedValue();
+
+                    if (field is NodeField executionField)
+                    {
+                        executionField.ProceedValue(processedNodes);
+                    }
+                    else
+                    {
+                        field.ProceedValue();
+                    }
                 }
             }
         }
     }
-}
 
     public override void UpdateValueFromSource(IConnectorValue sourceValue) { }
 }
@@ -68,7 +67,7 @@ public class NodeField<T> : NodeFieldBase<T>
 
     public NodeField()
     {
-        
+
         if (typeof(T) == typeof(ConnectorValueInt))
             _currentValue = (T)(object)new ConnectorValueInt(0);
         else if (typeof(T) == typeof(ConnectorValueFloat))
@@ -103,9 +102,18 @@ public class NodeField<T> : NodeFieldBase<T>
 
         try
         {
-            object sourceInnerValue = sourceValue.GetInnerValue();
-            UpdateCurrentValue(sourceInnerValue);
-            CurrentValueHandler?.Invoke(_currentValue);
+            // Try to cast to the typed interface to avoid boxing
+            if (sourceValue is IConnectorValue<T> typedSource)
+            {
+                UpdateValueFromSourceTyped(typedSource);
+            }
+            else
+            {
+                // Fallback to object-based for compatibility
+                var sourceInnerValue = sourceValue.GetInnerValue();
+                UpdateCurrentValue(sourceInnerValue);
+                CurrentValueHandler?.Invoke(_currentValue);
+            }
         }
         catch (Exception e)
         {
@@ -113,20 +121,82 @@ public class NodeField<T> : NodeFieldBase<T>
         }
     }
 
+    private void UpdateValueFromSourceTyped(IConnectorValue<T> sourceValue)
+    {
+        try
+        {
+            UpdateCurrentValueTyped(sourceValue);
+            CurrentValueHandler?.Invoke(_currentValue);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to update value from source (typed): {e.Message}");
+        }
+    }
+
     private void UpdateCurrentValue(object newValue)
     {
-        if (typeof(T) == typeof(ConnectorValueInt))
-            ((ConnectorValueInt)(object)_currentValue).SetInnerValue((int)newValue);
-        else if (typeof(T) == typeof(ConnectorValueFloat))
-            ((ConnectorValueFloat)(object)_currentValue).SetInnerValue((float)newValue);
-        else if (typeof(T) == typeof(ConnectorValueBool))
-            ((ConnectorValueBool)(object)_currentValue).SetInnerValue((bool)newValue);
-        else if (typeof(T) == typeof(ConnectorValueString))
-            ((ConnectorValueString)(object)_currentValue).SetInnerValue((string)newValue);
-        else if (typeof(T) == typeof(ConnectorValueVector3))
-            ((ConnectorValueVector3)(object)_currentValue).SetInnerValue((Vector3)newValue);
-        else if (typeof(T) == typeof(ConnectorValueObject))
-            ((ConnectorValueObject)(object)_currentValue).SetInnerValue(newValue);
+        if (newValue == null || _currentValue == null)
+        {
+            Debug.LogWarning("Null value in UpdateCurrentValue");
+            return;
+        }
+
+        try
+        {
+            // Fallback object-based update
+            if (_currentValue is IConnectorValue currentConnector)
+            {
+                currentConnector.SetInnerValue(newValue);
+            }
+            else
+            {
+                Debug.LogError($"Current value is not IConnectorValue: {_currentValue.GetType()}");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to update current value: {e.Message}");
+        }
+    }
+
+    private void UpdateCurrentValueTyped(IConnectorValue<T> newValue)
+    {
+        var innerValue = newValue.GetInnerValue();
+
+        // Direct typed updates to avoid boxing
+        if (_currentValue is ConnectorValueInt intConnector && innerValue is int intVal)
+        {
+            intConnector.SetInnerValue(intVal);
+        }
+        else if (_currentValue is ConnectorValueFloat floatConnector && innerValue is float floatVal)
+        {
+            floatConnector.SetInnerValue(floatVal);
+        }
+        else if (_currentValue is ConnectorValueBool boolConnector && innerValue is bool boolVal)
+        {
+            boolConnector.SetInnerValue(boolVal);
+        }
+        else if (_currentValue is ConnectorValueString stringConnector && innerValue is string stringVal)
+        {
+            stringConnector.SetInnerValue(stringVal);
+        }
+        else if (_currentValue is ConnectorValueVector3 vectorConnector && innerValue is Vector3 vectorVal)
+        {
+            vectorConnector.SetInnerValue(vectorVal);
+        }
+        else if (_currentValue is ConnectorValueObject objectConnector)
+        {
+            objectConnector.SetInnerValue(innerValue);
+        }
+        else if (_currentValue is ConnectorValueVoid)
+        {
+            // Void, do nothing
+        }
+        else
+        {
+            Debug.LogError($"Unsupported type for typed update: {_currentValue.GetType()}");
+        }
     }
 
     public override void ProceedValue()
@@ -176,26 +246,31 @@ public class NodeField<T> : NodeFieldBase<T>
             ProcessVoidInput(connectedConnector);
         }
     }
-
     private void ProcessDataInput(Connector connectedConnector)
     {
-        
         if (!connectedConnector.Node.IsProcessing)
         {
             connectedConnector.Node.Process();
         }
 
-        var connectedField = connectedConnector.Field;
+        var connectedField = connectedConnector.Field as NodeFieldBase<T>;
         if (connectedField != null)
         {
-            var sourceValue = connectedField.GetObjectValue();
-            UpdateFromSourceValue(sourceValue);
+            var sourceValue = connectedField.GetValue();
+            if (sourceValue is IConnectorValue<T> typedSource)
+            {
+                UpdateValueFromSourceTyped(typedSource);
+            }
+            else if (sourceValue is IConnectorValue untypedSource)
+            {
+                UpdateValueFromSource(untypedSource);
+            }
         }
     }
 
     private void ProcessVoidInput(Connector connectedConnector)
     {
-        
+
         if (Connector.Node is ExecutableNodeBase executableNode && !executableNode.IsProcessing)
         {
             executableNode.Process();
@@ -222,7 +297,7 @@ public class NodeField<T> : NodeFieldBase<T>
 
     private void ProcessDataOutput()
     {
-        
+
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;
@@ -235,7 +310,7 @@ public class NodeField<T> : NodeFieldBase<T>
 
     private void ProcessVoidOutput()
     {
-        
+
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;
@@ -243,16 +318,6 @@ public class NodeField<T> : NodeFieldBase<T>
             {
                 field.ProceedValue();
             }
-        }
-    }
-
-    private void UpdateFromSourceValue(object sourceValue)
-    {
-        if (sourceValue is IConnectorValue sourceConnector)
-        {
-            var innerValue = sourceConnector.GetInnerValue();
-            UpdateCurrentValue(innerValue);
-            CurrentValueHandler?.Invoke(_currentValue);
         }
     }
 
@@ -273,10 +338,5 @@ public class NodeField<T> : NodeFieldBase<T>
         }
 
         return _currentValue;
-    }
-
-    public override object GetObjectValue()
-    {
-        return GetValue();
     }
 }

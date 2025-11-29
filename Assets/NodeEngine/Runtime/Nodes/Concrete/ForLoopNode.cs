@@ -4,7 +4,7 @@ using UnityEngine;
 [NodePath("Control Flow/For Loop")]
 public class ForLoopNode : ExecutableNodeBase
 {
-    
+
     private ConnectorValueInt _count;
     private ConnectorValueInt _index;
 
@@ -20,18 +20,19 @@ public class ForLoopNode : ExecutableNodeBase
     [NodeValue("Body", typeof(void))]
     public void Body(IConnectorValue body)
     {
-        
+
     }
 
     [NodeValue("Index", typeof(int))]
     public void Index(ConnectorValueInt index)
     {
-        
+
     }
 
     public override void Execute()
     {
-        
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
         int loopCount = _count?.GetInnerValue() ?? 0;
 
         for (int i = 0; i < loopCount; i++)
@@ -47,16 +48,17 @@ public class ForLoopNode : ExecutableNodeBase
                 _bodyField.ProceedValue();
             }
         }
-
+        sw.Stop();
+        Debug.LogError(sw.ElapsedMilliseconds + "ms");
         base.Execute();
     }
 
     public override void Setup()
     {
-        
+
         var countField = new NodeField<ConnectorValueInt>()
             .SetHandler(Count)
-            .SetDefaultValue(new ConnectorValueInt(5)); 
+            .SetDefaultValue(new ConnectorValueInt(5));
 
         _index = new ConnectorValueInt(0);
 
@@ -66,9 +68,9 @@ public class ForLoopNode : ExecutableNodeBase
 
         _bodyField = new NodeField().SetHandler(Body);
 
-        inputFields = new() 
+        inputFields = new()
         {
-            countField 
+            countField
         };
 
         outputFields = new()

@@ -65,7 +65,6 @@ public class VariableNodeField : NodeFieldBase
 
     public override Type GetValueType() => GetConnectorType(_variableType);
     public override NodeValueAttribute GetAttribute() => _valueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
-    public override object GetObjectValue() => _currentValue?.GetInnerValue();
 
     public void SetValue(object newValue)
     {

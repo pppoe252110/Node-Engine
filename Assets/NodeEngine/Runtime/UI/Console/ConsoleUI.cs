@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ConsoleUI : MonoBehaviour
+public class ConsoleUI : BasePanel
 {
     [Header("References")]
     [SerializeField] private Transform entriesParent;
@@ -18,7 +18,6 @@ public class ConsoleUI : MonoBehaviour
     [SerializeField] private Toggle errorToggle;
     [SerializeField] private Toggle warningToggle;
     [SerializeField] private Toggle logToggle;
-    [SerializeField] private CanvasGroup canvasGroup;
 
     [Header("Prefabs")]
     [SerializeField] private ConsoleEntryUI entryPrefab;
@@ -26,9 +25,6 @@ public class ConsoleUI : MonoBehaviour
     [Header("Pooling")]
     [SerializeField] private int initialPoolSize = 50;
     [SerializeField] private int maxDisplayedEntries = 200;
-
-    [Header("Fading")]
-    [SerializeField] private float fadeDuration = 0.3f;
 
     [Header("Refresh Settings")]
     [SerializeField] private float delayedRefreshTime = 0.5f;
@@ -47,14 +43,13 @@ public class ConsoleUI : MonoBehaviour
     private float lastRefreshTime;
     private const float refreshInterval = 0.05f;
 
-    private bool isConsoleVisible = false;
     private Coroutine delayedRefreshCoroutine;
 
     private ConsoleEntry lastCollapsedEntry = null;
 
     public static ConsoleUI Instance { get; private set; }
 
-    private void Awake()
+    protected override void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -67,6 +62,13 @@ public class ConsoleUI : MonoBehaviour
 
         Application.logMessageReceived += HandleLog;
         SetupUI();
+
+        base.Awake();
+    }
+
+    private void Start()
+    {
+        PanelManager.Instance.RegisterPanel(this);
     }
 
     private void SetupUI()
@@ -87,54 +89,6 @@ public class ConsoleUI : MonoBehaviour
         }
 
         UpdateCollapseButtonText();
-        SetConsoleVisibility(false);
-    }
-
-    public void ToggleConsoleVisibility()
-    {
-        SetConsoleVisibility(!isConsoleVisible);
-    }
-
-    public void SetConsoleVisibility(bool isVisible)
-    {
-        if (isConsoleVisible == isVisible) return;
-
-        isConsoleVisible = isVisible;
-        StopAllCoroutines();
-        StartCoroutine(FadeConsole(isVisible));
-
-        if (isVisible)
-        {
-            ForceRefresh();
-        }
-    }
-
-    private IEnumerator FadeConsole(bool fadeIn)
-    {
-        if (fadeIn)
-        {
-            canvasGroup.gameObject.SetActive(true);
-        }
-
-        float startAlpha = canvasGroup.alpha;
-        float endAlpha = fadeIn ? 1f : 0f;
-        float elapsedTime = 0f;
-
-        while (elapsedTime < fadeDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, elapsedTime / fadeDuration);
-            yield return null;
-        }
-
-        canvasGroup.alpha = endAlpha;
-        canvasGroup.interactable = fadeIn;
-        canvasGroup.blocksRaycasts = fadeIn;
-
-        if (!fadeIn)
-        {
-            canvasGroup.gameObject.SetActive(false);
-        }
     }
 
     private void OnFilterChanged(bool _)
@@ -164,12 +118,12 @@ public class ConsoleUI : MonoBehaviour
     {
         if (isCollapsed && allEntries.Count > 0)
         {
-            
+
             if (lastCollapsedEntry != null &&
                 lastCollapsedEntry.message == logString &&
                 lastCollapsedEntry.logType == type)
             {
-                
+
                 lastCollapsedEntry.timestamps.Add(DateTime.Now);
                 ScheduleDelayedRefresh();
                 return;
@@ -310,7 +264,7 @@ public class ConsoleUI : MonoBehaviour
     private void ToggleCollapse()
     {
         isCollapsed = !isCollapsed;
-        lastCollapsedEntry = null; 
+        lastCollapsedEntry = null;
 
         if (isCollapsed)
         {
@@ -344,10 +298,10 @@ public class ConsoleUI : MonoBehaviour
 
             if (messageToIdMap.TryGetValue(messageKey, out int existingId))
             {
-                
+
                 if (groupedEntries.TryGetValue(existingId, out var existingEntry))
                 {
-                    
+
                     var combinedTimestamps = new List<DateTime>(existingEntry.timestamps);
                     combinedTimestamps.AddRange(entry.timestamps);
                     existingEntry.timestamps = combinedTimestamps;
@@ -355,8 +309,8 @@ public class ConsoleUI : MonoBehaviour
             }
             else
             {
-                
-                var newGroupedEntry = new ConsoleEntry(entry); 
+
+                var newGroupedEntry = new ConsoleEntry(entry);
                 groupedEntries[entry.id] = newGroupedEntry;
                 messageToIdMap[messageKey] = entry.id;
             }
@@ -378,10 +332,10 @@ public class ConsoleUI : MonoBehaviour
         {
             foreach (var timestamp in entry.timestamps)
             {
-                
+
                 var newEntry = new ConsoleEntry
                 {
-                    id = entry.id, 
+                    id = entry.id,
                     message = entry.message,
                     stackTrace = entry.stackTrace,
                     logType = entry.logType
