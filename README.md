@@ -9,8 +9,16 @@ A complete in-game visual scripting system that allows players to create, edit, 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ⚠️ **IN DEVELOPMENT** ⚠️
-
 </div>
+
+## ⚡ Performance Improvements
+
+**Version 0.3 is 1.5x faster than Version 0.2**
+
+This performance boost comes from two key optimizations:
+
+1. **UI Variables Caching** - Variable nodes now cache their values, eliminating redundant UI updates and value conversions
+2. **Execution Flow Refactoring** - Complete overhaul of node execution logic with optimized value propagation and reduced processing overhead
 
 ## 📖 Table of Contents
 - [What is This?](#-what-is-this)
@@ -320,7 +328,6 @@ public class DebugNode : ExecutableNodeBase
 
 ### Performance Optimization
 
-- Use the **Fast Bridge System** for high-performance data access
 - Implement **caching** for frequently accessed values
 - Use **void connections** for execution flow to avoid unnecessary data processing
 - **Batch process** nodes when possible to reduce per-frame overhead
