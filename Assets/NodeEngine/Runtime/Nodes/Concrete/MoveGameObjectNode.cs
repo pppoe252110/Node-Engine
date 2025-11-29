@@ -19,7 +19,7 @@ public class MoveGameObjectNode : ExecutableNodeBase
     public override void Execute()
     {
         if (_target.GetValue() is GameObject go && _position.GetValue() is Vector3 pos)
-            go.transform.position = Vector3.MoveTowards(go.transform.position, pos, _speed.GetValue() * Time.deltaTime);
+            go.transform.position = Vector3.MoveTowards(go.transform.position, pos, _speed.GetInnerValue() * Time.deltaTime);
 
         base.Execute();
     }

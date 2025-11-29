@@ -13,7 +13,7 @@ public class AddNode : NodeBase
     public void Result(ConnectorValueFloat result)
     {
         _result = result;
-        _result.SetValue(_a.GetValue() + _b.GetValue());
+        _result.SetInnerValue(_a.GetInnerValue() + _b.GetInnerValue());
     }
 
     public override void Setup()

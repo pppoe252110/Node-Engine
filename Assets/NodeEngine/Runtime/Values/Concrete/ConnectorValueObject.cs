@@ -3,9 +3,8 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public class ConnectorValueObject : ConnectorValueBase, IFastConnectorValue<object>, IConnectorValueBridge
+public class ConnectorValueObject : ConnectorValueBase<object>
 {
-    [SerializeField] private object _value;
     [SerializeField] private Type _storedType;
 
     public ConnectorValueObject()
@@ -71,10 +70,4 @@ public class ConnectorValueObject : ConnectorValueBase, IFastConnectorValue<obje
     public override string ToString() => _value?.ToString() ?? "null";
     public override bool Equals(object obj) => obj is ConnectorValueObject other && Equals(_value, other._value);
     public override int GetHashCode() => _value?.GetHashCode() ?? 0;
-
-    
-    protected override IConnectorValueBridge CreateFastBridge()
-    {
-        return new FastConnectorBridge<object>(this);
-    }
 }

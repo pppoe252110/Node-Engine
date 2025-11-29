@@ -41,52 +41,42 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
         var updateNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(updateNode), startPos);
         var intNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(intVariableNode), startPos + new Vector2(spacing, 50));
-        var forLoopNode1Logic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(forLoopNode), startPos + new Vector2(spacing * 2, 0));
-        var forLoopNode2Logic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(forLoopNode), startPos + new Vector2(spacing * 3, -50));
-        var toStringNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(toStringNode), startPos + new Vector2(spacing * 4, 50));
-        var debugNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(debugNode), startPos + new Vector2(spacing * 5, 0));
+        var forLoopNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(forLoopNode), startPos + new Vector2(spacing * 2, 0));
+        var toStringNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(toStringNode), startPos + new Vector2(spacing * 3, 50));
+        var debugNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(debugNode), startPos + new Vector2(spacing * 4, 0));
 
-        if (updateNodeLogic == null || intNodeLogic == null || forLoopNode1Logic == null ||
-            forLoopNode2Logic == null || toStringNodeLogic == null || debugNodeLogic == null)
+        if (updateNodeLogic == null || intNodeLogic == null || forLoopNodeLogic == null || toStringNodeLogic == null || debugNodeLogic == null)
         {
             Debug.LogWarning("Failed to spawn one or more nodes");
             return;
         }
 
-        ConnectNodes(updateNodeLogic, intNodeLogic, forLoopNode1Logic, forLoopNode2Logic, toStringNodeLogic, debugNodeLogic);
+        ConnectNodes(updateNodeLogic, intNodeLogic, forLoopNodeLogic, toStringNodeLogic, debugNodeLogic);
     }
 
-    private void ConnectNodes(NodeLogic updateNode, NodeLogic intNode, NodeLogic forLoopNode1,
-                             NodeLogic forLoopNode2, NodeLogic toStringNode, NodeLogic debugNode)
+    private void ConnectNodes(NodeLogic updateNode, NodeLogic intNode, NodeLogic forLoopNode,
+                             NodeLogic toStringNode, NodeLogic debugNode)
     {
         bool allSuccess = true;
 
-        
-        if (!TryConnectWithFallback(updateNode, forLoopNode1, "Update", "Execute", typeof(void), typeof(void)))
+        // UpdateNode -> ForLoopNode (execution)
+        if (!TryConnectWithFallback(updateNode, forLoopNode, "Update", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 
-        
-        if (!TryConnectWithFallback(intNode, forLoopNode1, "Value", "Count", typeof(int), typeof(int)))
+        // IntNode -> ForLoopNode (data: count for loop)
+        if (!TryConnectWithFallback(intNode, forLoopNode, "Value", "Count", typeof(int), typeof(int)))
             allSuccess = false;
 
-        
-        if (!TryConnectWithFallback(forLoopNode1, forLoopNode2, "Body", "Execute", typeof(void), typeof(void)))
+        // ForLoopNode -> ToStringNode (data: index to string)
+        if (!TryConnectWithFallback(forLoopNode, toStringNode, "Index", "Input", typeof(int), typeof(object)))
             allSuccess = false;
 
-        
-        if (!TryConnectWithFallback(forLoopNode1, forLoopNode2, "Index", "Count", typeof(int), typeof(int)))
+        // ForLoopNode -> DebugNode (execution: body triggers debug)
+        if (!TryConnectWithFallback(forLoopNode, debugNode, "Body", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 
-        
-        if (!TryConnectWithFallback(forLoopNode2, toStringNode, "Index", "Input", typeof(int), typeof(object)))
-            allSuccess = false;
-
-        
+        // ToStringNode -> DebugNode (data: string to log)
         if (!TryConnectWithFallback(toStringNode, debugNode, "Output", "LogString", typeof(string), typeof(string)))
-            allSuccess = false;
-
-        
-        if (!TryConnectWithFallback(forLoopNode2, debugNode, "Body", "Input", typeof(void), typeof(void)))
             allSuccess = false;
 
         if (!allSuccess)

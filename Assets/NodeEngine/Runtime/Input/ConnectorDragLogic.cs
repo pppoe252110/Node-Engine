@@ -9,13 +9,6 @@ public class ConnectorDragLogic : MonoBehaviour
     [SerializeField] private NodeBase _node;
     [SerializeField] private NodeDrag _nodeDrag;
 
-    
-    
-    
-    
-    
-    
-
     private UILineRenderer _dragLineRenderer;
     private Connector _dragConnector;
     private bool _isDragging = false;

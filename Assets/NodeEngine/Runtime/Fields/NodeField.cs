@@ -1,48 +1,106 @@
+// Assets/NodeEngine/Runtime/Fields/NodeField.cs
+
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
+// =================================================================================
+// PART 1: The NON-GENERIC NodeField
+// This is used for execution flow (void).
+// =================================================================================
 [Serializable]
-public class NodeField<T> : NodeFieldBase where T : IConnectorValue
+public class NodeField : NodeFieldBase
+{
+    public delegate void ValueHandlerFunc(IConnectorValue value);
+    public event ValueHandlerFunc CurrentValueHandler;
+
+    public NodeField SetHandler(ValueHandlerFunc handler)
+    {
+        CurrentValueHandler = handler;
+        return this;
+    }
+
+    public override Type GetValueType() => typeof(void);
+    public override NodeValueAttribute GetAttribute() => CurrentValueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
+    public override object GetObjectValue() => null; // Execution flow has no object value
+
+public override void ProceedValue()
+{
+    ProceedValue(new HashSet<NodeBase>());
+}
+
+private void ProceedValue(HashSet<NodeBase> processedNodes)
+{
+    if (Connector?.Node == null) return;
+    
+    // Prevent infinite recursion
+    if (processedNodes.Contains(Connector.Node))
+        return;
+        
+    processedNodes.Add(Connector.Node);
+
+    // 1. Trigger our own handler
+    var value = Connector?.GetConnectorValue() ?? ConnectorValueVoid.Instance;
+    CurrentValueHandler?.Invoke(value);
+
+    // 2. Propagate the execution signal to all connected fields.
+    if (Connector != null)
+    {
+        foreach (var connectedConnector in Connector.Connections)
+        {
+            var field = connectedConnector?.Field;
+            if (field != null && !connectedConnector.Node.IsProcessing && connectedConnector.Node != Connector.Node)
+            {
+                // Pass the processedNodes set to track which nodes we've already visited
+                if (field is NodeField executionField)
+                {
+                    executionField.ProceedValue(processedNodes);
+                }
+                else
+                {
+                    field.ProceedValue();
+                }
+            }
+        }
+    }
+}
+
+
+    // This method is not used for execution flow.
+    public override void UpdateValueFromSource(IConnectorValue sourceValue) { }
+}
+
+
+// =================================================================================
+// PART 2: The GENERIC NodeField<T>
+// This is used for data types like int, float, bool, Vector3, etc.
+// =================================================================================
+[Serializable]
+public class NodeField<T> : NodeFieldBase<T>
 {
     public delegate void ValueHandlerFunc(T value);
-
-    
-    private T _currentValue;
-    private readonly bool _isInput;
-    private IConnectorValueBridge _fastBridge;
-    private bool _hasFastBridge;
-
-    
     public event ValueHandlerFunc CurrentValueHandler;
-    public T CurrentValue => _currentValue;
-    public bool HasFastBridge => _hasFastBridge;
-    public bool IsInput => _isInput;
 
     public NodeField(bool isInput)
     {
-        _isInput = isInput;
-        InitializeFastBridge();
+        // Initialize with a default value of the correct type
+        if (typeof(T) == typeof(ConnectorValueInt))
+            _currentValue = (T)(object)new ConnectorValueInt(0);
+        else if (typeof(T) == typeof(ConnectorValueFloat))
+            _currentValue = (T)(object)new ConnectorValueFloat(0f);
+        else if (typeof(T) == typeof(ConnectorValueBool))
+            _currentValue = (T)(object)new ConnectorValueBool(false);
+        else if (typeof(T) == typeof(ConnectorValueString))
+            _currentValue = (T)(object)new ConnectorValueString("");
+        else if (typeof(T) == typeof(ConnectorValueVector3))
+            _currentValue = (T)(object)new ConnectorValueVector3(Vector3.zero);
+        else if (typeof(T) == typeof(ConnectorValueVoid))
+            _currentValue = (T)(object)ConnectorValueVoid.Instance;
+        else
+            _currentValue = default;
     }
 
-    private void InitializeFastBridge()
-    {
-        
-        if (typeof(T) == typeof(ConnectorValueVoid))
-        {
-            _hasFastBridge = false;
-            _fastBridge = null;
-            return;
-        }
-
-        if (_currentValue != null)
-        {
-            _fastBridge = ConnectorBridgeFactory.CreateBridge(_currentValue);
-            _hasFastBridge = _fastBridge != null;
-        }
-    }
-
-    
     public NodeField<T> SetHandler(ValueHandlerFunc handler)
     {
         CurrentValueHandler = handler;
@@ -52,27 +110,39 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
     public NodeField<T> SetDefaultValue(T value)
     {
         _currentValue = value;
-        InitializeFastBridge(); 
         return this;
     }
 
-    
     public override void UpdateValueFromSource(IConnectorValue sourceValue)
     {
         if (sourceValue == null) return;
 
         try
         {
-            var innerValue = sourceValue.GetInnerValue();
-            UpdateCurrentValue(innerValue);
-
-            
+            object sourceInnerValue = sourceValue.GetInnerValue();
+            UpdateCurrentValue(sourceInnerValue);
             CurrentValueHandler?.Invoke(_currentValue);
         }
         catch (Exception e)
         {
             Debug.LogError($"Failed to update value from source: {e.Message}");
         }
+    }
+
+    private void UpdateCurrentValue(object newValue)
+    {
+        if (typeof(T) == typeof(ConnectorValueInt))
+            ((ConnectorValueInt)(object)_currentValue).SetInnerValue((int)newValue);
+        else if (typeof(T) == typeof(ConnectorValueFloat))
+            ((ConnectorValueFloat)(object)_currentValue).SetInnerValue((float)newValue);
+        else if (typeof(T) == typeof(ConnectorValueBool))
+            ((ConnectorValueBool)(object)_currentValue).SetInnerValue((bool)newValue);
+        else if (typeof(T) == typeof(ConnectorValueString))
+            ((ConnectorValueString)(object)_currentValue).SetInnerValue((string)newValue);
+        else if (typeof(T) == typeof(ConnectorValueVector3))
+            ((ConnectorValueVector3)(object)_currentValue).SetInnerValue((Vector3)newValue);
+        else if (typeof(T) == typeof(ConnectorValueObject))
+            ((ConnectorValueObject)(object)_currentValue).SetInnerValue(newValue);
     }
 
     public override void ProceedValue()
@@ -83,7 +153,9 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
             return;
         }
 
-        if (_isInput)
+        bool isInput = Connector.Node.inputConnectors.Contains(Connector);
+
+        if (isInput)
         {
             ProcessInputField();
         }
@@ -123,7 +195,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessDataInput(Connector connectedConnector)
     {
-        
+        // Automatic: Call Process() on the connected node to trigger its output computation
         if (!connectedConnector.Node.IsProcessing)
         {
             connectedConnector.Node.Process();
@@ -139,13 +211,13 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessVoidInput(Connector connectedConnector)
     {
-        
+        // Simplified: Directly call Execute() on executable nodes (matches old behavior)
         if (Connector.Node is ExecutableNodeBase executableNode && !executableNode.IsProcessing)
         {
-            executableNode.Process();
             executableNode.Execute();
         }
     }
+
 
     private void ProcessOutputField()
     {
@@ -166,7 +238,7 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessDataOutput()
     {
-        
+        // Propagate data to connected input fields
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;
@@ -179,13 +251,13 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
 
     private void ProcessVoidOutput()
     {
-        
+        // Propagate execution to connected input fields
         foreach (var connectedConnector in Connector.Connections)
         {
             var field = connectedConnector?.Field;
             if (field != null && !connectedConnector.Node.IsProcessing)
             {
-                field.ProceedValue();  
+                field.ProceedValue();
             }
         }
     }
@@ -200,57 +272,27 @@ public class NodeField<T> : NodeFieldBase where T : IConnectorValue
         }
     }
 
-    private void UpdateCurrentValue(object newValue)
-    {
-        if (_currentValue is IConnectorValueBridge targetBridge)
-        {
-            targetBridge.SetValueFast(newValue);
-        }
-        else
-        {
-            SetValueManually(_currentValue, newValue);
-        }
-    }
-
-    
-    private void SetValueManually(IConnectorValue target, object value)
-    {
-        switch (target)
-        {
-            case ConnectorValueInt intTarget when value is int intVal:
-                intTarget.SetValue(intVal);
-                break;
-            case ConnectorValueFloat floatTarget when value is float floatVal:
-                floatTarget.SetValue(floatVal);
-                break;
-            case ConnectorValueBool boolTarget when value is bool boolVal:
-                boolTarget.SetValue(boolVal);
-                break;
-            case ConnectorValueString stringTarget when value is string stringVal:
-                stringTarget.SetValue(stringVal);
-                break;
-            case ConnectorValueObject objTarget:
-                objTarget.SetValue(value);
-                break;
-        }
-    }
-
     public override NodeValueAttribute GetAttribute()
     {
         return CurrentValueHandler?.GetMethodInfo()?.GetCustomAttribute<NodeValueAttribute>();
     }
 
-    public override Type GetValueType()
+    public override T GetValue()
     {
-        return typeof(T);
+        if (Connector?.Connections.Count > 0 && Connector.Node.inputConnectors.Contains(Connector))
+        {
+            var sourceConnector = Connector.Connections[0];
+            if (sourceConnector?.GetConnectorValue() is IConnectorValue<T> sourceValue)
+            {
+                return sourceValue.GetInnerValue();
+            }
+        }
+
+        return _currentValue;
     }
 
     public override object GetObjectValue()
     {
-        if (_hasFastBridge && _fastBridge != null)
-        {
-            return _fastBridge.WrappedValue;
-        }
-        return _currentValue;
+        return GetValue();
     }
 }

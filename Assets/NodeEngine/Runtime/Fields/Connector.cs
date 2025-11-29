@@ -16,6 +16,8 @@ public class Connector : MonoBehaviour
     private List<Connector> _connections = new List<Connector>();
     private static ConnectorColorDatabase _colorDatabase;
 
+    private IConnectorValue _connectorValue;
+
     public NodeBase Node => _node;
     public NodeFieldBase Field => _field;
     public Type ValueType => Field is VariableNodeField ? ((VariableNodeField)Field).GetValueType() : _valueAttribute?.type ?? typeof(object);
@@ -24,6 +26,17 @@ public class Connector : MonoBehaviour
     public Vector3 AnchoredPositionPoint => _connectorImage.rectTransform.position;
     public int ConnectionsCount => _connections.Count;
     public List<Connector> Connections => _connections;
+
+    public void SetConnectorValue(IConnectorValue value)
+    {
+        _connectorValue = value;
+        UpdateVisuals(); // Update visuals when the value is set
+    }
+
+    public IConnectorValue GetConnectorValue()
+    {
+        return _connectorValue;
+    }
 
     public void SetColorDatabase(ConnectorColorDatabase colorDatabase)
     {

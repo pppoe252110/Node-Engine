@@ -1,12 +1,12 @@
-public class ConnectorValueVoid : IExecutableConnector
+public class ConnectorValueVoid : IConnectorValue, IExecutableConnector
 {
-    public ConnectorValueVoid()
+    public static readonly ConnectorValueVoid Instance = new ConnectorValueVoid();
+
+    public object GetInnerValue() => null;
+    public void SetInnerValue(object value) { /* Do nothing for void */ }
+
+    public void Execute()
     {
 
     }
-    
-    public void Execute() { }
-
-    
-    public object GetInnerValue() => null; 
 }

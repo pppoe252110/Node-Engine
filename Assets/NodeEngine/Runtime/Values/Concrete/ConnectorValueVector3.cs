@@ -2,17 +2,15 @@ using System;
 using UnityEngine;
 
 [Serializable]
-public class ConnectorValueVector3 : ConnectorValueBase, IFastConnectorValue<Vector3>, IConnectorValueBridge
+public class ConnectorValueVector3 : ConnectorValueBase<Vector3>
 {
-    [SerializeField] private Vector3 _value;
-
     public ConnectorValueVector3() => _value = Vector3.zero;
     public ConnectorValueVector3(Vector3 value) => _value = value;
 
     
     public void SetValue(Vector3 value) => _value = value;
     public Vector3 GetValue() => _value;
-    public override object GetInnerValue() => _value;
+    public override Vector3 GetInnerValue() => _value;
 
     
     public IConnectorValue WrappedValue => this;
@@ -79,12 +77,6 @@ public class ConnectorValueVector3 : ConnectorValueBase, IFastConnectorValue<Vec
     
     public static implicit operator Vector3(ConnectorValueVector3 connector) => connector._value;
     public static implicit operator ConnectorValueVector3(Vector3 vector) => new ConnectorValueVector3(vector);
-
-    
-    protected override IConnectorValueBridge CreateFastBridge()
-    {
-        return new FastConnectorBridge<Vector3>(this);
-    }
 
     public override string ToString() => _value.ToString();
     public override bool Equals(object obj) => obj is ConnectorValueVector3 other && _value == other._value;

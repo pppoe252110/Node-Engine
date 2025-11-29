@@ -16,8 +16,8 @@ public class SetVariableNode : ExecutableNodeBase
 
     public override void Execute()
     {
-        if (!string.IsNullOrEmpty(_name.GetValue()))
-            _variables[_name.GetValue()] = _value.GetValue();
+        if (!string.IsNullOrEmpty(_name.GetInnerValue()))
+            _variables[_name.GetInnerValue()] = _value.GetValue();
 
         base.Execute();
     }

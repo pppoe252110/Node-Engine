@@ -58,16 +58,16 @@ public class VariableNodeField : NodeFieldBase
             switch (_currentValue)
             {
                 case ConnectorValueInt intConnector when newValue is int intVal:
-                    intConnector.SetValue(intVal);
+                    intConnector.SetInnerValue(intVal);
                     break;
                 case ConnectorValueFloat floatConnector when newValue is float floatVal:
-                    floatConnector.SetValue(floatVal);
+                    floatConnector.SetInnerValue(floatVal);
                     break;
                 case ConnectorValueBool boolConnector when newValue is bool boolVal:
-                    boolConnector.SetValue(boolVal);
+                    boolConnector.SetInnerValue(boolVal);
                     break;
                 case ConnectorValueString stringConnector when newValue is string stringVal:
-                    stringConnector.SetValue(stringVal);
+                    stringConnector.SetInnerValue(stringVal);
                     break;
                 case ConnectorValueObject objConnector:
                     objConnector.SetValue(newValue);

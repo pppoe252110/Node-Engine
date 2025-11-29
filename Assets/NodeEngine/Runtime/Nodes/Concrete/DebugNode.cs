@@ -13,7 +13,7 @@ public class DebugNode : ExecutableNodeBase
 
     public override void Execute()
     {
-        string text = _logText?.GetValue() ?? "null";
+        string text = _logText?.GetInnerValue() ?? "null";
 
         if (ConsoleUI.Instance != null)
         {

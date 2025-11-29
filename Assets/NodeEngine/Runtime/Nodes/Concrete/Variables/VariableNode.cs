@@ -1,17 +1,34 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class VariableNode : NodeBase
 {
     public abstract VariableType VariableType { get; }
-
     public VariableUIElement UIElement { get; set; }
-
-    private NodeFieldBase _outputField;
+    protected NodeFieldBase _outputField;
 
     public override void Setup()
     {
         _outputField = CreateTypedOutputField();
         outputFields = new() { _outputField };
+
+        // Don't call UpdateOutputValue here - wait for connections
+    }
+
+    public void InitializeOutputValue()
+    {
+        UpdateOutputValue();
+    }
+
+    public override void Process(List<Connector> fromConnectors = null)
+    {
+        base.Process(fromConnectors);
+        Debug.LogError("AAAAAAAAA");
+    }
+
+    protected override void Initialized()
+    {
+        UpdateOutputValue();
     }
 
     private NodeFieldBase CreateTypedOutputField()
@@ -19,133 +36,94 @@ public abstract class VariableNode : NodeBase
         switch (VariableType)
         {
             case VariableType.Int:
-                return new NodeField<ConnectorValueInt>(isInput: false)
+                return new NodeField<ConnectorValueInt>(false)
                     .SetHandler(OutputInt)
                     .SetDefaultValue(new ConnectorValueInt(0));
 
             case VariableType.Single:
-                return new NodeField<ConnectorValueFloat>(isInput: false)
+                return new NodeField<ConnectorValueFloat>(false)
                     .SetHandler(OutputFloat)
                     .SetDefaultValue(new ConnectorValueFloat(0f));
 
             case VariableType.Bool:
-                return new NodeField<ConnectorValueBool>(isInput: false)
+                return new NodeField<ConnectorValueBool>(false)
                     .SetHandler(OutputBool)
                     .SetDefaultValue(new ConnectorValueBool(false));
 
             case VariableType.String:
-                return new NodeField<ConnectorValueString>(isInput: false)
+                return new NodeField<ConnectorValueString>(false)
                     .SetHandler(OutputString)
                     .SetDefaultValue(new ConnectorValueString(""));
 
             case VariableType.Vector3:
-                return new NodeField<ConnectorValueVector3>(isInput: false)
+                return new NodeField<ConnectorValueVector3>(false)
                     .SetHandler(OutputVector3)
                     .SetDefaultValue(new ConnectorValueVector3(Vector3.zero));
 
             default:
-                return new NodeField<ConnectorValueObject>(isInput: false)
+                return new NodeField<ConnectorValueObject>(false)
                     .SetHandler(OutputObject)
                     .SetDefaultValue(new ConnectorValueObject(null));
         }
     }
 
-    
     [NodeValue("Value", typeof(int))]
     public void OutputInt(ConnectorValueInt value)
     {
+        Debug.LogError("DADA");
         if (UIElement != null && UIElement.GetValue() is int uiVal)
         {
-            value.SetValue(uiVal);
+            value.SetInnerValue(uiVal);
         }
     }
+
     [NodeValue("Value", typeof(float))]
-    public void OutputFloat(ConnectorValueFloat value) { }
+    public void OutputFloat(ConnectorValueFloat value)
+    {
+        if (UIElement != null && UIElement.GetValue() is float uiVal)
+        {
+            value.SetInnerValue(uiVal);
+        }
+    }
 
     [NodeValue("Value", typeof(bool))]
-    public void OutputBool(ConnectorValueBool value) { }
+    public void OutputBool(ConnectorValueBool value)
+    {
+        if (UIElement != null && UIElement.GetValue() is bool uiVal)
+        {
+            value.SetInnerValue(uiVal);
+        }
+    }
 
     [NodeValue("Value", typeof(string))]
-    public void OutputString(ConnectorValueString value) { }
+    public void OutputString(ConnectorValueString value)
+    {
+        if (UIElement != null && UIElement.GetValue() is string uiVal)
+        {
+            value.SetInnerValue(uiVal);
+        }
+    }
 
     [NodeValue("Value", typeof(Vector3))]
-    public void OutputVector3(ConnectorValueVector3 value) { }
+    public void OutputVector3(ConnectorValueVector3 value)
+    {
+        if (UIElement != null && UIElement.GetValue() is Vector3 uiVal)
+        {
+            value.SetInnerValue(uiVal);
+        }
+    }
 
     [NodeValue("Value", typeof(object))]
-    public void OutputObject(ConnectorValueObject value) { }
-
+    public void OutputObject(ConnectorValueObject value)
+    {
+        if (UIElement != null)
+        {
+            value.SetInnerValue(UIElement.GetValue());
+        }
+    }
 
     public void UpdateOutputValue()
     {
-        if (UIElement != null && _outputField != null)
-        {
-            var val = UIElement.GetValue();
-
-            
-            switch (_outputField)
-            {
-                case NodeField<ConnectorValueInt> intField:
-                    
-                    var intValue = intField.GetObjectValue() as ConnectorValueInt;
-
-                    if (intValue != null && val is int intVal)
-                    {
-                        intValue.SetValue(intVal);
-
-                        
-                        intField.ProceedValue();
-                    }
-                    else
-                    {
-                        Debug.LogError($"VariableNode: Failed to set value - intValue: {intValue != null}, val: {val}, val is int: {val is int}");
-                    }
-                    break;
-
-                case NodeField<ConnectorValueFloat> floatField:
-                    var floatValue = floatField.GetObjectValue() as ConnectorValueFloat;
-                    if (floatValue != null && val is float floatVal)
-                    {
-                        floatValue.SetValue(floatVal);
-                        floatField.ProceedValue();
-                    }
-                    break;
-
-                case NodeField<ConnectorValueBool> boolField:
-                    var boolValue = boolField.GetObjectValue() as ConnectorValueBool;
-                    if (boolValue != null && val is bool boolVal)
-                    {
-                        boolValue.SetValue(boolVal);
-                        boolField.ProceedValue();
-                    }
-                    break;
-
-                case NodeField<ConnectorValueString> stringField:
-                    var stringValue = stringField.GetObjectValue() as ConnectorValueString;
-                    if (stringValue != null && val is string stringVal)
-                    {
-                        stringValue.SetValue(stringVal);
-                        stringField.ProceedValue();
-                    }
-                    break;
-
-                case NodeField<ConnectorValueVector3> vector3Field:
-                    var vector3Value = vector3Field.GetObjectValue() as ConnectorValueString;
-                    if (vector3Value != null && val is string vector3Val)
-                    {
-                        vector3Value.SetValue(vector3Val);
-                        vector3Field.ProceedValue();
-                    }
-                    break;
-
-                case NodeField<ConnectorValueObject> objField:
-                    var objValue = objField.GetObjectValue() as ConnectorValueObject;
-                    if (objValue != null)
-                    {
-                        objValue.SetValue(val);
-                        objField.ProceedValue();
-                    }
-                    break;
-            }
-        }
+        _outputField?.ProceedValue();
     }
 }

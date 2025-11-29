@@ -18,9 +18,9 @@ public class ClampNode : NodeBase
     public void Result(ConnectorValueFloat result)
     {
         _result = result;
-        float val = _value.GetValue();
-        float minVal = _min.GetValue();
-        float maxVal = _max.GetValue();
+        float val = _value.GetInnerValue();
+        float minVal = _min.GetInnerValue();
+        float maxVal = _max.GetInnerValue();
 
         
         if (minVal > maxVal)
@@ -30,7 +30,7 @@ public class ClampNode : NodeBase
             maxVal = temp;
         }
 
-        _result.SetValue(Mathf.Clamp(val, minVal, maxVal));
+        _result.SetInnerValue(Mathf.Clamp(val, minVal, maxVal));
     }
 
     public override void Setup()

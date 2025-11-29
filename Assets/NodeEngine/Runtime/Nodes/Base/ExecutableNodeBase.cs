@@ -1,52 +1,49 @@
 public abstract class ExecutableNodeBase : NodeBase
 {
-    protected ConnectorValueVoid _executeInput;
-    protected ConnectorValueVoid _executeOutput;
-    protected NodeField<ConnectorValueVoid> _executeInputField;
-    protected NodeField<ConnectorValueVoid> _executeOutputField;
+    // FIX: Use the non-generic NodeField for execution flow
+    protected NodeField _executeInputField;
+    protected NodeField _executeOutputField;
 
+    // FIX: The handler for the non-generic NodeField takes IConnectorValue
     [NodeValue("Input", typeof(void))]
-    protected virtual void OnExecuteInput(ConnectorValueVoid execute)
+    protected virtual void OnExecuteInput(IConnectorValue execute)
     {
-        _executeInput = execute;
         Execute();
         TriggerOutput();
     }
 
+    // FIX: The handler for the non-generic NodeField takes IConnectorValue
     [NodeValue("Output", typeof(void))]
-    protected virtual void OnExecuteOutput(ConnectorValueVoid execute)
+    protected virtual void OnExecuteOutput(IConnectorValue execute)
     {
-        _executeOutput = execute;
+        // This handler doesn't need to do anything, the call to ProceedValue() is what matters.
     }
 
     protected virtual void TriggerOutput()
     {
         if (_executeOutputField != null)
         {
+            // This will trigger the execution flow to the next node
             _executeOutputField.ProceedValue();
         }
     }
+
     public override void Setup()
     {
         SetupDefaultExecutionFlow();
     }
+
     public virtual void Execute()
     {
-        TriggerOutput();
+        // This method is meant to be overridden by concrete nodes
     }
 
-    
     protected void SetupDefaultExecutionFlow()
     {
-        _executeInputField = new NodeField<ConnectorValueVoid>(true)
-            .SetHandler(OnExecuteInput)
-            .SetDefaultValue(new ConnectorValueVoid());
+        // FIX: Use the non-generic NodeField and its corresponding handler
+        _executeInputField = new NodeField().SetHandler(OnExecuteInput);
+        _executeOutputField = new NodeField().SetHandler(OnExecuteOutput);
 
-        _executeOutputField = new NodeField<ConnectorValueVoid>(false)
-            .SetHandler(OnExecuteOutput)
-            .SetDefaultValue(new ConnectorValueVoid());
-
-        
         inputFields.Insert(0, _executeInputField);
         outputFields.Add(_executeOutputField);
     }

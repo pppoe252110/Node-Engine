@@ -15,7 +15,7 @@ public class IfElseNode : ExecutableNodeBase
 
     public override void Execute()
     {
-        if (_condition.GetValue())
+        if (_condition.GetInnerValue())
         {
             
             _trueTrigger.Execute();

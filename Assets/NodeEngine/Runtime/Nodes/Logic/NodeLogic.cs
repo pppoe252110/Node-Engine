@@ -40,11 +40,11 @@ public class NodeLogic : MonoBehaviour
         _node.Initialize(this, gameObject.GetEntityId());
 
         _nodeName.text = _node.NodeName;
-        _nodeType.text = GetNodeTypeFromPath(_node); 
+        _nodeType.text = GetNodeTypeFromPath(_node);
         _nodeIcon.sprite = _node.NodeSprite;
         _nodeIcon.color = _node.NodeSprite ? Color.white : Color.clear;
 
-        
+
         if (_node is VariableNode varNode && VariableDatabase != null)
         {
             _nodeUIManager.CreateVariableUI(varNode, VariableDatabase, _image);
@@ -53,11 +53,13 @@ public class NodeLogic : MonoBehaviour
         }
         else
         {
-            
             _nodeUIManager.CreateConnectors(_node, _node.inputFields, _node.outputFields, _node.inputConnectors, _node.outputConnectors);
         }
 
-        
+        // FIXED: Call InitializeConnectorValues after connectors are created
+        _node.InitializeConnectorValues();
+
+
         _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, 57 + (Mathf.Max(_node.inputFields.Count, _node.outputFields.Count)) * 25);
         _image.material = new Material(_image.material);
 

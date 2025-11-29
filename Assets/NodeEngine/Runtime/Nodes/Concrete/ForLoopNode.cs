@@ -1,66 +1,94 @@
+﻿using System.Collections.Generic;
+using UnityEngine;
+
 [NodePath("Control Flow/For Loop")]
 public class ForLoopNode : ExecutableNodeBase
 {
-    private ConnectorValueVoid _execute;
+    // Data Fields
     private ConnectorValueInt _count;
-    private ConnectorValueVoid _body, _end;
     private ConnectorValueInt _index;
 
-    private NodeField<ConnectorValueVoid> _bodyField, _endField;
+    // Execution Flow Fields
+    private NodeField _bodyField;
     private NodeField<ConnectorValueInt> _indexField;
 
-    [NodeValue("Execute", typeof(void))]
-    public void ExecuteInput(ConnectorValueVoid execute) => _execute = execute;
-
+    // --- Input Handlers ---
     [NodeValue("Count", typeof(int))]
-    public void Count(ConnectorValueInt count) => _count = count;
+    public void Count(ConnectorValueInt count)
+    {
+        _count = count;
+    }
 
+    // --- Output Handlers ---
     [NodeValue("Body", typeof(void))]
-    public void Body(ConnectorValueVoid body) => _body = body;
+    public void Body(IConnectorValue body)
+    {
+        // This handler doesn't need to do anything
+    }
 
     [NodeValue("Index", typeof(int))]
-    public void Index(ConnectorValueInt index) => _index = index;
-
-    [NodeValue("End", typeof(void))]
-    public void End(ConnectorValueVoid end) => _end = end;
+    public void Index(ConnectorValueInt index)
+    {
+        // This handler doesn't need to do anything
+    }
 
     public override void Execute()
     {
-        Process();
-
-        int loopCount = _count?.GetValue() ?? 0;
+        // Get the loop count
+        int loopCount = _count?.GetInnerValue() ?? 0;
 
         for (int i = 0; i < loopCount; i++)
         {
-            _index?.SetValue(i);
-            _bodyField.ProceedValue();
+            if (_indexField != null)
+            {
+                _index.SetInnerValue(i);
+                _indexField.ProceedValue();
+            }
+
+            // Execute the body
+            if (_bodyField != null)
+            {
+                _bodyField.ProceedValue();
+            }
         }
 
-        _endField.ProceedValue();
+        // Trigger the main output execution
+        base.Execute();
     }
+
     public override void Setup()
     {
-        var bodyVoid = new ConnectorValueVoid();
-        var endVoid = new ConnectorValueVoid();
+        // IMPORTANT: Always call the base Setup() first
 
-        _bodyField = new NodeField<ConnectorValueVoid>(false).SetHandler(Body).SetDefaultValue(bodyVoid);
-        _endField = new NodeField<ConnectorValueVoid>(false).SetHandler(End).SetDefaultValue(endVoid);
-        _indexField = new NodeField<ConnectorValueInt>(false).SetHandler(Index).SetDefaultValue(new ConnectorValueInt(0));  
+        // --- Setup Data Fields ---
+        var countField = new NodeField<ConnectorValueInt>(true)
+            .SetHandler(Count)
+            .SetDefaultValue(new ConnectorValueInt(5)); // Default to 5 iterations
 
-        inputFields = new()
+        _index = new ConnectorValueInt(0);
+
+        // Create index field with default value
+        _indexField = new NodeField<ConnectorValueInt>(false)
+            .SetHandler(Index)
+            .SetDefaultValue(_index);
+
+        // Store reference to the index value
+
+        // --- Setup Execution Flow Fields ---
+        _bodyField = new NodeField().SetHandler(Body);
+
+        // --- Add Fields to Node ---
+        inputFields = new() 
         {
-            new NodeField<ConnectorValueVoid>(true).SetHandler(ExecuteInput).SetDefaultValue(new ConnectorValueVoid()),
-            new NodeField<ConnectorValueInt>(true).SetHandler(Count).SetDefaultValue(new ConnectorValueInt(0))
+            countField 
         };
+
         outputFields = new()
         {
             _bodyField,
-            _indexField,
-            _endField
+            _indexField
         };
 
-        _body = bodyVoid;
-        _end = endVoid;
-        _index = new ConnectorValueInt(0);
+        base.Setup();
     }
 }

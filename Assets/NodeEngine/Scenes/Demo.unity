@@ -456,6 +456,10 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4005809730965324843, guid: 886e162d98616894a82395fa4800100e, type: 3}
+      propertyPath: _enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4742852334566858359, guid: 886e162d98616894a82395fa4800100e, type: 3}
       propertyPath: m_Name
       value: NodeEngine

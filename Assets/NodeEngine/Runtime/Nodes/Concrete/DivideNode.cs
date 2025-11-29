@@ -13,16 +13,16 @@ public class DivideNode : NodeBase
     public void Result(ConnectorValueFloat result)
     {
         _result = result;
-        float denominator = _b.GetValue();
+        float denominator = _b.GetInnerValue();
 
         
         if (denominator == 0)
         {
-            _result.SetValue(0);
+            _result.SetInnerValue(0);
         }
         else
         {
-            _result.SetValue(_a.GetValue() / denominator);
+            _result.SetInnerValue(_a.GetInnerValue() / denominator);
         }
     }
 
