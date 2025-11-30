@@ -87,25 +87,17 @@ public class NodeSpawnerAndConnector : MonoBehaviour
         {
             Debug.LogWarning("Some node connections failed");
         }
-        else
-        {
-            Debug.Log("All node connections successful!");
-        }
     }
 
     private bool TryConnectWithFallback(NodeLogic fromNode, NodeLogic toNode, string fromConnectorName, string toConnectorName, Type fromType, Type toType)
     {
-        Debug.Log($"Trying to connect: {fromNode.Node.NodeName}.{fromConnectorName} → {toNode.Node.NodeName}.{toConnectorName}");
-
         if (ConnectionManager.Instance.CreateConnection(fromNode, toNode, fromConnectorName, toConnectorName))
         {
-            Debug.Log($"Connected via names: {fromConnectorName} → {toConnectorName}");
             return true;
         }
 
         if (ConnectionManager.Instance.CreateConnection(fromNode, toNode, fromType, toType))
         {
-            Debug.Log($"Connected via types: {fromType.Name} → {toType.Name}");
             return true;
         }
 
@@ -118,21 +110,16 @@ public class NodeSpawnerAndConnector : MonoBehaviour
         if (fromNode?.Node?.outputConnectors == null || toNode?.Node?.inputConnectors == null)
             return false;
 
-        Debug.Log($"Searching for compatible connectors between {fromNode.Node.NodeName} and {toNode.Node.NodeName}");
-
         foreach (var outputConnector in fromNode.Node.outputConnectors)
         {
             var outputAttr = outputConnector.Field?.GetAttribute();
-            Debug.Log($"  Output: {outputAttr?.attributeName ?? "Unknown"} ({outputConnector.ValueType.Name})");
 
             foreach (var inputConnector in toNode.Node.inputConnectors)
             {
                 var inputAttr = inputConnector.Field?.GetAttribute();
-                Debug.Log($"    Input: {inputAttr?.attributeName ?? "Unknown"} ({inputConnector.ValueType.Name})");
 
                 if (IsCompatibleType(outputConnector.ValueType, inputConnector.ValueType))
                 {
-                    Debug.Log($"    Found compatible: {outputAttr?.attributeName} → {inputAttr?.attributeName}");
                     return ConnectionManager.Instance.CreateConnectionWithConnectors(outputConnector, inputConnector);
                 }
             }
@@ -145,7 +132,6 @@ public class NodeSpawnerAndConnector : MonoBehaviour
     private bool IsCompatibleType(Type dragType, Type targetType)
     {
         bool compatible = dragType == targetType || targetType == typeof(object);
-        Debug.Log($"Type compatibility: {dragType.Name} → {targetType.Name} = {compatible}");
         return compatible;
     }
 }

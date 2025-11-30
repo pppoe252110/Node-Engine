@@ -4,6 +4,7 @@ using UnityEngine;
 public class DebugNode : ExecutableNodeBase
 {
     private ConnectorValueString _logText;
+    private NodeField<ConnectorValueString> _inputField;
 
     [NodeValue("LogString", typeof(string))]
     public void LogString(ConnectorValueString value)
@@ -13,10 +14,11 @@ public class DebugNode : ExecutableNodeBase
 
     public override void Execute()
     {
+        _inputField.ProceedValue();
         string text = _logText?.GetInnerValue() ?? "null";
         if (ConsoleUI.Instance != null)
         {
-            ConsoleUI.Instance.LogMessage($"[Debug] {text}");
+            //ConsoleUI.Instance.LogMessage($"[Debug] {text}");
         }
         else
         {
@@ -28,9 +30,12 @@ public class DebugNode : ExecutableNodeBase
 
     public override void Setup()
     {
+        _logText = new ConnectorValueString();
+        _inputField = new NodeField<ConnectorValueString>().SetHandler(LogString).SetDefaultValue(_logText);
+
         inputFields = new()
         {
-            new NodeField<ConnectorValueString>().SetHandler(LogString).SetDefaultValue(new ConnectorValueString(""))
+            _inputField
         };
         
         base.Setup();

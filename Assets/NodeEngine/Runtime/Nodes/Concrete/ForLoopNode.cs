@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 [NodePath("Control Flow/For Loop")]
 public class ForLoopNode : ExecutableNodeBase
 {
-
     private ConnectorValueInt _count;
+    private NodeField<ConnectorValueInt> _countField;
     private ConnectorValueInt _index;
 
     private NodeField _bodyField;
@@ -26,13 +25,15 @@ public class ForLoopNode : ExecutableNodeBase
     [NodeValue("Index", typeof(int))]
     public void Index(ConnectorValueInt index)
     {
-
+        _index = index;
     }
 
     public override void Execute()
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
+        _countField.ProceedValue();
+        
         int loopCount = _count?.GetInnerValue() ?? 0;
 
         for (int i = 0; i < loopCount; i++)
@@ -40,7 +41,6 @@ public class ForLoopNode : ExecutableNodeBase
             if (_indexField != null)
             {
                 _index.SetInnerValue(i);
-                //_indexField.ProceedValue();
             }
 
             if (_bodyField != null)
@@ -48,6 +48,7 @@ public class ForLoopNode : ExecutableNodeBase
                 _bodyField.ProceedValue();
             }
         }
+
         sw.Stop();
         Debug.LogError(sw.ElapsedMilliseconds + "ms");
         base.Execute();
@@ -55,8 +56,7 @@ public class ForLoopNode : ExecutableNodeBase
 
     public override void Setup()
     {
-
-        var countField = new NodeField<ConnectorValueInt>()
+        _countField = new NodeField<ConnectorValueInt>()
             .SetHandler(Count)
             .SetDefaultValue(new ConnectorValueInt(5));
 
@@ -70,7 +70,7 @@ public class ForLoopNode : ExecutableNodeBase
 
         inputFields = new()
         {
-            countField
+            _countField
         };
 
         outputFields = new()

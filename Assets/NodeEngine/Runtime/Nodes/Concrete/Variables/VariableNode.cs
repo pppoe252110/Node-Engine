@@ -106,7 +106,6 @@ public abstract class VariableNode : NodeBase
     [NodeValue("Value", typeof(string))]
     public void OutputString(ConnectorValueString value)
     {
-        Debug.LogError(value.GetInnerValue());
         value.SetInnerValue(_cachedStringValue.GetInnerValue());
     }
 
