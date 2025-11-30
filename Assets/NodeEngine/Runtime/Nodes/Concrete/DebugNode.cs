@@ -16,7 +16,7 @@ public class DebugNode : ExecutableNodeBase
         string text = _logText?.GetInnerValue() ?? "null";
         if (ConsoleUI.Instance != null)
         {
-            //ConsoleUI.Instance.LogMessage($"[Debug] {text}");
+            ConsoleUI.Instance.LogMessage($"[Debug] {text}");
         }
         else
         {

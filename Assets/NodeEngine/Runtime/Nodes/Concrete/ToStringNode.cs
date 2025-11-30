@@ -1,41 +1,65 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 [NodePath("Conversion/ToString")]
-public class ToStringNode : NodeBase
+public class ToStringNode : ExecutableNodeBase
 {
     private ConnectorValueObject _input;
     private ConnectorValueString _output;
+    private NodeField<ConnectorValueObject> _inputField;
+    private NodeField<ConnectorValueString> _outputField;
 
-    [NodeValue("Input", typeof(object))]
+    [NodeValue("InputValue", typeof(object))]
     public void Input(ConnectorValueObject input)
     {
         _input = input;
-        
-        if (outputFields.Count > 0)
-        {
-            outputFields[0].ProceedValue();  
-        }
     }
 
-    [NodeValue("Output", typeof(string))]
+    [NodeValue("OutputValue", typeof(string))]
     public void Output(ConnectorValueString output)
     {
         _output = output;
+    }
+
+    public override void Execute()
+    {
+        // First, make sure we have the latest input value
+        if (_inputField != null)
+        {
+            _inputField.ProceedValue(); // This pulls the latest value from connected nodes
+        }
+
+        // Now convert the value
         if (_output != null && _input != null)
         {
-            _output.SetInnerValue(_input.GetInnerValue()?.ToString() ?? "");
+            var innerValue = _input.GetInnerValue();
+            string result = innerValue?.ToString() ?? "null";
+
+            _output.SetInnerValue(result);
+
+            // Push the output to connected nodes
+            if (_outputField != null)
+            {
+                _outputField.ProceedValue();
+            }
         }
+
+        base.Execute();
     }
 
     public override void Setup()
     {
-        inputFields = new()
-        {
-            new NodeField<ConnectorValueObject>().SetHandler(Input).SetDefaultValue(new ConnectorValueObject(null))
-        };
-        outputFields = new()
-        {
-            new NodeField<ConnectorValueString>().SetHandler(Output).SetDefaultValue(new ConnectorValueString(""))
-        };
+        // Initialize with default values
+        _input = new ConnectorValueObject(null);
+        _output = new ConnectorValueString("");
+
+        // Create fields
+        _inputField = new NodeField<ConnectorValueObject>().SetHandler(Input).SetDefaultValue(_input);
+        _outputField = new NodeField<ConnectorValueString>().SetHandler(Output).SetDefaultValue(_output);
+
+        base.Setup();
+        
+        inputFields.Add(_inputField);
+        outputFields.Add(_outputField);
     }
 }

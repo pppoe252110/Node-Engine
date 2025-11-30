@@ -40,7 +40,7 @@ public class ForLoopNode : ExecutableNodeBase
             if (_indexField != null)
             {
                 _index.SetInnerValue(i);
-                _indexField.ProceedValue();
+                //_indexField.ProceedValue();
             }
 
             if (_bodyField != null)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 [NodePath("Engine/Time")]
 public class TimeNode : NodeBase
@@ -37,10 +38,5 @@ public class TimeNode : NodeBase
             new NodeField<ConnectorValueFloat>().SetHandler(Time).SetDefaultValue(_time),
             new NodeField<ConnectorValueFloat>().SetHandler(RealTime).SetDefaultValue(_realTime)
         };
-    }
-
-    public override void Process(List<Connector> fromConnectors = null)
-    {
-        base.Process(fromConnectors);
     }
 }

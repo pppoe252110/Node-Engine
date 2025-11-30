@@ -114,7 +114,6 @@ public abstract class NodeBase : INode
 
         try
         {
-            
             foreach (var connector in inputConnectors)
             {
                 if (!fromConnectors.Contains(connector) && connector.ValueType != typeof(void))

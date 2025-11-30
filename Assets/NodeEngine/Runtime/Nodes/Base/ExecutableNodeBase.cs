@@ -6,7 +6,6 @@ public abstract class ExecutableNodeBase : NodeBase
     [NodeValue("Input", typeof(void))]
     protected virtual void OnExecuteInput(IConnectorValue execute)
     {
-        Process(); 
         Execute();
         TriggerOutput();
     }

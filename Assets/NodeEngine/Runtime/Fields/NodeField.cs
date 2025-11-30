@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -102,16 +103,20 @@ public class NodeField<T> : NodeFieldBase<T>
 
         try
         {
-            // Try to cast to the typed interface to avoid boxing
-            if (sourceValue is IConnectorValue<T> typedSource)
+            if (sourceValue is T directConnector)
+            {
+                _currentValue = directConnector;
+                CurrentValueHandler?.Invoke(_currentValue);
+            }
+            else if (sourceValue is IConnectorValue<T> typedSource)
             {
                 UpdateValueFromSourceTyped(typedSource);
             }
             else
             {
-                // Fallback to object-based for compatibility
-                var sourceInnerValue = sourceValue.GetInnerValue();
-                UpdateCurrentValue(sourceInnerValue);
+                //Debug.LogError(sourceValue.GetType() + " " + typeof(T));
+                var innerValue = sourceValue.GetInnerValue();
+                UpdateCurrentValue(innerValue);
                 CurrentValueHandler?.Invoke(_currentValue);
             }
         }
@@ -120,7 +125,6 @@ public class NodeField<T> : NodeFieldBase<T>
             Debug.LogError($"Failed to update value from source: {e.Message}");
         }
     }
-
     private void UpdateValueFromSourceTyped(IConnectorValue<T> sourceValue)
     {
         try
@@ -136,22 +140,23 @@ public class NodeField<T> : NodeFieldBase<T>
 
     private void UpdateCurrentValue(object newValue)
     {
-        if (newValue == null || _currentValue == null)
+        if (_currentValue == null)
         {
-            Debug.LogWarning("Null value in UpdateCurrentValue");
+            Debug.LogWarning("Current value is null in UpdateCurrentValue");
             return;
         }
 
         try
         {
-            // Fallback object-based update
+            // If _currentValue is a connector wrapper, update its inner value
             if (_currentValue is IConnectorValue currentConnector)
             {
                 currentConnector.SetInnerValue(newValue);
             }
             else
             {
-                Debug.LogError($"Current value is not IConnectorValue: {_currentValue.GetType()}");
+                // Direct assignment (shouldn't happen for connector types)
+                _currentValue = (T)newValue;
             }
         }
         catch (Exception e)
@@ -256,21 +261,32 @@ public class NodeField<T> : NodeFieldBase<T>
         var connectedField = connectedConnector.Field as NodeFieldBase<T>;
         if (connectedField != null)
         {
+            connectedField.ProceedValue();
             var sourceValue = connectedField.GetValue();
-            if (sourceValue is IConnectorValue<T> typedSource)
+
+            // Direct value assignment for connector types
+            if (sourceValue is T directValue)
             {
-                UpdateValueFromSourceTyped(typedSource);
+                _currentValue = directValue;
+                CurrentValueHandler?.Invoke(_currentValue);
             }
-            else if (sourceValue is IConnectorValue untypedSource)
+            // Get inner value and update our current connector
+            else if (_currentValue is IConnectorValue currentConnector && sourceValue is IConnectorValue sourceConnector)
             {
-                UpdateValueFromSource(untypedSource);
+                var innerValue = sourceConnector.GetInnerValue();
+                currentConnector.SetInnerValue(innerValue);
+                CurrentValueHandler?.Invoke(_currentValue);
+            }
+            else
+            {
+                // Fallback
+                UpdateValueFromSource(sourceValue as IConnectorValue);
             }
         }
     }
 
     private void ProcessVoidInput(Connector connectedConnector)
     {
-
         if (Connector.Node is ExecutableNodeBase executableNode && !executableNode.IsProcessing)
         {
             executableNode.Process();

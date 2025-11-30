@@ -1,4 +1,4 @@
-public class ConnectorValueString : IConnectorValue
+public class ConnectorValueString : IConnectorValue, IConnectorValue<string>
 {
     private string _value;
 

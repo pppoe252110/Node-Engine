@@ -30,7 +30,7 @@ public class Connector : MonoBehaviour
     public void SetConnectorValue(IConnectorValue value)
     {
         _connectorValue = value;
-        UpdateVisuals(); 
+        UpdateVisuals();
     }
 
     public IConnectorValue GetConnectorValue()
@@ -48,7 +48,7 @@ public class Connector : MonoBehaviour
         if (_colorDatabase != null)
             return _colorDatabase.GetColorForType(ValueType);
 
-        return Color.gray; 
+        return Color.gray;
     }
 
     public void SetData(NodeValueAttribute attribute)
@@ -92,17 +92,6 @@ public class Connector : MonoBehaviour
     public void SetNode(NodeBase node) => _node = node;
 
     public void UpdateFilled() => SetConnectorFilled(_connections.Count > 0);
-
-    public void Process(List<Connector> connectors)
-    {
-        if (connectors.Contains(this)) return;
-
-        foreach (var connection in _connections)
-        {
-            connectors.Add(connection);
-            connection.Node.Process(connectors);
-        }
-    }
 
     public void SetField(NodeFieldBase field)
     {
