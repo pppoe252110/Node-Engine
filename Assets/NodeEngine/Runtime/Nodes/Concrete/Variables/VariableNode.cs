@@ -16,7 +16,6 @@ public abstract class VariableNode : NodeBase
 
     public override void Setup()
     {
-        
         InitializeCachedValues();
 
         _outputField = CreateTypedOutputField();
@@ -157,5 +156,14 @@ public abstract class VariableNode : NodeBase
         }
 
         _outputField?.ProceedValue();
+    }
+    public override void Process(List<Connector> fromConnectors = null)
+    {
+        if (IsProcessing)
+            return;
+
+        IsProcessing = true;
+
+        base.Process(fromConnectors);
     }
 }

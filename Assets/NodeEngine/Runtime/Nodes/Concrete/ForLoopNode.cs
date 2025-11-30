@@ -33,19 +33,23 @@ public class ForLoopNode : ExecutableNodeBase
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
         _countField.ProceedValue();
-        
+
+        var indexField = _indexField;
+        var bodyField = _bodyField;
+        var indexValue = _index;
+
         int loopCount = _count?.GetInnerValue() ?? 0;
 
         for (int i = 0; i < loopCount; i++)
         {
-            if (_indexField != null)
+            if (indexField != null)
             {
-                _index.SetInnerValue(i);
+                indexValue.SetInnerValue(i);
             }
 
-            if (_bodyField != null)
+            if (bodyField != null)
             {
-                _bodyField.ProceedValue();
+                bodyField.ProceedValue();
             }
         }
 

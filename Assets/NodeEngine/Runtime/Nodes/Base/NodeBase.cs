@@ -114,20 +114,6 @@ public abstract class NodeBase : INode
 
         try
         {
-            foreach (var connector in inputConnectors)
-            {
-                if (!fromConnectors.Contains(connector) && connector.ValueType != typeof(void))
-                {
-                    connector.Field.ProceedValue();
-                    fromConnectors.Add(connector);
-
-                    foreach (var connected in connector.Connections)
-                    {
-                        connected.Node.Process(fromConnectors);
-                    }
-                }
-            }
-
             foreach (var connector in outputConnectors)
             {
                 if (connector.ValueType != typeof(void))
