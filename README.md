@@ -24,7 +24,6 @@ This performance boost comes from two key optimizations:
 - [What is This?](#-what-is-this)
 - [✨ Features](#-features)
 - [📦 Installation](#-installation)
-- [🚀 Getting Started](#-getting-started)
 - [🛠️ Setup Instructions](#️-setup-instructions)
 - [💾 Save/Load System](#-saveload-system)
 - [🎮 Controls](#-controls)
@@ -110,13 +109,6 @@ This method involves editing a project file directly.
   }
 }
 ```
-## 🚀 Getting Started
-
-1. **Install the package** using one of the methods above
-2. **Add the NodeEngine component** to a GameObject in your scene
-3. **Configure the component** with your desired settings
-4. **Run your game** and press the **Space key** to open the node editor
-5. **Start creating!** Right-click to add nodes and connect them to build logic
 
 ## 🛠️ Setup Instructions
 
