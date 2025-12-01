@@ -113,7 +113,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
     {
         var saveData = new GraphSaveData
         {
-            saveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            saveTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
             version = 2
         };
 

@@ -20,7 +20,7 @@ public class Connector : MonoBehaviour
 
     public NodeBase Node => _node;
     public NodeFieldBase Field => _field;
-    public Type ValueType => Field is VariableNodeField ? ((VariableNodeField)Field).GetValueType() : _valueAttribute?.type ?? typeof(object);
+    public Type ValueType { get; private set; }
     public Color Color => GetConnectorColor();
     public Vector3 DragPoint => _connectorImage.rectTransform.position;
     public Vector3 AnchoredPositionPoint => _connectorImage.rectTransform.position;
@@ -54,6 +54,7 @@ public class Connector : MonoBehaviour
     public void SetData(NodeValueAttribute attribute)
     {
         _valueAttribute = attribute ?? CreateDefaultAttribute();
+        CalculateAndCacheValueType();
 
         if (_nameText != null)
         {
@@ -97,6 +98,14 @@ public class Connector : MonoBehaviour
     {
         _field = field;
         _field.Connector = this;
+        CalculateAndCacheValueType();
+    }
+
+    private void CalculateAndCacheValueType()
+    {
+        ValueType = Field is VariableNodeField ?
+            ((VariableNodeField)Field).GetValueType() :
+            _valueAttribute?.type ?? typeof(object);
     }
 
     public void ClearConnections()
