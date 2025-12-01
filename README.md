@@ -272,28 +272,22 @@ The node engine features a robust connection system with visual feedback:
 Here's an example of creating a custom Debug node that outputs messages to the console:
 
 ```csharp
-using UnityEngine;
-
-// NodePath attribute defines where this node appears in the node menu
 [NodePath("Debug/Log")]
 public class DebugNode : ExecutableNodeBase
 {
     private ConnectorValueString _logText;
+    private NodeField<ConnectorValueString> _inputField;
 
-    // NodeValue attribute defines an input connector with name and type
     [NodeValue("LogString", typeof(string))]
     public void LogString(ConnectorValueString value)
     {
-        _logText = value; // Store the input value for later use
+        _logText = value;
     }
 
-    // Execute is called when the node is triggered
     public override void Execute()
     {
-        // Get the text value, with null safety
-        string text = _logText?.GetValue() ?? "null";
-
-        // Output to the in-game console if available, otherwise use Unity's console
+        _inputField.ProceedValue();
+        string text = _logText?.GetInnerValue() ?? "null";
         if (ConsoleUI.Instance != null)
         {
             ConsoleUI.Instance.LogMessage($"[Debug] {text}");
@@ -303,22 +297,19 @@ public class DebugNode : ExecutableNodeBase
             Debug.Log($"[Debug] {text}");
         }
 
-        // Important: Always call base.Execute() to trigger default output connections
         base.Execute();
     }
 
-    // Setup defines the node's input and output connectors
     public override void Setup()
     {
-        // Define input fields - true means it's an input connector
+        _logText = new ConnectorValueString();
+        _inputField = new NodeField<ConnectorValueString>().SetHandler(LogString).SetDefaultValue(_logText);
+
         inputFields = new()
         {
-            new NodeField<ConnectorValueString>(true)
-                .SetHandler(LogString)                    // Method to call when value changes
-                .SetDefaultValue(new ConnectorValueString("")) // Default value
+            _inputField
         };
-
-        // Important: Always call base.Setup() to include default execution connectors
+        
         base.Setup();
     }
 }
