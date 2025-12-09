@@ -1,0 +1,104 @@
+{
+    "nodes": [
+        {
+            "instanceId": -397110,
+            "databaseId": "ToStringNode_ToString",
+            "position": {
+                "x": -2.7717642784118654,
+                "y": 110.37129974365235
+            },
+            "fieldValuesJson": "{\"values\":[]}"
+        },
+        {
+            "instanceId": -397322,
+            "databaseId": "DebugNode_Debug",
+            "position": {
+                "x": 256.16119384765627,
+                "y": 113.53154754638672
+            },
+            "fieldValuesJson": "{\"values\":[]}"
+        },
+        {
+            "instanceId": -397500,
+            "databaseId": "TypeVariableNode_Type",
+            "position": {
+                "x": -592.2784423828125,
+                "y": -7.976344108581543
+            },
+            "fieldValuesJson": "{\"values\":[{\"attributeName\":\"variableValue\",\"value\":\"System.Object\"}]}"
+        },
+        {
+            "instanceId": -397724,
+            "databaseId": "ConvertNode_Convert",
+            "position": {
+                "x": -251.68157958984376,
+                "y": 113.46553802490235
+            },
+            "fieldValuesJson": "{\"values\":[]}"
+        },
+        {
+            "instanceId": -397970,
+            "databaseId": "UpdateNode_Update",
+            "position": {
+                "x": -589.53955078125,
+                "y": 251.72613525390626
+            },
+            "fieldValuesJson": "{\"values\":[]}"
+        },
+        {
+            "instanceId": -398080,
+            "databaseId": "FloatVariableNode_Single",
+            "position": {
+                "x": -591.1349487304688,
+                "y": 124.85708618164063
+            },
+            "fieldValuesJson": "{\"values\":[{\"attributeName\":\"variableValue\",\"value\":\"5\"}]}"
+        }
+    ],
+    "connections": [
+        {
+            "fromNodeId": -397110,
+            "toNodeId": -397322,
+            "fromConnectorName": "Output",
+            "toConnectorName": "Input"
+        },
+        {
+            "fromNodeId": -397110,
+            "toNodeId": -397322,
+            "fromConnectorName": "OutputValue",
+            "toConnectorName": "LogString"
+        },
+        {
+            "fromNodeId": -397500,
+            "toNodeId": -397724,
+            "fromConnectorName": "Value",
+            "toConnectorName": "TargetType"
+        },
+        {
+            "fromNodeId": -397724,
+            "toNodeId": -397110,
+            "fromConnectorName": "Output",
+            "toConnectorName": "Input"
+        },
+        {
+            "fromNodeId": -397724,
+            "toNodeId": -397110,
+            "fromConnectorName": "OutputValue",
+            "toConnectorName": "InputValue"
+        },
+        {
+            "fromNodeId": -397970,
+            "toNodeId": -397724,
+            "fromConnectorName": "Update",
+            "toConnectorName": "Input"
+        },
+        {
+            "fromNodeId": -398080,
+            "toNodeId": -397724,
+            "fromConnectorName": "Value",
+            "toConnectorName": "InputValue"
+        }
+    ],
+    "saveTime": "2025-12-09 14:35:19",
+    "version": 2
+}

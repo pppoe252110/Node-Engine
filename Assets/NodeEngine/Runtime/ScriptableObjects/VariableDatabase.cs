@@ -4,7 +4,9 @@ using UnityEngine;
 public class VariableDatabase : ScriptableObject
 {
     [SerializeField] private VariableUIEntry[] _entries;
-
+    [SerializeField] private DropdownUIElement _converterUIPrefab;
+    
+    public DropdownUIElement ConverterUIPrefab => _converterUIPrefab;
     public VariableUIEntry[] Entries => _entries;
 
     public VariableUIElement GetPrefabForType(VariableType type)

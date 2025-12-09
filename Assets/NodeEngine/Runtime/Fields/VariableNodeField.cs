@@ -9,6 +9,8 @@ public class VariableNodeField : NodeFieldBase
     private Action<IConnectorValue> _valueHandler;
     private VariableType _variableType;
 
+    public override IConnectorValue GetCurrentValue() => _currentValue;
+    
     public override void UpdateValueFromSource(IConnectorValue sourceValue)
     {
         if (sourceValue == null) return;

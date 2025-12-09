@@ -365,7 +365,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4227364312072211847}
   m_HandleRect: {fileID: 181249690633033827}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -886,6 +886,7 @@ MonoBehaviour:
   _zoomSpeed: 0.1
   _minZoom: 0.1
   _maxZoom: 5
+  _background: {fileID: 2534620921390194200}
   _mat: {fileID: 2100000, guid: 4dc279cbc9a7e234ab6524c0f05c7b6f, type: 2}
   _nodesParent: {fileID: 1268940566771191763}
 --- !u!1 &4067652660049081636

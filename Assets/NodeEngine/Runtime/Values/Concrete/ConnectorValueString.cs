@@ -1,3 +1,5 @@
+using System;
+
 public class ConnectorValueString : IConnectorValue, IConnectorValue<string>
 {
     private string _value;
@@ -12,4 +14,5 @@ public class ConnectorValueString : IConnectorValue, IConnectorValue<string>
 
     public void SetInnerValue(string value) => _value = value;
     void IConnectorValue.SetInnerValue(object value) => _value = (string)value;
+    public Type InnerType => typeof(string);
 }

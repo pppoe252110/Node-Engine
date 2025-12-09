@@ -17,7 +17,6 @@ public class Connector : MonoBehaviour
     private static ConnectorColorDatabase _colorDatabase;
 
     private IConnectorValue _connectorValue;
-
     public NodeBase Node => _node;
     public NodeFieldBase Field => _field;
     public Type ValueType { get; private set; }
@@ -26,6 +25,8 @@ public class Connector : MonoBehaviour
     public Vector3 AnchoredPositionPoint => _connectorImage.rectTransform.position;
     public int ConnectionsCount => _connections.Count;
     public List<Connector> Connections => _connections;
+
+    private List<IConnectionListener> _listeners = new List<IConnectionListener>();
 
     public void SetConnectorValue(IConnectorValue value)
     {
@@ -81,9 +82,46 @@ public class Connector : MonoBehaviour
             _connectorImageFill.color = connectorColor;
     }
 
-    public void AddConnection(Connector connector) => _connections.Add(connector);
-    public void RemoveConnection(Connector connector) => _connections.Remove(connector);
+    public void AddConnectionListener(IConnectionListener listener)
+    {
+        if (!_listeners.Contains(listener))
+            _listeners.Add(listener);
+    }
 
+    public void RemoveConnectionListener(IConnectionListener listener)
+    {
+        _listeners.Remove(listener);
+    }
+
+    public void AddConnection(Connector connector)
+    {
+        _connections.Add(connector);
+
+        foreach (var listener in _listeners)
+        {
+            listener.OnConnected(this, connector);
+        }
+
+        if (connector.Node is IConnectionListener otherListener)
+        {
+            otherListener.OnConnected(connector, this);
+        }
+    }
+
+    public void RemoveConnection(Connector connector)
+    {
+        _connections.Remove(connector);
+
+        foreach (var listener in _listeners)
+        {
+            listener.OnDisconnected(this, connector);
+        }
+
+        if (connector.Node is IConnectionListener otherListener)
+        {
+            otherListener.OnDisconnected(connector, this);
+        }
+    }
     public void SetConnectorFilled(bool filled)
     {
         if (_connectorImageFill != null)
@@ -103,9 +141,7 @@ public class Connector : MonoBehaviour
 
     private void CalculateAndCacheValueType()
     {
-        ValueType = Field is VariableNodeField ?
-            ((VariableNodeField)Field).GetValueType() :
-            _valueAttribute?.type ?? typeof(object);
+        ValueType = Field?.GetValueType() ?? typeof(object);
     }
 
     public void ClearConnections()

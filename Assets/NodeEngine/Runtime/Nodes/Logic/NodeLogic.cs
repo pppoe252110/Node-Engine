@@ -44,23 +44,54 @@ public class NodeLogic : MonoBehaviour
         _nodeIcon.sprite = _node.NodeSprite;
         _nodeIcon.color = _node.NodeSprite ? Color.white : Color.clear;
 
-        if (_node is VariableNode varNode && VariableDatabase != null)
+        // Handle different node types
+        if (_node is TypeVariableNode converterNode)
+        {
+            // Create converter UI
+            CreateConverterUI(converterNode);
+
+            // Generate connectors
+            _nodeUIManager.GenerateOutputConnectors(_node, _node.outputFields, _node.outputConnectors);
+        }
+        else if (_node is VariableNode varNode && VariableDatabase != null)
         {
             _nodeUIManager.CreateVariableUI(varNode, VariableDatabase, _image);
-
             _nodeUIManager.GenerateOutputConnectors(_node, _node.outputFields, _node.outputConnectors);
         }
         else
         {
-            _nodeUIManager.CreateConnectors(_node, _node.inputFields, _node.outputFields, _node.inputConnectors, _node.outputConnectors);
+            _nodeUIManager.CreateConnectors(_node, _node.inputFields, _node.outputFields,
+                _node.inputConnectors, _node.outputConnectors);
         }
 
         _node.InitializeConnectorValues();
 
-        _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x, 57 + (Mathf.Max(_node.inputFields.Count, _node.outputFields.Count)) * 25);
+        _image.rectTransform.sizeDelta = new Vector2(_image.rectTransform.sizeDelta.x,
+            57 + (Mathf.Max(_node.inputFields.Count, _node.outputFields.Count)) * 25);
         _image.material = new Material(_image.material);
 
         RecalculateMaterial();
+    }
+
+    private void CreateConverterUI(TypeVariableNode converterNode)
+    {
+        if (converterNode == null || VariableDatabase == null) return;
+        var prefab = VariableDatabase.ConverterUIPrefab;
+        if (prefab == null) return;
+        var uiElement = Instantiate(prefab, LeftConnectorsParent);
+        uiElement.Initialize(converterNode);
+        converterNode.UIElement = uiElement;
+        UpdateNodeSizeForConverterUI(_image);
+    }
+
+    private void UpdateNodeSizeForConverterUI(Image nodeImage)
+    {
+        const float boxHeight = 30f;
+        const float padding = 20f;
+        nodeImage.rectTransform.sizeDelta = new Vector2(
+            nodeImage.rectTransform.sizeDelta.x,
+            Mathf.Max(nodeImage.rectTransform.sizeDelta.y, boxHeight + padding)
+        );
     }
 
     private string GetNodeTypeFromPath(NodeBase node)

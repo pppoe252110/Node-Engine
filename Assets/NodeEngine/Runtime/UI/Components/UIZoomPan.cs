@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class UIZoomPan : MonoBehaviour
 {
@@ -23,6 +24,7 @@ public class UIZoomPan : MonoBehaviour
     [SerializeField] private float _maxZoom = 5f;
 
     [Header("Properties")]
+    [SerializeField] private Image _background;
     [SerializeField] private Material _mat;
 
     [SerializeField] private RectTransform _nodesParent;
@@ -32,6 +34,8 @@ public class UIZoomPan : MonoBehaviour
 
     void Start()
     {
+        _mat = new Material(_mat);
+        _background.material = _mat;
         _rectTransform = transform as RectTransform;
     }
 

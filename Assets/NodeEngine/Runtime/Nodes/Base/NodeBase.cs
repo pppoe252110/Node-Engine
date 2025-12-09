@@ -13,11 +13,13 @@ public abstract class NodeBase : INode
 
     [SerializeField] private string _nodeName = "Basic";
     [SerializeField] private Sprite _nodeIcon;
-
+    
     public List<NodeFieldBase> inputFields;
     public List<Connector> inputConnectors;
     public List<NodeFieldBase> outputFields;
     public List<Connector> outputConnectors;
+
+    protected NodeLogic _nodeLogic;
 
     [SerializeField]
     private int _guid = 0;
@@ -30,11 +32,15 @@ public abstract class NodeBase : INode
 
     public void Initialize(NodeLogic nodeLogic, int guid)
     {
+        _nodeLogic = nodeLogic;
+
         inputFields = new();
         inputConnectors = new();
         outputFields = new();
         outputConnectors = new();
+        
         _guid = guid;
+        
         Setup();
         
         Initialized();

@@ -66,11 +66,21 @@ MonoBehaviour:
       PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 552918c18ce4c8f4ebcf83d4fd990c89, type: 3}
+  - nodeName: Convert
+    nodeType: ConvertNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 21300000, guid: f476699faae46174d903d3682f5fdc11, type: 3}
   - nodeName: SetVariable
     nodeType: SetVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 63eb2535a3c92f84585326fbd1fea345, type: 3}
+  - nodeName: Bool
+    nodeType: BoolVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Int
     nodeType: IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
@@ -91,3 +101,8 @@ MonoBehaviour:
       PublicKeyToken=null
     variableType: 4
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
+  - nodeName: Type
+    nodeType: TypeVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 21300000, guid: 8e03a0d1b56d28a4ab5ccfe26c1fdd4a, type: 3}

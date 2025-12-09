@@ -7,13 +7,14 @@ public abstract class NodeFieldBase
     public abstract void ProceedValue();
     public abstract NodeValueAttribute GetAttribute();
     public abstract void UpdateValueFromSource(IConnectorValue sourceValue);
+    public abstract IConnectorValue GetCurrentValue();
 }
 
-public abstract class NodeFieldBase<T> : NodeFieldBase
+public abstract class NodeFieldBase<T> : NodeFieldBase where T : IConnectorValue
 {
-    
     protected T _currentValue;
 
-    public override Type GetValueType() => typeof(T);
+    public override Type GetValueType() => _currentValue.InnerType;
     public abstract T GetValue();
+    public override IConnectorValue GetCurrentValue() => _currentValue;
 }

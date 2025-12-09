@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,12 +8,7 @@ public abstract class VariableNode : NodeBase
     public VariableUIElement UIElement { get; set; }
     protected NodeFieldBase _outputField;
 
-    private ConnectorValueInt _cachedIntValue;
-    private ConnectorValueFloat _cachedFloatValue;
-    private ConnectorValueBool _cachedBoolValue;
-    private ConnectorValueString _cachedStringValue;
-    private ConnectorValueVector3 _cachedVector3Value;
-    private ConnectorValueObject _cachedObjectValue;
+    private IConnectorValue _cachedValue;
 
     public override void Setup()
     {
@@ -24,105 +20,104 @@ public abstract class VariableNode : NodeBase
 
     private void InitializeCachedValues()
     {
-        switch (VariableType)
+        _cachedValue = VariableType switch
         {
-            case VariableType.Int:
-                _cachedIntValue = new ConnectorValueInt(0);
-                break;
-            case VariableType.Single:
-                _cachedFloatValue = new ConnectorValueFloat(0f);
-                break;
-            case VariableType.Bool:
-                _cachedBoolValue = new ConnectorValueBool(false);
-                break;
-            case VariableType.String:
-                _cachedStringValue = new ConnectorValueString("");
-                break;
-            case VariableType.Vector3:
-                _cachedVector3Value = new ConnectorValueVector3(Vector3.zero);
-                break;
-            default:
-                _cachedObjectValue = new ConnectorValueObject(null);
-                break;
-        }
+            VariableType.Int => new ConnectorValueInt(0),
+            VariableType.Single => new ConnectorValueFloat(0f),
+            VariableType.Bool => new ConnectorValueBool(false),
+            VariableType.String => new ConnectorValueString(""),
+            VariableType.Vector3 => new ConnectorValueVector3(Vector3.zero),
+            VariableType.Type => new ConnectorValueType(typeof(object)),
+            _ => new ConnectorValueObject(null)
+        };
     }
 
     private NodeFieldBase CreateTypedOutputField()
     {
-        switch (VariableType)
+        return VariableType switch
         {
-            case VariableType.Int:
-                return new NodeField<ConnectorValueInt>()
-                    .SetHandler(OutputInt)
-                    .SetDefaultValue(_cachedIntValue);
+            VariableType.Int => new NodeField<ConnectorValueInt>()
+                .SetHandler(OutputInt)
+                .SetDefaultValue((ConnectorValueInt)_cachedValue),
 
-            case VariableType.Single:
-                return new NodeField<ConnectorValueFloat>()
-                    .SetHandler(OutputFloat)
-                    .SetDefaultValue(_cachedFloatValue);
+            VariableType.Single => new NodeField<ConnectorValueFloat>()
+                .SetHandler(OutputFloat)
+                .SetDefaultValue((ConnectorValueFloat)_cachedValue),
 
-            case VariableType.Bool:
-                return new NodeField<ConnectorValueBool>()
-                    .SetHandler(OutputBool)
-                    .SetDefaultValue(_cachedBoolValue);
+            VariableType.Bool => new NodeField<ConnectorValueBool>()
+                .SetHandler(OutputBool)
+                .SetDefaultValue((ConnectorValueBool)_cachedValue),
 
-            case VariableType.String:
-                return new NodeField<ConnectorValueString>()
-                    .SetHandler(OutputString)
-                    .SetDefaultValue(_cachedStringValue);
+            VariableType.String => new NodeField<ConnectorValueString>()
+                .SetHandler(OutputString)
+                .SetDefaultValue((ConnectorValueString)_cachedValue),
 
-            case VariableType.Vector3:
-                return new NodeField<ConnectorValueVector3>()
-                    .SetHandler(OutputVector3)
-                    .SetDefaultValue(_cachedVector3Value);
+            VariableType.Vector3 => new NodeField<ConnectorValueVector3>()
+                .SetHandler(OutputVector3)
+                .SetDefaultValue((ConnectorValueVector3)_cachedValue),
 
-            default:
-                return new NodeField<ConnectorValueObject>()
-                    .SetHandler(OutputObject)
-                    .SetDefaultValue(_cachedObjectValue);
-        }
+            VariableType.Type => new NodeField<ConnectorValueType>()
+                .SetHandler(OutputType)
+                .SetDefaultValue((ConnectorValueType)_cachedValue),
+
+            _ => new NodeField<ConnectorValueObject>()
+                .SetHandler(OutputObject)
+                .SetDefaultValue((ConnectorValueObject)_cachedValue)
+        };
     }
 
     [NodeValue("Value", typeof(int))]
     public void OutputInt(ConnectorValueInt value)
     {
-        
-        value.SetInnerValue(_cachedIntValue.GetInnerValue());
+        // Direct cast since we know the type
+        var cached = (ConnectorValueInt)_cachedValue;
+        value.SetInnerValue(cached.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(float))]
     public void OutputFloat(ConnectorValueFloat value)
     {
-        value.SetInnerValue(_cachedFloatValue.GetInnerValue());
+        var cached = (ConnectorValueFloat)_cachedValue;
+        value.SetInnerValue(cached.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(bool))]
     public void OutputBool(ConnectorValueBool value)
     {
-        value.SetInnerValue(_cachedBoolValue.GetInnerValue());
+        var cached = (ConnectorValueBool)_cachedValue;
+        value.SetInnerValue(cached.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(string))]
     public void OutputString(ConnectorValueString value)
     {
-        value.SetInnerValue(_cachedStringValue.GetInnerValue());
+        var cached = (ConnectorValueString)_cachedValue;
+        value.SetInnerValue(cached.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(Vector3))]
     public void OutputVector3(ConnectorValueVector3 value)
     {
-        value.SetInnerValue(_cachedVector3Value.GetInnerValue());
+        var cached = (ConnectorValueVector3)_cachedValue;
+        value.SetInnerValue(cached.GetInnerValue());
+    }
+
+    [NodeValue("Value", typeof(Type))]
+    public void OutputType(ConnectorValueType value)
+    {
+        var cached = (ConnectorValueType)_cachedValue;
+        value.SetInnerValue(cached.GetInnerValue());
     }
 
     [NodeValue("Value", typeof(object))]
     public void OutputObject(ConnectorValueObject value)
     {
-        value.SetInnerValue(_cachedObjectValue.GetInnerValue());
+        var cached = (ConnectorValueObject)_cachedValue;
+        value.SetInnerValue(cached.GetInnerValue());
     }
 
     public void UpdateOutputValue()
     {
-        
         if (UIElement != null)
         {
             object uiValue = UIElement.GetValue();
@@ -131,39 +126,86 @@ public abstract class VariableNode : NodeBase
             {
                 case VariableType.Int:
                     if (uiValue is int intVal)
-                        _cachedIntValue.SetInnerValue(intVal);
+                        ((ConnectorValueInt)_cachedValue).SetInnerValue(intVal);
                     break;
                 case VariableType.Single:
                     if (uiValue is float floatVal)
-                        _cachedFloatValue.SetInnerValue(floatVal);
+                        ((ConnectorValueFloat)_cachedValue).SetInnerValue(floatVal);
                     break;
                 case VariableType.Bool:
                     if (uiValue is bool boolVal)
-                        _cachedBoolValue.SetInnerValue(boolVal);
+                        ((ConnectorValueBool)_cachedValue).SetInnerValue(boolVal);
                     break;
                 case VariableType.String:
                     if (uiValue is string stringVal)
-                        _cachedStringValue.SetInnerValue(stringVal);
+                        ((ConnectorValueString)_cachedValue).SetInnerValue(stringVal);
                     break;
                 case VariableType.Vector3:
                     if (uiValue is Vector3 vectorVal)
-                        _cachedVector3Value.SetInnerValue(vectorVal);
+                        ((ConnectorValueVector3)_cachedValue).SetInnerValue(vectorVal);
+                    break;
+                case VariableType.Type:
+                    if (uiValue is Type typeVal)
+                        ((ConnectorValueType)_cachedValue).SetInnerValue(typeVal);
                     break;
                 default:
-                    _cachedObjectValue.SetInnerValue(uiValue);
+                    ((ConnectorValueObject)_cachedValue).SetInnerValue(uiValue);
                     break;
             }
         }
 
         _outputField?.ProceedValue();
     }
+
+    // Property to get the cached value
+    public IConnectorValue CachedValue => _cachedValue;
+
+    // Method to get the inner value
+    public object GetValue()
+    {
+        return _cachedValue?.GetInnerValue();
+    }
+
+    // Method to set the value
+    public void SetValue(object value)
+    {
+        if (_cachedValue != null)
+        {
+            _cachedValue.SetInnerValue(value);
+            UpdateOutputValue();
+        }
+    }
+
     public override void Process(List<Connector> fromConnectors = null)
     {
         if (IsProcessing)
             return;
 
         IsProcessing = true;
-
         base.Process(fromConnectors);
+    }
+
+    // Add this method to sync UI after it's created
+    public void SyncUIWithCachedValue()
+    {
+        if (UIElement != null)
+        {
+            // Get the current cached value
+            object currentValue = GetValue();
+
+            // Update the UI element with the cached value
+            if (UIElement is InputFieldVariableUI inputFieldUI)
+            {
+                inputFieldUI.SetValue(currentValue);
+            }
+            else if (UIElement is DropdownUIElement dropdownUI)
+            {
+                // Dropdown might handle this differently
+                // You might need to add a SetValue method to DropdownUIElement
+            }
+
+            // Now trigger the output
+            UpdateOutputValue();
+        }
     }
 }

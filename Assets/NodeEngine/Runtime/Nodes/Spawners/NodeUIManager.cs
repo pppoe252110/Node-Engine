@@ -63,6 +63,8 @@ public class NodeUIManager : MonoBehaviour
         uiElement.Initialize(varNode, varNode.VariableType);
         varNode.UIElement = uiElement;
 
+        varNode.SyncUIWithCachedValue();
+
         UpdateNodeSizeForVariableUI(nodeImage);
     }
 

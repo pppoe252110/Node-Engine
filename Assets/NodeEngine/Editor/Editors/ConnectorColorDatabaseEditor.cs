@@ -462,17 +462,19 @@ public class ConnectorColorDatabaseEditor : Editor
     {
         return type.Name switch
         {
-            "Int32" => new Color(1f, 0.2f, 0.2f),     
-            "Single" => new Color(0.2f, 0.9f, 0.2f),  
-            "Boolean" => new Color(0.1f, 0.5f, 1f),   
-            "String" => new Color(1f, 0.8f, 0.1f),    
-            "Void" => new Color(0.8f, 0.2f, 0.8f),    
-            "Vector3" => new Color(1f, 0.5f, 0f),     
-            "GameObject" => new Color(0f, 0.8f, 1f),  
-            "Object" => new Color(0.9f, 0.1f, 0.5f),  
+            "Int32" => new Color(1f, 0.2f, 0.2f),
+            "Single" => new Color(0.2f, 0.9f, 0.2f),
+            "Boolean" => new Color(0.1f, 0.5f, 1f),
+            "String" => new Color(1f, 0.8f, 0.1f),
+            "Void" => new Color(0.8f, 0.2f, 0.8f),
+            "Vector3" => new Color(1f, 0.5f, 0f),
+            "GameObject" => new Color(0f, 0.8f, 1f),
+            "Object" => new Color(0.9f, 0.1f, 0.5f),
+            "Type" => new Color(0.8f, 0.4f, 0.6f),
             _ => database.FallbackColor
         };
     }
+
 
     [Serializable]
     private class SerializableDictionary<TKey, TValue>
