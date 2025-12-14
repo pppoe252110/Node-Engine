@@ -34,9 +34,9 @@ public class TimeNode : NodeBase
 
         outputFields = new()
         {
-            new NodeField<ConnectorValueFloat>().SetHandler(DeltaTime).SetDefaultValue(_deltaTime),
-            new NodeField<ConnectorValueFloat>().SetHandler(Time).SetDefaultValue(_time),
-            new NodeField<ConnectorValueFloat>().SetHandler(RealTime).SetDefaultValue(_realTime)
+            new NodeFieldTyped<ConnectorValueFloat>().SetHandler(DeltaTime).SetDefaultValue(_deltaTime),
+            new NodeFieldTyped<ConnectorValueFloat>().SetHandler(Time).SetDefaultValue(_time),
+            new NodeFieldTyped<ConnectorValueFloat>().SetHandler(RealTime).SetDefaultValue(_realTime)
         };
     }
 }

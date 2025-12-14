@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: BG
+  m_Shader: {fileID: 4800000, guid: 8a0e17f1f66668a449b3e9382cf0ecd4, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _DotSize: 2
+    - _FadeDistance: 5
+    - _GridFade: 0.1
+    - _GridFadeDistance: 50
+    - _GridGlowIntensity: 0.3
+    - _GridLineWidth: 1
+    - _GridScale: 0.133
+    - _GridScaleOffset: 1
+    - _GridSize: 50
+    - _LineThickness: 0.01
+    - _LineWidth: 0.5
+    - _MajorGridFrequency: 10
+    - _MajorGridScale: 5
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    - _Subdivisions: 2
+    - _UIMaskSoftnessX: 1
+    - _UIMaskSoftnessY: 1
+    - _UseScreenSpace: 0
+    - _ZoomFactor: 1
+    - _ZoomLevel: 1
+    m_Colors:
+    - _BackgroundColor: {r: 0.09999997, g: 0.09999997, b: 0.09999997, a: 1}
+    - _ClipRect: {r: 0, g: 0, b: 0, a: 0}
+    - _Color1: {r: 1, g: 1, b: 1, a: 1}
+    - _Color2: {r: 0, g: 0, b: 0, a: 1}
+    - _DotColor: {r: 0.30499998, g: 0.30499998, b: 0.30499998, a: 1}
+    - _GridColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
+    - _GridOffset: {r: 0, g: 0, b: 0, a: 0}
+    - _GridSize: {r: 4, g: 4, b: 0, a: 0}
+    - _MajorGridColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _MinorGridColor: {r: 0.17199996, g: 0.17199996, b: 0.17199996, a: 1}
+    - _OutlineSize: {r: 1, g: 1, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

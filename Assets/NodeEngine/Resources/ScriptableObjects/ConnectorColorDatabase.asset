@@ -29,4 +29,6 @@ MonoBehaviour:
     color: {r: 1, g: 0.5, b: 0, a: 1}
   - typeName: Void
     color: {r: 0.8, g: 0.2, b: 0.8, a: 1}
+  - typeName: Type
+    color: {r: 0.8, g: 0.4, b: 0.6, a: 1}
   fallbackColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}

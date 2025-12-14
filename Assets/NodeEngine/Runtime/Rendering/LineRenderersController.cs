@@ -1,4 +1,5 @@
 using Radishmouse;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -176,6 +177,36 @@ public class LineRenderersController : MonoBehaviour
                 Destroy(connection.LineRenderer.gameObject);
         }
         Instance._connections.Clear();
+    }
+
+    public static void UpdateConnectionColors(Connector connector)
+    {
+        if (Instance == null || connector == null) return;
+
+        try
+        {
+            foreach (var connection in Instance._connections)
+            {
+                if (!connection.IsValid) continue;
+
+                bool isOurConnection = connection.ConnectorA == connector || connection.ConnectorB == connector;
+
+                if (isOurConnection)
+                {
+                    var lineRenderer = connection.LineRenderer;
+                    if (lineRenderer != null && lineRenderer.material != null)
+                    {
+                        // Update material with current connector colors
+                        lineRenderer.material.SetColor("_Color1", connection.ConnectorA.Color);
+                        lineRenderer.material.SetColor("_Color2", connection.ConnectorB.Color);
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error updating connection colors: {e.Message}");
+        }
     }
 
     [ContextMenu("Debug Line Quality")]

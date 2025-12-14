@@ -6,7 +6,6 @@ public class InputFieldVariableUI : VariableUIElement
 {
     [SerializeField] private TMP_InputField _inputField;
 
-    private VariableType _type;
     private object _value;
     private CultureInfo _culture;
 
@@ -222,33 +221,42 @@ public class InputFieldVariableUI : VariableUIElement
         }
     }
 
-    public void SetValue(object newValue)
+    public override void SetValue(object value)
     {
-        if (newValue != null)
+        if (_inputField == null) return;
+
+        if (value == null)
         {
-            if ((_type == VariableType.Int && newValue is int) ||
-                (_type == VariableType.Single && newValue is float) ||
-                (_type == VariableType.String && newValue is string) ||
-                (_type == VariableType.Vector3 && newValue is Vector3))
-            {
-                _value = newValue;
-                FormatCurrentValue();
-                _node?.UpdateOutputValue();
-            }
-            else
-            {
-                Debug.LogWarning($"Type mismatch: Cannot assign {newValue.GetType()} to {_type}");
-            }
+            _inputField.text = "";
+            return;
         }
+
+        // Format based on type
+        switch (_type)
+        {
+            case VariableType.Single:
+                // For floats, use invariant culture to avoid comma issues
+                if (value is float floatValue)
+                {
+                    _inputField.text = floatValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    _inputField.text = value.ToString();
+                }
+                break;
+            case VariableType.Int:
+            case VariableType.Bool:
+            case VariableType.String:
+            default:
+                _inputField.text = value.ToString();
+                break;
+        }
+
+        _value = value;
     }
 
     public override object GetValue() => _value;
-
-    private string ConvertToInvariantFormat(string input)
-    {
-        
-        return input.Replace(",", ".");
-    }
 
     private void Start()
     {
@@ -257,7 +265,6 @@ public class InputFieldVariableUI : VariableUIElement
 
     private void OnEndEdit(string value)
     {
-        
         FormatCurrentValue();
     }
 

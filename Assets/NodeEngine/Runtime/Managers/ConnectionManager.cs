@@ -6,17 +6,20 @@ using UnityEngine;
 
 public class ConnectionManager : MonoBehaviour
 {
-    [System.Serializable]
+    [Serializable]
     public class ConnectionData
     {
         public int fromNodeId;
         public int toNodeId;
         public string fromConnectorName;
         public string toConnectorName;
-        public string fromConnectorType;
-        public string toConnectorType;
+        public string fromConnectorType;      // Type name as string
+        public string toConnectorType;        // Type name as string
+        public string fromConnectorAssembly;  // Assembly qualified name
+        public string toConnectorAssembly;    // Assembly qualified name
 
-        public ConnectionData(int fromNode, int toNode, string fromName, string toName, string fromType, string toType)
+        public ConnectionData(int fromNode, int toNode, string fromName, string toName,
+                             string fromType, string toType, Type fromTypeObj = null, Type toTypeObj = null)
         {
             fromNodeId = fromNode;
             toNodeId = toNode;
@@ -24,6 +27,10 @@ public class ConnectionManager : MonoBehaviour
             toConnectorName = toName;
             fromConnectorType = fromType;
             toConnectorType = toType;
+
+            // Save assembly qualified names for proper type reconstruction
+            fromConnectorAssembly = fromTypeObj?.AssemblyQualifiedName ?? "";
+            toConnectorAssembly = toTypeObj?.AssemblyQualifiedName ?? "";
         }
     }
 
@@ -167,7 +174,9 @@ public class ConnectionManager : MonoBehaviour
             fromAttrFinal?.attributeName ?? "Unknown",
             toAttrFinal?.attributeName ?? "Unknown",
             fromConnector.ValueType.Name,
-            toConnector.ValueType.Name
+            toConnector.ValueType.Name,
+            fromConnector.ValueType,
+            toConnector.ValueType
         );
 
         _connections.Add(connection);

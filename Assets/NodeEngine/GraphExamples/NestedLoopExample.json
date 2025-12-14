@@ -1,110 +1,122 @@
 {
     "nodes": [
         {
-            "instanceId": -474688,
+            "instanceId": -28466,
             "databaseId": "UpdateNode_Update",
             "position": {
                 "x": 0.0,
                 "y": 0.0
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         },
         {
-            "instanceId": -474798,
+            "instanceId": -28576,
             "databaseId": "IntVariableNode_Int",
             "position": {
                 "x": 2.690892457962036,
                 "y": -117.07463836669922
             },
-            "fieldValuesJson": "{\"values\":[{\"attributeName\":\"variableValue\",\"value\":\"5\"}]}"
+            "fieldValuesJson": "{\"values\":[{\"attributeName\":\"variableValue\",\"value\":\"5\"}]}",
+            "nodeType": "",
+            "variableType": 1
         },
         {
-            "instanceId": -474976,
+            "instanceId": -28754,
             "databaseId": "ForLoopNode_ForLoop",
             "position": {
                 "x": 357.8071594238281,
                 "y": -52.377838134765628
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         },
         {
-            "instanceId": -475222,
+            "instanceId": -29000,
             "databaseId": "ForLoopNode_ForLoop",
             "position": {
                 "x": 600.0,
                 "y": -50.0
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         },
         {
-            "instanceId": -475468,
+            "instanceId": -29246,
             "databaseId": "ToStringNode_ToString",
             "position": {
                 "x": 895.1302490234375,
                 "y": -28.10772705078125
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         },
         {
-            "instanceId": -475680,
+            "instanceId": -29458,
             "databaseId": "DebugNode_Debug",
             "position": {
                 "x": 1237.1578369140625,
                 "y": 21.824092864990236
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         }
     ],
     "connections": [
         {
-            "fromNodeId": -474688,
-            "toNodeId": -474976,
+            "fromNodeId": -28466,
+            "toNodeId": -28754,
             "fromConnectorName": "Update",
             "toConnectorName": "Input"
         },
         {
-            "fromNodeId": -474798,
-            "toNodeId": -474976,
+            "fromNodeId": -28576,
+            "toNodeId": -28754,
             "fromConnectorName": "Value",
             "toConnectorName": "Count"
         },
         {
-            "fromNodeId": -474976,
-            "toNodeId": -475222,
+            "fromNodeId": -28754,
+            "toNodeId": -29000,
             "fromConnectorName": "Body",
             "toConnectorName": "Input"
         },
         {
-            "fromNodeId": -474976,
-            "toNodeId": -475222,
+            "fromNodeId": -28754,
+            "toNodeId": -29000,
             "fromConnectorName": "Index",
             "toConnectorName": "Count"
         },
         {
-            "fromNodeId": -475222,
-            "toNodeId": -475468,
+            "fromNodeId": -29000,
+            "toNodeId": -29246,
             "fromConnectorName": "Body",
             "toConnectorName": "Input"
         },
         {
-            "fromNodeId": -475222,
-            "toNodeId": -475468,
+            "fromNodeId": -29000,
+            "toNodeId": -29246,
             "fromConnectorName": "Index",
             "toConnectorName": "InputValue"
         },
         {
-            "fromNodeId": -475468,
-            "toNodeId": -475680,
+            "fromNodeId": -29246,
+            "toNodeId": -29458,
             "fromConnectorName": "Output",
             "toConnectorName": "Input"
         },
         {
-            "fromNodeId": -475468,
-            "toNodeId": -475680,
+            "fromNodeId": -29246,
+            "toNodeId": -29458,
             "fromConnectorName": "OutputValue",
             "toConnectorName": "LogString"
         }
     ],
-    "saveTime": "2025-11-30 22:35:19",
+    "saveTime": "2025-12-14 02:12:10",
     "version": 2
 }

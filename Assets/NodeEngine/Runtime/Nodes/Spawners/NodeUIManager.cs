@@ -6,6 +6,7 @@ public class NodeUIManager : MonoBehaviour
 {
     public RectTransform RightConnectorsParent => _rightConnectorsParent;
     public RectTransform LeftConnectorsParent => _leftConnectorsParent;
+    public ConnectorColorDatabase ColorDatabase => _colorDatabase; // Expose the database
 
     [SerializeField] private ConnectorColorDatabase _colorDatabase;
 
@@ -14,7 +15,8 @@ public class NodeUIManager : MonoBehaviour
     [SerializeField] private RectTransform _rightConnectorsParent;
     [SerializeField] private RectTransform _leftConnectorsParent;
 
-    public void CreateConnectors(NodeBase node, List<NodeFieldBase> inputFields, List<NodeFieldBase> outputFields, List<Connector> inputConnectors, List<Connector> outputConnectors)
+    public void CreateConnectors(NodeBase node, List<NodeFieldBase> inputFields, List<NodeFieldBase> outputFields,
+                                 List<Connector> inputConnectors, List<Connector> outputConnectors)
     {
         GenerateInputConnectors(node, inputFields, inputConnectors);
         GenerateOutputConnectors(node, outputFields, outputConnectors);

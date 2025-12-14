@@ -4,11 +4,11 @@ using UnityEngine;
 public class ForLoopNode : ExecutableNodeBase
 {
     private ConnectorValueInt _count;
-    private NodeField<ConnectorValueInt> _countField;
+    private NodeFieldTyped<ConnectorValueInt> _countField;
     private ConnectorValueInt _index;
 
     private NodeField _bodyField;
-    private NodeField<ConnectorValueInt> _indexField;
+    private NodeFieldTyped<ConnectorValueInt> _indexField;
 
     [NodeValue("Count", typeof(int))]
     public void Count(ConnectorValueInt count)
@@ -60,13 +60,13 @@ public class ForLoopNode : ExecutableNodeBase
 
     public override void Setup()
     {
-        _countField = new NodeField<ConnectorValueInt>()
+        _countField = new NodeFieldTyped<ConnectorValueInt>()
             .SetHandler(Count)
             .SetDefaultValue(new ConnectorValueInt(5));
 
         _index = new ConnectorValueInt(0);
 
-        _indexField = new NodeField<ConnectorValueInt>()
+        _indexField = new NodeFieldTyped<ConnectorValueInt>()
             .SetHandler(Index)
             .SetDefaultValue(_index);
 

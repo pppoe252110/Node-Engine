@@ -1,89 +1,99 @@
 {
     "nodes": [
         {
-            "instanceId": -470054,
+            "instanceId": -24386,
             "databaseId": "UpdateNode_Update",
             "position": {
                 "x": 0.0,
                 "y": 0.0
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         },
         {
-            "instanceId": -470164,
+            "instanceId": -24496,
             "databaseId": "IntVariableNode_Int",
             "position": {
                 "x": -8.18853759765625,
                 "y": -190.01417541503907
             },
-            "fieldValuesJson": "{\"values\":[{\"attributeName\":\"variableValue\",\"value\":\"1000000\"}]}"
+            "fieldValuesJson": "{\"values\":[{\"attributeName\":\"variableValue\",\"value\":\"100\"}]}",
+            "nodeType": "",
+            "variableType": 1
         },
         {
-            "instanceId": -470344,
+            "instanceId": -24674,
             "databaseId": "ForLoopNode_ForLoop",
             "position": {
                 "x": 400.0,
                 "y": 0.0
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         },
         {
-            "instanceId": -470590,
+            "instanceId": -24920,
             "databaseId": "ToStringNode_ToString",
             "position": {
                 "x": 688.8016357421875,
                 "y": 0.16208696365356446
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         },
         {
-            "instanceId": -470802,
+            "instanceId": -25132,
             "databaseId": "DebugNode_Debug",
             "position": {
                 "x": 961.296875,
                 "y": -0.4707294702529907
             },
-            "fieldValuesJson": "{\"values\":[]}"
+            "fieldValuesJson": "{\"values\":[]}",
+            "nodeType": "",
+            "variableType": 5
         }
     ],
     "connections": [
         {
-            "fromNodeId": -470054,
-            "toNodeId": -470344,
+            "fromNodeId": -24386,
+            "toNodeId": -24674,
             "fromConnectorName": "Update",
             "toConnectorName": "Input"
         },
         {
-            "fromNodeId": -470164,
-            "toNodeId": -470344,
+            "fromNodeId": -24496,
+            "toNodeId": -24674,
             "fromConnectorName": "Value",
             "toConnectorName": "Count"
         },
         {
-            "fromNodeId": -470344,
-            "toNodeId": -470590,
+            "fromNodeId": -24674,
+            "toNodeId": -24920,
             "fromConnectorName": "Body",
             "toConnectorName": "Input"
         },
         {
-            "fromNodeId": -470344,
-            "toNodeId": -470590,
+            "fromNodeId": -24674,
+            "toNodeId": -24920,
             "fromConnectorName": "Index",
             "toConnectorName": "InputValue"
         },
         {
-            "fromNodeId": -470590,
-            "toNodeId": -470802,
+            "fromNodeId": -24920,
+            "toNodeId": -25132,
             "fromConnectorName": "Output",
             "toConnectorName": "Input"
         },
         {
-            "fromNodeId": -470590,
-            "toNodeId": -470802,
+            "fromNodeId": -24920,
+            "toNodeId": -25132,
             "fromConnectorName": "OutputValue",
             "toConnectorName": "LogString"
         }
     ],
-    "saveTime": "2025-11-30 22:33:43",
+    "saveTime": "2025-12-14 02:11:42",
     "version": 2
 }

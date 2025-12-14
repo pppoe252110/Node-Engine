@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Unity.Plastic.Newtonsoft.Json;
 using UnityEngine;
 
-public abstract class VariableNode : NodeBase
+public abstract class VariableNode : NodeBase, ISerializableVariable
 {
     public abstract VariableType VariableType { get; }
     public VariableUIElement UIElement { get; set; }
@@ -36,31 +37,31 @@ public abstract class VariableNode : NodeBase
     {
         return VariableType switch
         {
-            VariableType.Int => new NodeField<ConnectorValueInt>()
+            VariableType.Int => new NodeFieldTyped<ConnectorValueInt>()
                 .SetHandler(OutputInt)
                 .SetDefaultValue((ConnectorValueInt)_cachedValue),
 
-            VariableType.Single => new NodeField<ConnectorValueFloat>()
+            VariableType.Single => new NodeFieldTyped<ConnectorValueFloat>()
                 .SetHandler(OutputFloat)
                 .SetDefaultValue((ConnectorValueFloat)_cachedValue),
 
-            VariableType.Bool => new NodeField<ConnectorValueBool>()
+            VariableType.Bool => new NodeFieldTyped<ConnectorValueBool>()
                 .SetHandler(OutputBool)
                 .SetDefaultValue((ConnectorValueBool)_cachedValue),
 
-            VariableType.String => new NodeField<ConnectorValueString>()
+            VariableType.String => new NodeFieldTyped<ConnectorValueString>()
                 .SetHandler(OutputString)
                 .SetDefaultValue((ConnectorValueString)_cachedValue),
 
-            VariableType.Vector3 => new NodeField<ConnectorValueVector3>()
+            VariableType.Vector3 => new NodeFieldTyped<ConnectorValueVector3>()
                 .SetHandler(OutputVector3)
                 .SetDefaultValue((ConnectorValueVector3)_cachedValue),
 
-            VariableType.Type => new NodeField<ConnectorValueType>()
+            VariableType.Type => new NodeFieldTyped<ConnectorValueType>()
                 .SetHandler(OutputType)
                 .SetDefaultValue((ConnectorValueType)_cachedValue),
 
-            _ => new NodeField<ConnectorValueObject>()
+            _ => new NodeFieldTyped<ConnectorValueObject>()
                 .SetHandler(OutputObject)
                 .SetDefaultValue((ConnectorValueObject)_cachedValue)
         };
@@ -166,26 +167,53 @@ public abstract class VariableNode : NodeBase
         return _cachedValue?.GetInnerValue();
     }
 
-    // Method to set the value
+    // In VariableNode.cs, update the SetValue method and add helper methods:
+
+    // Update just the SetValue and related methods:
+
     public void SetValue(object value)
     {
         if (_cachedValue != null)
         {
             _cachedValue.SetInnerValue(value);
+
+            // Update UI if it exists
+            if (UIElement != null)
+            {
+                // Different UI elements need different update methods
+                if (UIElement is InputFieldVariableUI inputFieldUI)
+                {
+                    inputFieldUI.SetValue(value);
+                }
+                else if (UIElement is DropdownUIElement dropdownUI)
+                {
+                    UpdateDropdownUI(dropdownUI, value);
+                }
+                else
+                {
+                    Debug.LogWarning($"Unknown UIElement type: {UIElement.GetType()}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("UIElement is null!");
+            }
+
+            // Trigger output
             UpdateOutputValue();
         }
     }
 
-    public override void Process(List<Connector> fromConnectors = null)
+    private void UpdateDropdownUI(DropdownUIElement dropdownUI, object value)
     {
-        if (IsProcessing)
-            return;
-
-        IsProcessing = true;
-        base.Process(fromConnectors);
+        if (value is Type typeValue)
+        {
+            // Use SetSelectedType with updateNode = FALSE to prevent recursion
+            dropdownUI.SetSelectedType(typeValue, false);
+        }
     }
 
-    // Add this method to sync UI after it's created
+    // Also update the SyncUIWithCachedValue method:
     public void SyncUIWithCachedValue()
     {
         if (UIElement != null)
@@ -200,12 +228,40 @@ public abstract class VariableNode : NodeBase
             }
             else if (UIElement is DropdownUIElement dropdownUI)
             {
-                // Dropdown might handle this differently
-                // You might need to add a SetValue method to DropdownUIElement
+                // Use SetSelectedType with updateNode = FALSE
+                dropdownUI.SetSelectedType(currentValue as Type, false);
             }
 
             // Now trigger the output
             UpdateOutputValue();
         }
+    }
+    public override void Process(List<Connector> fromConnectors = null)
+    {
+        // Variable nodes output their value when processed
+        if (IsProcessing)
+            return;
+
+        IsProcessing = true;
+
+        try
+        {
+            // Output the current value
+            _outputField?.ProceedValue();
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    public void DeserializeValue(string serializedValue)
+    {
+        CachedValue.SetInnerValue(serializedValue);
+    }
+
+    public string SerializeValue()
+    {
+        return JsonConvert.SerializeObject(CachedValue.GetInnerValue());
     }
 }

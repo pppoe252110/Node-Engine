@@ -20,6 +20,8 @@ public class NodeInstanceData
     public string databaseId;
     public Vector2 position;
     public string fieldValuesJson;
+    public string nodeType;
+    public VariableType variableType;
 }
 
 [Serializable]
@@ -53,6 +55,8 @@ public class GraphSaveLoadSystem : MonoBehaviour
     public event Action<string> OnGraphSaved;
     public event Action<string> OnGraphLoaded;
 
+    private List<IValuePersister> _valuePersisters = new List<IValuePersister>();
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -63,6 +67,18 @@ public class GraphSaveLoadSystem : MonoBehaviour
         Instance = this;
         transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
+
+        InitializeValuePersisters();
+    }
+
+    private void InitializeValuePersisters()
+    {
+        _valuePersisters = new List<IValuePersister>
+        {
+            new TypeValuePersister(),
+            new BasicValuePersister(),
+            new Vector3ValuePersister()
+        };
     }
 
     public void SaveGraph(string saveName)
@@ -127,6 +143,7 @@ public class GraphSaveLoadSystem : MonoBehaviour
                 instanceId = nodeLogic.Node.Guid,
                 databaseId = databaseId,
                 position = nodeLogic.transform.localPosition,
+                variableType = nodeLogic.Node is VariableNode varNode ? varNode.VariableType : VariableType.Object
             };
             SaveNodeData(nodeLogic.Node, nodeSaveData);
             saveData.nodes.Add(nodeSaveData);
@@ -248,7 +265,17 @@ public class GraphSaveLoadSystem : MonoBehaviour
     private void LoadFromSaveData(GraphSaveData saveData)
     {
         ClearCurrentGraph();
-        var loadedNodeIds = new HashSet<int>();
+
+        // PHASE 1: Spawn all nodes
+        var loadedNodes = SpawnAllNodes(saveData);
+
+        // Wait one frame for UI to initialize
+        StartCoroutine(LoadPhase2(saveData, loadedNodes));
+    }
+
+    private Dictionary<int, (NodeLogic nodeLogic, object valueToLoad)> SpawnAllNodes(GraphSaveData saveData)
+    {
+        var loadedNodes = new Dictionary<int, (NodeLogic, object)>();
         var databaseNodes = _nodesDatabase.GetNodes().ToDictionary(
             n => $"{n.GetType().Name}_{n.NodeName}",
             n => n
@@ -258,16 +285,40 @@ public class GraphSaveLoadSystem : MonoBehaviour
         {
             if (databaseNodes.TryGetValue(nodeSaveData.databaseId, out var databaseNode))
             {
-                var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(databaseNode), nodeSaveData.position, nodeSaveData.instanceId);
+                // Spawn the node
+                var nodeLogic = NodeSpawnerService.Instance.SpawnNode(
+                    _nodesDatabase.GetClone(databaseNode),
+                    nodeSaveData.position,
+                    nodeSaveData.instanceId
+                );
+
                 if (nodeLogic != null)
                 {
-                    LoadNodeData(nodeLogic.Node, nodeSaveData);
-                    loadedNodeIds.Add(nodeSaveData.instanceId);
+                    // Parse the value to load (but don't load it yet)
+                    object valueToLoad = ParseNodeValue(nodeSaveData);
+                    loadedNodes[nodeSaveData.instanceId] = (nodeLogic, valueToLoad);
                 }
             }
         }
 
-        ConnectNodes(saveData, loadedNodeIds);
+        return loadedNodes;
+    }
+
+    private System.Collections.IEnumerator LoadPhase2(GraphSaveData saveData, Dictionary<int, (NodeLogic nodeLogic, object valueToLoad)> loadedNodes)
+    {
+        // Wait for UI to be fully initialized
+        yield return null;
+
+        // PHASE 2: Connect all nodes
+        ConnectNodes(saveData, loadedNodes.Keys.ToHashSet());
+
+        // Wait one more frame for connections to be established
+        yield return null;
+
+        // PHASE 3: Load all values (UI is now ready)
+        LoadAllValues(loadedNodes);
+
+        Debug.Log("Graph loading complete!");
     }
 
     private void ConnectNodes(GraphSaveData saveData, HashSet<int> loadedNodeIds)
@@ -307,12 +358,20 @@ public class GraphSaveLoadSystem : MonoBehaviour
         var fromNode = NodeSpawnerService.Instance.GetNodeById(fromNodeId);
         var toNode = NodeSpawnerService.Instance.GetNodeById(toNodeId);
 
-        if (fromNode == null || toNode == null) return false;
+        if (fromNode == null || toNode == null)
+        {
+            Debug.LogWarning($"Nodes not found: {fromNodeId} -> {toNodeId}");
+            return false;
+        }
 
         Connector fromConnector = FindConnectorByAttributeName(fromNode.Node.outputConnectors, fromConnectorName);
         Connector toConnector = FindConnectorByAttributeName(toNode.Node.inputConnectors, toConnectorName);
 
-        if (fromConnector == null || toConnector == null) return false;
+        if (fromConnector == null || toConnector == null)
+        {
+            Debug.LogWarning($"Connectors not found: {fromConnectorName} -> {toConnectorName}");
+            return false;
+        }
 
         return ConnectionManager.Instance.CreateConnectionWithConnectors(fromConnector, toConnector);
     }
@@ -328,6 +387,91 @@ public class GraphSaveLoadSystem : MonoBehaviour
             }
         }
         return null;
+    }
+
+    private void LoadAllValues(Dictionary<int, (NodeLogic nodeLogic, object valueToLoad)> loadedNodes)
+    {
+        foreach (var kvp in loadedNodes)
+        {
+            var nodeLogic = kvp.Value.nodeLogic;
+            var valueToLoad = kvp.Value.valueToLoad;
+
+            if (nodeLogic != null && nodeLogic.Node != null && valueToLoad != null)
+            {
+                if (nodeLogic.Node is VariableNode variableNode)
+                {
+                    variableNode.SetValue(valueToLoad);
+                    variableNode.SyncUIWithCachedValue();
+                }
+            }
+        }
+    }
+
+    private object ParseNodeValue(NodeInstanceData nodeSaveData)
+    {
+        if (string.IsNullOrEmpty(nodeSaveData.fieldValuesJson))
+            return null;
+
+        try
+        {
+            var fieldValuesList = JsonUtility.FromJson<FieldValueDataList>(nodeSaveData.fieldValuesJson);
+            var variableValueData = fieldValuesList?.values?.FirstOrDefault(v => v.attributeName == "variableValue");
+
+            if (variableValueData != null && !string.IsNullOrEmpty(variableValueData.value))
+            {
+                // Find appropriate persister based on variableType
+                var persister = _valuePersisters.FirstOrDefault(p => p.CanPersist(nodeSaveData.variableType));
+
+                if (persister != null)
+                {
+                    return persister.RestoreValue(variableValueData.value, nodeSaveData.variableType);
+                }
+                else
+                {
+                    // Fallback to default deserialization
+                    return DeserializeVariableValue(nodeSaveData.variableType, variableValueData.value);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to parse node value: {e.Message}");
+        }
+
+        return null;
+    }
+
+    private object DeserializeVariableValue(VariableType type, string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return GetDefaultValueForType(type);
+
+        try
+        {
+            switch (type)
+            {
+                case VariableType.Bool:
+                    return bool.Parse(value);
+                case VariableType.Int:
+                    return int.Parse(value);
+                case VariableType.Single:
+                    // Use invariant culture for floats
+                    return float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+                case VariableType.String:
+                    return value;
+                case VariableType.Vector3:
+                    return JsonUtility.FromJson<Vector3>(value);
+                case VariableType.Type:
+                    return TypeSerializer.DeserializeType(value);
+                default:
+                    return GetDefaultValueForType(type);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"Failed to deserialize {type} value '{value}': {e.Message}");
+            return GetDefaultValueForType(type);
+        }
     }
 
     private void ClearCurrentGraph()
@@ -388,46 +532,65 @@ public class GraphSaveLoadSystem : MonoBehaviour
 
         if (node is VariableNode variableNode)
         {
-            if (variableNode.UIElement != null)
+            // Find appropriate persister
+            var persister = _valuePersisters.FirstOrDefault(p => p.CanPersist(variableNode.VariableType));
+
+            string serializedValue;
+            if (persister != null)
             {
-                fieldValues.Add(new FieldValueData
-                {
-                    attributeName = "variableValue",
-                    value = variableNode.UIElement.GetValue()?.ToString()
-                });
+                serializedValue = persister.PersistValue(variableNode.GetValue());
             }
+            else
+            {
+                // Fallback to default serialization
+                serializedValue = SerializeVariableValue(variableNode);
+            }
+
+            fieldValues.Add(new FieldValueData
+            {
+                attributeName = "variableValue",
+                value = serializedValue
+            });
         }
 
         nodeSaveData.fieldValuesJson = JsonUtility.ToJson(new FieldValueDataList { values = fieldValues });
     }
 
-    private void LoadNodeData(NodeBase node, NodeInstanceData nodeSaveData)
+    private string SerializeVariableValue(VariableNode node)
     {
-        if (!string.IsNullOrEmpty(nodeSaveData.fieldValuesJson))
+        object val = node.GetValue();
+        if (val == null) return string.Empty;
+
+        switch (node.VariableType)
         {
-            try
-            {
-                var fieldValuesList = JsonUtility.FromJson<FieldValueDataList>(nodeSaveData.fieldValuesJson);
-                if (fieldValuesList?.values != null)
-                {
-                    if (node is VariableNode variableNode)
-                    {
-                        var variableValueData = fieldValuesList.values.FirstOrDefault();
-                        if (variableValueData != null && variableNode.UIElement != null)
-                        {
-                            if (variableNode.UIElement is InputFieldVariableUI inputField)
-                            {
-                                inputField.UpdateValue(variableValueData.value);
-                            }
-                            variableNode.UpdateOutputValue();
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Node data load failed: {e.Message}");
-            }
+            case VariableType.Bool:
+            case VariableType.Int:
+            case VariableType.String:
+                return val.ToString();
+            case VariableType.Single:
+                // Use invariant culture for floats
+                return ((float)val).ToString(System.Globalization.CultureInfo.InvariantCulture);
+            case VariableType.Vector3:
+                return JsonUtility.ToJson((Vector3)val);
+            case VariableType.Type:
+                var typeValue = val as Type;
+                return TypeSerializer.SerializeType(typeValue);
+            default:
+                return val.ToString();
+        }
+    }
+
+    private object GetDefaultValueForType(VariableType type)
+    {
+        switch (type)
+        {
+            case VariableType.Bool: return false;
+            case VariableType.Int: return 0;
+            case VariableType.Single: return 0f;
+            case VariableType.String: return "";
+            case VariableType.Vector3: return Vector3.zero;
+            case VariableType.Type: return typeof(object);
+            default: return null;
         }
     }
 

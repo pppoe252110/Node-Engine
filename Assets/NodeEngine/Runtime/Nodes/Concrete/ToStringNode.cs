@@ -6,8 +6,8 @@ public class ToStringNode : ExecutableNodeBase
 {
     private ConnectorValueObject _input;
     private ConnectorValueString _output;
-    private NodeField<ConnectorValueObject> _inputField;
-    private NodeField<ConnectorValueString> _outputField;
+    private NodeFieldTyped<ConnectorValueObject> _inputField;
+    private NodeFieldTyped<ConnectorValueString> _outputField;
 
     [NodeValue("InputValue", typeof(object))]
     public void Input(ConnectorValueObject input)
@@ -49,16 +49,16 @@ public class ToStringNode : ExecutableNodeBase
 
     public override void Setup()
     {
+        base.Setup();
+
         // Initialize with default values
         _input = new ConnectorValueObject(null);
         _output = new ConnectorValueString("");
 
         // Create fields
-        _inputField = new NodeField<ConnectorValueObject>().SetHandler(Input).SetDefaultValue(_input);
-        _outputField = new NodeField<ConnectorValueString>().SetHandler(Output).SetDefaultValue(_output);
+        _inputField = new NodeFieldTyped<ConnectorValueObject>().SetHandler(Input).SetDefaultValue(_input);
+        _outputField = new NodeFieldTyped<ConnectorValueString>().SetHandler(Output).SetDefaultValue(_output);
 
-        base.Setup();
-        
         inputFields.Add(_inputField);
         outputFields.Add(_outputField);
     }

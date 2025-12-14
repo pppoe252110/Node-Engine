@@ -1,7 +1,8 @@
 [NodePath("Math/Divide")]
-public class DivideNode : NodeBase
+public class DivideNode : ExecutableNodeBase
 {
     private ConnectorValueFloat _a, _b, _result;
+    private NodeFieldTyped<ConnectorValueFloat> _aField, _bField, _resultField;
 
     [NodeValue("A", typeof(float))]
     public void A(ConnectorValueFloat a) => _a = a;
@@ -13,28 +14,40 @@ public class DivideNode : NodeBase
     public void Result(ConnectorValueFloat result)
     {
         _result = result;
-        float denominator = _b.GetInnerValue();
+    }
 
-        if (denominator == 0)
+    public override void Execute()
+    {
+        // Process input values
+        _aField?.ProceedValue();
+        _bField?.ProceedValue();
+
+        // Calculate result
+        if (_a != null && _b != null && _result != null)
         {
-            _result.SetInnerValue(0);
-        }
-        else
-        {
-            _result.SetInnerValue(_a.GetInnerValue() / denominator);
+            float denominator = _b.GetInnerValue();
+            float resultValue = denominator == 0 ? 0 : _a.GetInnerValue() / denominator;
+            _result.SetInnerValue(resultValue);
+
+            // Trigger output field
+            _resultField?.ProceedValue();
         }
     }
 
     public override void Setup()
     {
-        inputFields = new()
-        {
-            new NodeField<ConnectorValueFloat>().SetHandler(A).SetDefaultValue(new ConnectorValueFloat(0)),
-            new NodeField<ConnectorValueFloat>().SetHandler(B).SetDefaultValue(new ConnectorValueFloat(1))
-        };
-        outputFields = new()
-        {
-            new NodeField<ConnectorValueFloat>().SetHandler(Result).SetDefaultValue(new ConnectorValueFloat(0))
-        };
+        base.Setup();
+
+        _a = new ConnectorValueFloat(0);
+        _b = new ConnectorValueFloat(1); // Default to 1 to avoid division by zero
+        _result = new ConnectorValueFloat(0);
+
+        _aField = new NodeFieldTyped<ConnectorValueFloat>().SetHandler(A).SetDefaultValue(_a);
+        _bField = new NodeFieldTyped<ConnectorValueFloat>().SetHandler(B).SetDefaultValue(_b);
+        _resultField = new NodeFieldTyped<ConnectorValueFloat>().SetHandler(Result).SetDefaultValue(_result);
+
+        inputFields.Add(_aField);
+        inputFields.Add(_bField);
+        outputFields.Add(_resultField);
     }
 }
