@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class LineRenderersController : MonoBehaviour
 {
-    public static LineRenderersController Instance => _instance ??= FindFirstObjectByType<LineRenderersController>();
+    public static LineRenderersController Instance => _instance ??= FindAnyObjectByType<LineRenderersController>();
     private static LineRenderersController _instance;
 
     public UILineRenderer LineRendererPrefab => _lineRendererPrefab;

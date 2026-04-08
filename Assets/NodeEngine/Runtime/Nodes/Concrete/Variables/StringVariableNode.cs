@@ -1,5 +1,3 @@
-using Unity.Plastic.Newtonsoft.Json;
-
 [NodePath("Variables/String")]
 public class StringVariableNode : VariableNode
 {

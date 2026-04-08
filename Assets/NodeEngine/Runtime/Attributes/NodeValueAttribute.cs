@@ -3,12 +3,11 @@ using System;
 [AttributeUsage(AttributeTargets.Method)]
 public class NodeValueAttribute : Attribute
 {
-    public string attributeName;
-    public Type type;
-
-    public NodeValueAttribute(string attributeName, Type type)
+    public string Name { get; }
+    public Type type { get; }
+    public NodeValueAttribute(string name, Type type)
     {
-        this.attributeName = attributeName;
+        Name = name;
         this.type = type;
     }
 }

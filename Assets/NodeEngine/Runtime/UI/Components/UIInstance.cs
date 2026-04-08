@@ -39,7 +39,7 @@ public class UIInstance : MonoBehaviour
         get
         {
             if (_instance == null)
-                _instance = FindFirstObjectByType<UIInstance>();
+                _instance = FindAnyObjectByType<UIInstance>();
             return _instance;
         }
     }

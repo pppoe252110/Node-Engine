@@ -14,7 +14,6 @@ public class NodesList : MonoBehaviour
     [SerializeField] private NodesListItem _nodesListItem;
     [SerializeField] private NodesListGroup _nodesListGroupPrefab;
     [SerializeField] private NodesDatabase _nodesDatabase;
-    [SerializeField] private VariableDatabase _variablesDatabase;
 
     [Header("Search")]
     [SerializeField] private TMP_InputField _searchInputField;
@@ -93,7 +92,7 @@ public class NodesList : MonoBehaviour
         ApplySearchFilter();
     }
 
-    private (string groupName, string itemName) GetNodeGroupAndName(NodeBase node)
+    private (string groupName, string itemName) GetNodeGroupAndName(BaseNode node)
     {
         var nodeType = node.GetType();
         var pathAttribute = nodeType.GetCustomAttributes(typeof(NodePathAttribute), false)
@@ -216,7 +215,7 @@ public class NodesList : MonoBehaviour
         if (originalIndex >= 0 && originalIndex < nodes.Length)
         {
             var targetNode = nodes[originalIndex];
-            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(targetNode), _nodesListView.position, -1, true);
+            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(targetNode), _nodesListView.position);
         }
 
         _nodesListView.gameObject.SetActive(false);

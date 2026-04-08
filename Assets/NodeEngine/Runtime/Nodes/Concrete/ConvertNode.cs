@@ -1,157 +1,56 @@
 using System;
-using UnityEngine;
 
 [NodePath("Conversion/Convert")]
-public class ConvertNode : ExecutableNodeBase, IConnectionListener
+public class ConvertNode : BaseNode, IConnectionListener
 {
-    private ConnectorValueObject _inputValue;
-    private ConnectorValueType _targetType;
-    private ConnectorValueObject _outputValue;
-    private NodeFieldTyped<ConnectorValueObject> _inputValueField;
-    private NodeFieldTyped<ConnectorValueType> _targetTypeField;
-    private NodeFieldTyped<ConnectorValueObject> _outputValueField;
+    [NodePort("Input", true)] public object input;
+    [NodePort("TargetType", true)] public Type targetType;
+    [NodePort("Result", false)] public object result;
 
-    private Type _currentOutputType = typeof(object);
-
-    [NodeValue("InputValue", typeof(object))]
-    public void InputValue(ConnectorValueObject value) => _inputValue = value;
-
-    [NodeValue("TargetType", typeof(Type))]
-    public void TargetType(ConnectorValueType type)
-    {
-        _targetType = type;
-
-        if (!NodeEngine.IsExecuting)
-            UpdateOutputType();
-    }
-
-    [NodeValue("OutputValue", typeof(object))]
-    public void Output(ConnectorValueObject output)
-    {
-        _outputValue = output;
-    }
-
-    public override void Setup()
-    {
-        _inputValue = new ConnectorValueObject(null);
-        _targetType = new ConnectorValueType(typeof(object));
-        _outputValue = new ConnectorValueObject(null);
-
-        _inputValueField = new NodeFieldTyped<ConnectorValueObject>().SetHandler(InputValue).SetDefaultValue(_inputValue);
-        _targetTypeField = new NodeFieldTyped<ConnectorValueType>().SetHandler(TargetType).SetDefaultValue(_targetType);
-        _outputValueField = new NodeFieldTyped<ConnectorValueObject>().SetHandler(Output).SetDefaultValue(_outputValue);
-
-        inputFields = new()
-        {
-            _inputValueField,
-            _targetTypeField
-        };
-
-        base.Setup();
-
-        outputFields.Add(_outputValueField);
-    }
-
-    private void UpdateOutputType()
-    {
-        if (_targetType == null || _outputValueField == null)
-            return;
-
-        Type newType = _targetType.GetInnerValue();
-        if (newType == null)
-            return;
-
-        // Skip if type hasn't changed
-        if (newType == _currentOutputType)
-            return;
-
-        // Use the centralized TypeChangeService (value update now happens here)
-        bool success = _outputValueField.TryUpdateOutputType(newType);
-
-        if (success)
-        {
-            _currentOutputType = newType;
-        }
-        else
-        {
-            Debug.LogWarning($"ConvertNode: Failed to update output type to {newType.Name}");
-        }
-    }
-
-    public override void Execute()
-    {
-        _targetTypeField?.ProceedValue();
-        _inputValueField?.ProceedValue();
-
-        object input = _inputValue?.GetInnerValue();
-        Type targetType = _targetType?.GetInnerValue();
-
-        if (input == null || targetType == null)
-        {
-            Debug.LogWarning("Input or target type is null");
-            _outputValue?.SetValue(null);
-        }
-        else
-        {
-            try
-            {
-                // Convert the value
-                object converted = Convert.ChangeType(input, targetType);
-                _outputValue?.SetInnerValue(converted);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"Conversion failed: {e.Message}. Input: {input} ({input.GetType()}) to {targetType}");
-                _outputValue?.SetValue(null);
-            }
-        }
-
-        if (_outputValueField != null)
-        {
-            _outputValueField.ProceedValue();
-        }
-
-        base.Execute();
-    }
-
-    // IConnectionListener implementation
     public void OnConnected(Connector myConnector, Connector otherConnector)
     {
-        // When target type field is connected, update the output type
-        if (myConnector?.Field == _targetTypeField)
-        {
-            UpdateOutputType();
-        }
+        if (myConnector.PortName == "TargetType" && otherConnector.Node is TypeVariableNode typeNode)
+            UpdateOutputType(typeNode.SelectedType);
     }
 
     public void OnDisconnected(Connector myConnector, Connector otherConnector)
     {
-        // Handle disconnection if needed
-        if (myConnector?.Field == _targetTypeField)
+        if (myConnector.PortName == "TargetType")
+            UpdateOutputType(typeof(object));
+    }
+
+    public void UpdateOutputType(Type newType)
+    {
+        Type resolvedType = newType ?? typeof(object);
+        var resultConnector = LogicView?.OutputConnectors.Find(c => c.PortName == "Result");
+        if (resultConnector != null)
+            TypeChangeService.TryChangeConnectorType(resultConnector, resolvedType);
+        else
         {
-            // Reset to default type when disconnected
-            _targetType?.SetInnerValue(typeof(object));
-            UpdateOutputType();
+            var portInfo = Ports.Find(p => p.Name == "Result");
+            if (portInfo != null) portInfo.ValueType = resolvedType;
         }
     }
 
-    protected override void Initialized()
+    public override Func<GraphContext, int> Compile()
     {
-        base.Initialized();
+        int inId = GetInputId("Input");
+        int typeId = GetInputId("TargetType");
+        int outId = GetOutputId("Result");
 
-        // Register this node as a connection listener for its connectors
-        if (_nodeLogic != null)
+        return (ctx) =>
         {
-            foreach (var connector in inputConnectors)
-            {
-                connector?.AddConnectionListener(this);
-            }
+            object val = ctx.Memory[inId];
+            Type t = ctx.Memory[typeId] as Type;
 
-            // Also listen to output connectors to detect when they're connected
-            foreach (var connector in outputConnectors)
+            if (val != null && t != null)
             {
-                connector?.AddConnectionListener(this);
+                try { ctx.Memory[outId] = Convert.ChangeType(val, t); }
+                catch { ctx.Memory[outId] = null; }
             }
-        }
+            else ctx.Memory[outId] = null;
+
+            return -1;
+        };
     }
 }

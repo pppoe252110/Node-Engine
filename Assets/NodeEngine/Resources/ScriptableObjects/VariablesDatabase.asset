@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: VariablesDatabase
   m_EditorClassIdentifier: Assembly-CSharp::VariableData
   _entries:
-  - Type: 0
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - Type: 1
     Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - Type: 2
@@ -22,5 +20,11 @@ MonoBehaviour:
   - Type: 3
     Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - Type: 4
+    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
+  - Type: 5
+    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
+  - Type: 6
+    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
+  - Type: 6
     Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   _converterUIPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}

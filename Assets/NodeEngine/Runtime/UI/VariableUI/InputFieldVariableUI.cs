@@ -110,8 +110,6 @@ public class InputFieldVariableUI : VariableUIElement
             
             FormatCurrentValue();
         }
-
-        _node?.UpdateOutputValue();
     }
 
     private void ParseVector3Value(string value)
@@ -224,36 +222,37 @@ public class InputFieldVariableUI : VariableUIElement
     public override void SetValue(object value)
     {
         if (_inputField == null) return;
-
         if (value == null)
         {
-            _inputField.text = "";
+            _inputField.SetTextWithoutNotify("");
             return;
         }
 
-        // Format based on type
+        _value = value;
+
         switch (_type)
         {
             case VariableType.Single:
-                // For floats, use invariant culture to avoid comma issues
                 if (value is float floatValue)
-                {
-                    _inputField.text = floatValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                }
+                    _inputField.SetTextWithoutNotify(floatValue.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 else
-                {
-                    _inputField.text = value.ToString();
-                }
+                    _inputField.SetTextWithoutNotify(value.ToString());
                 break;
+
+            case VariableType.Vector3:
+                if (value is Vector3 vec)
+                    _inputField.SetTextWithoutNotify($"{vec.x.ToString(System.Globalization.CultureInfo.InvariantCulture)}; {vec.y.ToString(System.Globalization.CultureInfo.InvariantCulture)}; {vec.z.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+                else
+                    _inputField.SetTextWithoutNotify(value.ToString());
+                break;
+
             case VariableType.Int:
             case VariableType.Bool:
             case VariableType.String:
             default:
-                _inputField.text = value.ToString();
+                _inputField.SetTextWithoutNotify(value.ToString());
                 break;
         }
-
-        _value = value;
     }
 
     public override object GetValue() => _value;
@@ -266,6 +265,8 @@ public class InputFieldVariableUI : VariableUIElement
     private void OnEndEdit(string value)
     {
         FormatCurrentValue();
+
+        _node.SyncCachedValueWithUI();
     }
 
     private void OnDestroy()

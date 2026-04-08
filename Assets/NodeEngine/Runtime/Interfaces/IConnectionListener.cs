@@ -1,4 +1,3 @@
-// Add to your existing Interfaces folder
 public interface IConnectionListener
 {
     void OnConnected(Connector myConnector, Connector otherConnector);

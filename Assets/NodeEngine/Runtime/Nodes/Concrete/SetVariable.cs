@@ -1,35 +1,43 @@
+using System;
 using System.Collections.Generic;
 
-[NodePath("Variables/Set")]
-public class SetVariableNode : ExecutableNodeBase
+[NodePath("Variables/Set Global")]
+public class SetGlobalNode : BaseNode
 {
-    private static Dictionary<string, object> _variables = new();  
+    private static Dictionary<string, object> _globalVariables = new();
 
-    private ConnectorValueObject _value;
-    private ConnectorValueString _name;
+    [NodePort("Enter", true, true)] public void Enter() { }
+    [NodePort("Name", true)] public string variableName;
+    [NodePort("Value", true)] public object value;
+    [NodePort("Exit", false, true)] public void Exit() { }
 
-    [NodeValue("Value", typeof(object))]
-    public void Value(ConnectorValueObject value) => _value = value;
-
-    [NodeValue("Name", typeof(string))]
-    public void Name(ConnectorValueString name) => _name = name;
-
-    public override void Execute()
+    public SetGlobalNode() : base()
     {
-        if (!string.IsNullOrEmpty(_name.GetInnerValue()))
-            _variables[_name.GetInnerValue()] = _value.GetValue();
-
-        base.Execute();
+        BindDynamicType("Value", "Value");
     }
 
-    public override void Setup()
+    public override Func<GraphContext, int> Compile()
     {
-        inputFields = new()
+        // 1. COMPILATION: Resolve indices ONCE. Zero cost at runtime.
+        int nameId = GetInputId("Name");
+        int valId = GetInputId("Value");
+        int exitFlow = GetFlowId("Exit");
+
+        // 2. EXECUTION: Pure integer array access.
+        return (ctx) =>
         {
-            new NodeFieldTyped<ConnectorValueObject>().SetHandler(Value).SetDefaultValue(new ConnectorValueObject(null)),
-            new NodeFieldTyped<ConnectorValueString>().SetHandler(Name).SetDefaultValue(new ConnectorValueString(""))
-        };
+            string name = Read<string>(ctx, nameId);
+            object val = ctx.Memory[valId]; // Direct array access
 
-        base.Setup();
+            if (!string.IsNullOrEmpty(name))
+            {
+                _globalVariables[name] = val;
+            }
+
+            return exitFlow; // Returning a captured int!
+        };
     }
+
+    public static object GetGlobalValue(string name) =>
+        _globalVariables.TryGetValue(name, out var val) ? val : null;
 }

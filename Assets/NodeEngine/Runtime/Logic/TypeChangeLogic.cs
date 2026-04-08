@@ -5,67 +5,66 @@ using UnityEngine;
 
 public static class TypeChangeLogic
 {
-    // In TypeChangeLogic.cs, update CheckAndDisconnectIncompatible:
     public static void CheckAndDisconnectIncompatible(Connector connector, Type newType)
     {
         if (connector == null) return;
 
-        // Create a copy of the connections list to avoid modification during iteration
         var connectionsToCheck = connector.Connections.ToList();
 
         foreach (var connectedConnector in connectionsToCheck)
         {
             if (connectedConnector == null) continue;
 
-            // Check if types are compatible
             bool isCompatible = IsCompatibleType(newType, connectedConnector.ValueType);
 
             if (!isCompatible)
             {
                 Debug.LogWarning($"Disconnecting incompatible connection: {newType.Name} -> {connectedConnector.ValueType.Name}");
 
-                // Remove connection from both connectors
-                connector.RemoveConnection(connectedConnector);
-                connectedConnector.RemoveConnection(connector);
-
-                // Remove visual line
-                if (LineRenderersController.Instance != null)
+                if (ConnectionManager.Instance != null)
                 {
-                    LineRenderersController.Remove(connector, connectedConnector);
+                    // REFACTORED: This single call now handles Logic, Visuals, and the OnDisconnected event
+                    ConnectionManager.Instance.Disconnect(connector, connectedConnector);
                 }
-
-                // Notify the nodes about the disconnection
-                NotifyDisconnection(connector, connectedConnector);
             }
         }
     }
 
-    private static void NotifyDisconnection(Connector fromConnector, Connector toConnector)
+    public static bool IsCompatibleType(Type source, Type target)
     {
-        // Notify connection listeners
-        if (fromConnector.Node is IConnectionListener fromListener)
+        if (source == null || target == null) return false;
+
+        if (target.IsAssignableFrom(source)) return true;
+
+        if (IsNumericType(source) && IsNumericType(target))
         {
-            fromListener.OnDisconnected(fromConnector, toConnector);
+            return GetNumericPrecedence(source) <= GetNumericPrecedence(target);
         }
 
-        if (toConnector.Node is IConnectionListener toListener)
-        {
-            toListener.OnDisconnected(toConnector, fromConnector);
-        }
-    }
-
-    public static bool IsCompatibleType(Type sourceType, Type targetType)
-    {
-        if (sourceType == targetType) return true;
-        if (targetType == typeof(object)) return true;  // Object accepts any type
-
-        // Add type compatibility rules
-        if (sourceType == typeof(int) && targetType == typeof(float)) return true;
-        if (sourceType == typeof(float) && targetType == typeof(int)) return true;
-
-        // Allow numeric to object conversions
-        if ((sourceType == typeof(int) || sourceType == typeof(float)) && targetType == typeof(object)) return true;
+        // Custom converter exists? (You can extend this)
+        // if (TypeConverterRegistry.CanConvert(source, target)) return true;
 
         return false;
+    }
+
+    private static bool IsNumericType(Type type)
+    {
+        return type == typeof(byte) || type == typeof(sbyte) ||
+               type == typeof(short) || type == typeof(ushort) ||
+               type == typeof(int) || type == typeof(uint) ||
+               type == typeof(long) || type == typeof(ulong) ||
+               type == typeof(float) || type == typeof(double) || type == typeof(decimal);
+    }
+
+    private static int GetNumericPrecedence(Type type)
+    {
+        if (type == typeof(byte) || type == typeof(sbyte)) return 1;
+        if (type == typeof(short) || type == typeof(ushort)) return 2;
+        if (type == typeof(int) || type == typeof(uint)) return 3;
+        if (type == typeof(long) || type == typeof(ulong)) return 4;
+        if (type == typeof(float)) return 5;
+        if (type == typeof(double)) return 6;
+        if (type == typeof(decimal)) return 7;
+        return 0;
     }
 }

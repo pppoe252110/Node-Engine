@@ -4,58 +4,28 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-[Serializable]
-public class GraphSaveData
-{
-    public List<NodeInstanceData> nodes = new List<NodeInstanceData>();
-    public List<ConnectionSaveData> connections = new List<ConnectionSaveData>();
-    public string saveTime;
-    public int version = 2;
-}
-
-[Serializable]
-public class NodeInstanceData
-{
-    public int instanceId;
-    public string databaseId;
-    public Vector2 position;
-    public string fieldValuesJson;
-    public string nodeType;
-    public VariableType variableType;
-}
-
-[Serializable]
-public class ConnectionSaveData
-{
-    public int fromNodeId;
-    public int toNodeId;
-    public string fromConnectorName;
-    public string toConnectorName;
-}
-
-[Serializable]
-public class FieldValueData
-{
-    public string attributeName;
-    public string value;
-}
-
-[Serializable]
-public class FieldValueDataList
-{
-    public List<FieldValueData> values;
-}
-
+/// <summary>
+/// Handles saving and loading of node graphs to/from persistent storage.
+/// Works with the existing NodeSpawnerService, ConnectionManager, and LineRenderersController.
+/// </summary>
 public class GraphSaveLoadSystem : MonoBehaviour
 {
     public static GraphSaveLoadSystem Instance { get; private set; }
 
-    [SerializeField] private NodesDatabase _nodesDatabase;
+    [Header("Settings")]
+    [SerializeField] private string _saveFileExtension = ".json";
+    [SerializeField] private string _quickSaveSlotName = "QuickSave";
+    [SerializeField] private bool _prettyPrint = true;
 
+    [Header("Dependencies")]
+    [SerializeField] private NodesDatabase _nodesDatabase; // Assign in Inspector to restore node icons
+
+    // Events for UI feedback
     public event Action<string> OnGraphSaved;
     public event Action<string> OnGraphLoaded;
+    public event Action<string> OnSaveDeleted;
 
-    private List<IValuePersister> _valuePersisters = new List<IValuePersister>();
+    private string SaveDirectory => Application.persistentDataPath + "/NodeGraphs/";
 
     private void Awake()
     {
@@ -65,537 +35,461 @@ public class GraphSaveLoadSystem : MonoBehaviour
             return;
         }
         Instance = this;
-        transform.SetParent(null);
         DontDestroyOnLoad(gameObject);
 
-        InitializeValuePersisters();
+        // Ensure save directory exists
+        if (!Directory.Exists(SaveDirectory))
+            Directory.CreateDirectory(SaveDirectory);
     }
 
-    private void InitializeValuePersisters()
-    {
-        _valuePersisters = new List<IValuePersister>
-        {
-            new TypeValuePersister(),
-            new BasicValuePersister(),
-            new Vector3ValuePersister()
-        };
-    }
+    #region Public API
 
+    /// <summary>
+    /// Save the current graph with a custom name.
+    /// </summary>
     public void SaveGraph(string saveName)
     {
-        if (string.IsNullOrEmpty(saveName)) return;
+        if (string.IsNullOrEmpty(saveName))
+        {
+            Debug.LogWarning("[GraphSaveLoadSystem] Cannot save with empty name.");
+            return;
+        }
 
         try
         {
-            var saveData = CreateSaveData();
-            string json = JsonUtility.ToJson(saveData, true);
-            string filePath = GetSavePath(saveName);
+            var graphData = CaptureCurrentGraph();
+            string json = JsonUtility.ToJson(graphData, _prettyPrint);
+            string filePath = GetFilePath(saveName);
+
             File.WriteAllText(filePath, json);
-            Debug.Log($"SAVED: {saveData.nodes.Count} nodes, {saveData.connections.Count} connections");
+            Debug.Log($"[GraphSaveLoadSystem] Graph saved to: {filePath}");
+
             OnGraphSaved?.Invoke(saveName);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Debug.LogError($"Save failed: {e.Message}");
+            Debug.LogError($"[GraphSaveLoadSystem] Failed to save graph '{saveName}': {ex.Message}");
         }
     }
 
+    /// <summary>
+    /// Load a graph by name, replacing the current graph.
+    /// </summary>
     public void LoadGraph(string saveName)
     {
-        if (string.IsNullOrEmpty(saveName)) return;
+        string filePath = GetFilePath(saveName);
+        if (!File.Exists(filePath))
+        {
+            Debug.LogWarning($"[GraphSaveLoadSystem] Save file not found: {saveName}");
+            return;
+        }
 
         try
         {
-            string filePath = GetSavePath(saveName);
-            if (!File.Exists(filePath))
-            {
-                Debug.LogError($"File not found: {filePath}");
-                return;
-            }
-
             string json = File.ReadAllText(filePath);
-            var saveData = JsonUtility.FromJson<GraphSaveData>(json);
-            Debug.Log($"LOADING: {saveData.nodes.Count} nodes, {saveData.connections.Count} connections");
-            LoadFromSaveData(saveData);
+            var graphData = JsonUtility.FromJson<SerializableGraph>(json);
+
+            ClearCurrentGraph();
+            RestoreGraph(graphData);
+
+            Debug.Log($"[GraphSaveLoadSystem] Graph loaded from: {saveName}");
             OnGraphLoaded?.Invoke(saveName);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Debug.LogError($"Load failed: {e.Message}");
+            Debug.LogError($"[GraphSaveLoadSystem] Failed to load graph '{saveName}': {ex.Message}");
         }
     }
 
-    private GraphSaveData CreateSaveData()
+    /// <summary>
+    /// Quick save to a predefined slot.
+    /// </summary>
+    public void QuickSave()
     {
-        var saveData = new GraphSaveData
-        {
-            saveTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
-            version = 2
-        };
+        SaveGraph(_quickSaveSlotName);
+    }
 
-        foreach (var (nodeId, nodeLogic) in NodeSpawnerService.Instance.GetAllNodes())
-        {
-            if (nodeLogic == null || nodeLogic.Node == null) continue;
+    /// <summary>
+    /// Quick load from the predefined slot.
+    /// </summary>
+    public void QuickLoad()
+    {
+        LoadGraph(_quickSaveSlotName);
+    }
 
-            var databaseId = FindDatabaseIdForNode(nodeLogic.Node);
-            var nodeSaveData = new NodeInstanceData
+    /// <summary>
+    /// Get a list of all available save file names (without extension).
+    /// </summary>
+    public List<string> GetSaveFiles()
+    {
+        var files = new List<string>();
+        if (!Directory.Exists(SaveDirectory))
+            return files;
+
+        foreach (string file in Directory.GetFiles(SaveDirectory, "*" + _saveFileExtension))
+        {
+            string fileName = Path.GetFileNameWithoutExtension(file);
+            files.Add(fileName);
+        }
+        return files.OrderBy(f => f).ToList();
+    }
+
+    /// <summary>
+    /// Delete a specific save file.
+    /// </summary>
+    public void DeleteSaveFile(string saveName)
+    {
+        string filePath = GetFilePath(saveName);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+            Debug.Log($"[GraphSaveLoadSystem] Deleted save: {saveName}");
+            OnSaveDeleted?.Invoke(saveName);
+        }
+    }
+
+    /// <summary>
+    /// Delete all save files.
+    /// </summary>
+    public void DeleteAllSaves()
+    {
+        foreach (string file in Directory.GetFiles(SaveDirectory, "*" + _saveFileExtension))
+        {
+            File.Delete(file);
+        }
+        Debug.Log("[GraphSaveLoadSystem] Deleted all saves.");
+        OnSaveDeleted?.Invoke(null);
+    }
+
+    #endregion
+
+    #region Graph Capture & Restoration
+
+    private SerializableGraph CaptureCurrentGraph()
+    {
+        var graph = new SerializableGraph();
+        graph.version = "1.0";
+
+        // Capture nodes
+        foreach (var nodeLogic in NodeSpawnerService.Instance.GetAllNodes())
+        {
+            var node = nodeLogic.Node;
+            var nodeData = new SerializableGraph.NodeData
             {
-                instanceId = nodeLogic.Node.Guid,
-                databaseId = databaseId,
-                position = nodeLogic.transform.localPosition,
-                variableType = nodeLogic.Node is VariableNode varNode ? varNode.VariableType : VariableType.Object
+                nodeId = node.NodeId,
+                nodeType = node.GetType().AssemblyQualifiedName,
+                position = new SerializableVector2(nodeLogic.transform.localPosition),
+                nodeName = node.NodeName
             };
-            SaveNodeData(nodeLogic.Node, nodeSaveData);
-            saveData.nodes.Add(nodeSaveData);
-        }
 
-        SaveAllConnections(saveData);
-        return saveData;
-    }
-
-    private void SaveAllConnections(GraphSaveData saveData)
-    {
-        var savedConnections = new HashSet<string>();
-
-        SaveConnectorConnections(saveData, savedConnections);
-        SaveVisualConnections(saveData, savedConnections);
-
-        Debug.Log($"CONNECTIONS SAVED: {saveData.connections.Count}");
-    }
-
-    private void SaveConnectorConnections(GraphSaveData saveData, HashSet<string> savedConnections)
-    {
-        foreach (var (nodeId, nodeLogic) in NodeSpawnerService.Instance.GetAllNodes())
-        {
-            if (nodeLogic?.Node == null) continue;
-
-            foreach (var outputConnector in nodeLogic.Node.outputConnectors)
+            // Capture variable node values
+            if (node is VariableNode varNode)
             {
-                foreach (var connectedConnector in outputConnector.Connections)
-                {
-                    if (connectedConnector?.Node == null) continue;
-
-                    var fromAttr = outputConnector.Field?.GetAttribute();
-                    var toAttr = connectedConnector.Field?.GetAttribute();
-
-                    if (fromAttr != null && toAttr != null)
-                    {
-                        SaveConnection(saveData, savedConnections,
-                            nodeLogic.Node.Guid, connectedConnector.Node.Guid,
-                            fromAttr.attributeName, toAttr.attributeName);
-                    }
-                }
+                nodeData.variableType = (int)varNode.VariableType;
+                nodeData.serializedValue = SerializeVariableValue(varNode);
             }
+
+            graph.nodes.Add(nodeData);
         }
-    }
 
-    private void SaveVisualConnections(GraphSaveData saveData, HashSet<string> savedConnections)
-    {
-        if (LineRenderersController.Instance == null) return;
-
-        try
+        // Capture data connections
+        foreach (var conn in ConnectionManager.Instance.ActiveDataConnections)
         {
-            var controllerType = typeof(LineRenderersController);
-            var connectionsField = controllerType.GetField("_connections",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-            if (connectionsField != null)
+            graph.connections.Add(new SerializableGraph.ConnectionData
             {
-                var connections = connectionsField.GetValue(LineRenderersController.Instance) as List<LineRenderersController.ConnectionData>;
-                if (connections != null)
-                {
-                    foreach (var connection in connections)
-                    {
-                        if (connection.IsValid && connection.ConnectorA != null && connection.ConnectorB != null)
-                        {
-                            var fromAttr = connection.ConnectorA.Field?.GetAttribute();
-                            var toAttr = connection.ConnectorB.Field?.GetAttribute();
-
-                            if (fromAttr != null && toAttr != null)
-                            {
-                                SaveConnection(saveData, savedConnections,
-                                    connection.ConnectorA.Node.Guid, connection.ConnectorB.Node.Guid,
-                                    fromAttr.attributeName, toAttr.attributeName);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogWarning($"Visual connections save failed: {e.Message}");
-        }
-    }
-
-    private void SaveConnection(GraphSaveData saveData, HashSet<string> savedConnections,
-        int fromNodeId, int toNodeId, string fromConnectorName, string toConnectorName)
-    {
-        if (fromNodeId == toNodeId) return;
-        if (string.IsNullOrEmpty(fromConnectorName) || fromConnectorName == "Unknown") return;
-        if (string.IsNullOrEmpty(toConnectorName) || toConnectorName == "Unknown") return;
-
-        string key = $"{fromNodeId}_{toNodeId}_{fromConnectorName}_{toConnectorName}";
-        if (!savedConnections.Contains(key))
-        {
-            saveData.connections.Add(new ConnectionSaveData
-            {
-                fromNodeId = fromNodeId,
-                toNodeId = toNodeId,
-                fromConnectorName = fromConnectorName,
-                toConnectorName = toConnectorName
+                sourceNodeId = conn.SourceNode.NodeId,
+                sourcePortName = conn.OutputPortName,
+                targetNodeId = conn.TargetNode.NodeId,
+                targetPortName = conn.InputPortName,
+                isFlow = false
             });
-            savedConnections.Add(key);
         }
-    }
 
-    private string FindDatabaseIdForNode(NodeBase node)
-    {
-        var nodes = _nodesDatabase.GetNodes();
-        for (int i = 0; i < nodes.Length; i++)
+        // Capture flow connections
+        foreach (var conn in ConnectionManager.Instance.ActiveFlowConnections)
         {
-            if (nodes[i].GetType() == node.GetType() && nodes[i].NodeName == node.NodeName)
+            graph.connections.Add(new SerializableGraph.ConnectionData
             {
-                return $"{node.GetType().Name}_{node.NodeName}";
-            }
-        }
-        return "unknown";
-    }
-
-    private void LoadFromSaveData(GraphSaveData saveData)
-    {
-        ClearCurrentGraph();
-
-        // PHASE 1: Spawn all nodes
-        var loadedNodes = SpawnAllNodes(saveData);
-
-        // Wait one frame for UI to initialize
-        StartCoroutine(LoadPhase2(saveData, loadedNodes));
-    }
-
-    private Dictionary<int, (NodeLogic nodeLogic, object valueToLoad)> SpawnAllNodes(GraphSaveData saveData)
-    {
-        var loadedNodes = new Dictionary<int, (NodeLogic, object)>();
-        var databaseNodes = _nodesDatabase.GetNodes().ToDictionary(
-            n => $"{n.GetType().Name}_{n.NodeName}",
-            n => n
-        );
-
-        foreach (var nodeSaveData in saveData.nodes)
-        {
-            if (databaseNodes.TryGetValue(nodeSaveData.databaseId, out var databaseNode))
-            {
-                // Spawn the node
-                var nodeLogic = NodeSpawnerService.Instance.SpawnNode(
-                    _nodesDatabase.GetClone(databaseNode),
-                    nodeSaveData.position,
-                    nodeSaveData.instanceId
-                );
-
-                if (nodeLogic != null)
-                {
-                    // Parse the value to load (but don't load it yet)
-                    object valueToLoad = ParseNodeValue(nodeSaveData);
-                    loadedNodes[nodeSaveData.instanceId] = (nodeLogic, valueToLoad);
-                }
-            }
+                sourceNodeId = conn.SourceNode.NodeId,
+                sourcePortName = conn.SourcePortName,
+                targetNodeId = conn.TargetNode.NodeId,
+                targetPortName = conn.TargetPortName,
+                isFlow = true
+            });
         }
 
-        return loadedNodes;
-    }
-
-    private System.Collections.IEnumerator LoadPhase2(GraphSaveData saveData, Dictionary<int, (NodeLogic nodeLogic, object valueToLoad)> loadedNodes)
-    {
-        // Wait for UI to be fully initialized
-        yield return null;
-
-        // PHASE 2: Connect all nodes
-        ConnectNodes(saveData, loadedNodes.Keys.ToHashSet());
-
-        // Wait one more frame for connections to be established
-        yield return null;
-
-        // PHASE 3: Load all values (UI is now ready)
-        LoadAllValues(loadedNodes);
-
-        Debug.Log("Graph loading complete!");
-    }
-
-    private void ConnectNodes(GraphSaveData saveData, HashSet<int> loadedNodeIds)
-    {
-        foreach (var connection in saveData.connections)
-        {
-            if (IsValidConnectionForLoading(connection, loadedNodeIds))
-            {
-                if (!ConnectNodesByAttributeNames(connection.fromNodeId, connection.toNodeId,
-                    connection.fromConnectorName, connection.toConnectorName))
-                {
-                    Debug.LogWarning($"Can't connect {connection.fromConnectorName} to {connection.toConnectorName}");
-                }
-            }
-        }
-    }
-
-    private bool IsValidConnectionForLoading(ConnectionSaveData connection, HashSet<int> loadedNodeIds)
-    {
-        if (string.IsNullOrEmpty(connection.fromConnectorName) || connection.fromConnectorName == "Unknown" ||
-            string.IsNullOrEmpty(connection.toConnectorName) || connection.toConnectorName == "Unknown" ||
-            connection.fromNodeId == connection.toNodeId)
-        {
-            return false;
-        }
-
-        if (!loadedNodeIds.Contains(connection.fromNodeId) || !loadedNodeIds.Contains(connection.toNodeId))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private bool ConnectNodesByAttributeNames(int fromNodeId, int toNodeId, string fromConnectorName, string toConnectorName)
-    {
-        var fromNode = NodeSpawnerService.Instance.GetNodeById(fromNodeId);
-        var toNode = NodeSpawnerService.Instance.GetNodeById(toNodeId);
-
-        if (fromNode == null || toNode == null)
-        {
-            Debug.LogWarning($"Nodes not found: {fromNodeId} -> {toNodeId}");
-            return false;
-        }
-
-        Connector fromConnector = FindConnectorByAttributeName(fromNode.Node.outputConnectors, fromConnectorName);
-        Connector toConnector = FindConnectorByAttributeName(toNode.Node.inputConnectors, toConnectorName);
-
-        if (fromConnector == null || toConnector == null)
-        {
-            Debug.LogWarning($"Connectors not found: {fromConnectorName} -> {toConnectorName}");
-            return false;
-        }
-
-        return ConnectionManager.Instance.CreateConnectionWithConnectors(fromConnector, toConnector);
-    }
-
-    private Connector FindConnectorByAttributeName(List<Connector> connectors, string attributeName)
-    {
-        foreach (var connector in connectors)
-        {
-            var attribute = connector.Field?.GetAttribute();
-            if (attribute != null && attribute.attributeName == attributeName)
-            {
-                return connector;
-            }
-        }
-        return null;
-    }
-
-    private void LoadAllValues(Dictionary<int, (NodeLogic nodeLogic, object valueToLoad)> loadedNodes)
-    {
-        foreach (var kvp in loadedNodes)
-        {
-            var nodeLogic = kvp.Value.nodeLogic;
-            var valueToLoad = kvp.Value.valueToLoad;
-
-            if (nodeLogic != null && nodeLogic.Node != null && valueToLoad != null)
-            {
-                if (nodeLogic.Node is VariableNode variableNode)
-                {
-                    variableNode.SetValue(valueToLoad);
-                    variableNode.SyncUIWithCachedValue();
-                }
-            }
-        }
-    }
-
-    private object ParseNodeValue(NodeInstanceData nodeSaveData)
-    {
-        if (string.IsNullOrEmpty(nodeSaveData.fieldValuesJson))
-            return null;
-
-        try
-        {
-            var fieldValuesList = JsonUtility.FromJson<FieldValueDataList>(nodeSaveData.fieldValuesJson);
-            var variableValueData = fieldValuesList?.values?.FirstOrDefault(v => v.attributeName == "variableValue");
-
-            if (variableValueData != null && !string.IsNullOrEmpty(variableValueData.value))
-            {
-                // Find appropriate persister based on variableType
-                var persister = _valuePersisters.FirstOrDefault(p => p.CanPersist(nodeSaveData.variableType));
-
-                if (persister != null)
-                {
-                    return persister.RestoreValue(variableValueData.value, nodeSaveData.variableType);
-                }
-                else
-                {
-                    // Fallback to default deserialization
-                    return DeserializeVariableValue(nodeSaveData.variableType, variableValueData.value);
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to parse node value: {e.Message}");
-        }
-
-        return null;
-    }
-
-    private object DeserializeVariableValue(VariableType type, string value)
-    {
-        if (string.IsNullOrEmpty(value))
-            return GetDefaultValueForType(type);
-
-        try
-        {
-            switch (type)
-            {
-                case VariableType.Bool:
-                    return bool.Parse(value);
-                case VariableType.Int:
-                    return int.Parse(value);
-                case VariableType.Single:
-                    // Use invariant culture for floats
-                    return float.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
-                case VariableType.String:
-                    return value;
-                case VariableType.Vector3:
-                    return JsonUtility.FromJson<Vector3>(value);
-                case VariableType.Type:
-                    return TypeSerializer.DeserializeType(value);
-                default:
-                    return GetDefaultValueForType(type);
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogWarning($"Failed to deserialize {type} value '{value}': {e.Message}");
-            return GetDefaultValueForType(type);
-        }
+        return graph;
     }
 
     private void ClearCurrentGraph()
     {
-        NodeSpawnerService.Instance.ClearAllNodes();
-        if (ConnectionManager.Instance != null)
+        // Delete all visual nodes (this also clears their connections)
+        var nodes = NodeSpawnerService.Instance.GetAllNodes().ToList();
+        foreach (var nodeLogic in nodes)
         {
-            ConnectionManager.Instance.ClearAllConnections();
+            NodeSpawnerService.Instance.DeleteNode(nodeLogic);
         }
+
+        // Clear any remaining logical connections
+        ConnectionManager.Instance.ActiveDataConnections.Clear();
+        ConnectionManager.Instance.ActiveFlowConnections.Clear();
+
+        // Clear all visual lines
+        LineRenderersController.ClearAllConnections();
     }
 
-    public void QuickSave() => SaveGraph("quicksave");
-    public void QuickLoad() => LoadGraph("quicksave");
-
-    public List<string> GetSaveFiles()
+    private void RestoreGraph(SerializableGraph graph)
     {
-        var saveFiles = new List<string>();
-        string saveDirectory = Application.dataPath;
-        if (!Directory.Exists(saveDirectory)) return saveFiles;
+        var nodeLookup = new Dictionary<string, BaseNode>();
 
-        var files = Directory.GetFiles(saveDirectory, "*.json");
-        foreach (var file in files)
+        // First pass: instantiate all nodes
+        foreach (var nodeData in graph.nodes)
         {
-            saveFiles.Add(Path.GetFileNameWithoutExtension(file));
-        }
-        return saveFiles;
-    }
-
-    public void DeleteSaveFile(string saveName)
-    {
-        try
-        {
-            string filePath = GetSavePath(saveName);
-            if (File.Exists(filePath)) File.Delete(filePath);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Delete failed: {e.Message}");
-        }
-    }
-
-    public void DeleteAllSaves()
-    {
-        try
-        {
-            var saveFiles = GetSaveFiles();
-            foreach (var saveFile in saveFiles) DeleteSaveFile(saveFile);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Delete all failed: {e.Message}");
-        }
-    }
-
-    private void SaveNodeData(NodeBase node, NodeInstanceData nodeSaveData)
-    {
-        var fieldValues = new List<FieldValueData>();
-
-        if (node is VariableNode variableNode)
-        {
-            // Find appropriate persister
-            var persister = _valuePersisters.FirstOrDefault(p => p.CanPersist(variableNode.VariableType));
-
-            string serializedValue;
-            if (persister != null)
+            Type nodeType = Type.GetType(nodeData.nodeType);
+            if (nodeType == null)
             {
-                serializedValue = persister.PersistValue(variableNode.GetValue());
-            }
-            else
-            {
-                // Fallback to default serialization
-                serializedValue = SerializeVariableValue(variableNode);
+                Debug.LogError($"[GraphSaveLoadSystem] Could not resolve type: {nodeData.nodeType}");
+                continue;
             }
 
-            fieldValues.Add(new FieldValueData
+            BaseNode nodeInstance;
+            try
             {
-                attributeName = "variableValue",
-                value = serializedValue
-            });
+                nodeInstance = (BaseNode)Activator.CreateInstance(nodeType);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[GraphSaveLoadSystem] Failed to create node of type {nodeType.Name}: {ex.Message}");
+                continue;
+            }
+
+            // Apply node name and icon from database
+            ApplyNodeMetadata(nodeInstance, nodeType, nodeData.nodeName);
+
+            // Restore variable value if applicable
+            if (nodeInstance is VariableNode varNode && !string.IsNullOrEmpty(nodeData.serializedValue))
+            {
+                DeserializeVariableValue(varNode, nodeData.serializedValue);
+            }
+
+            // Spawn the visual representation
+            Vector2 pos = new Vector2(nodeData.position.x, nodeData.position.y);
+            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(nodeInstance, pos, nodeData.nodeId);
+
+            if (nodeLogic != null)
+                nodeLookup[nodeData.nodeId] = nodeInstance;
         }
 
-        nodeSaveData.fieldValuesJson = JsonUtility.ToJson(new FieldValueDataList { values = fieldValues });
-    }
-
-    private string SerializeVariableValue(VariableNode node)
-    {
-        object val = node.GetValue();
-        if (val == null) return string.Empty;
-
-        switch (node.VariableType)
+        // Second pass: restore connections and create visual lines
+        foreach (var connData in graph.connections)
         {
-            case VariableType.Bool:
-            case VariableType.Int:
-            case VariableType.String:
-                return val.ToString();
-            case VariableType.Single:
-                // Use invariant culture for floats
-                return ((float)val).ToString(System.Globalization.CultureInfo.InvariantCulture);
-            case VariableType.Vector3:
-                return JsonUtility.ToJson((Vector3)val);
-            case VariableType.Type:
-                var typeValue = val as Type;
-                return TypeSerializer.SerializeType(typeValue);
-            default:
-                return val.ToString();
+            if (!nodeLookup.TryGetValue(connData.sourceNodeId, out BaseNode sourceNode) ||
+                !nodeLookup.TryGetValue(connData.targetNodeId, out BaseNode targetNode))
+            {
+                Debug.LogWarning($"[GraphSaveLoadSystem] Skipping connection: source or target node missing.");
+                continue;
+            }
+
+            // Find the connectors
+            Connector sourceConn = FindConnector(sourceNode, connData.sourcePortName, isOutput: true);
+            Connector targetConn = FindConnector(targetNode, connData.targetPortName, isOutput: false);
+
+            if (sourceConn == null)
+            {
+                Debug.LogWarning($"[GraphSaveLoadSystem] Source connector not found: {sourceNode.GetType().Name}.{connData.sourcePortName}");
+                continue;
+            }
+            if (targetConn == null)
+            {
+                Debug.LogWarning($"[GraphSaveLoadSystem] Target connector not found: {targetNode.GetType().Name}.{connData.targetPortName}");
+                continue;
+            }
+
+            // Create the logical connection
+            bool success = ConnectionManager.Instance.CreateConnectionWithConnectors(sourceConn, targetConn);
+            if (success)
+            {
+                // Create visual line
+                CreateVisualConnectionLine(sourceConn, targetConn);
+            }
         }
+
+        // Mark graph dirty to recompile
+        NodeRunner.Instance?.MarkDirty();
+
+        Debug.Log($"[GraphSaveLoadSystem] Restored {graph.nodes.Count} nodes and {graph.connections.Count} connections.");
     }
 
-    private object GetDefaultValueForType(VariableType type)
+    /// <summary>
+    /// Sets the node's Name and Sprite from the NodesDatabase.
+    /// </summary>
+    private void ApplyNodeMetadata(BaseNode node, Type nodeType, string savedName)
     {
-        switch (type)
+        string finalName = savedName;
+        Sprite icon = null;
+
+        // FIX: If database is null (e.g. system created dynamically), try to find it in loaded resources
+        if (_nodesDatabase == null)
         {
-            case VariableType.Bool: return false;
-            case VariableType.Int: return 0;
-            case VariableType.Single: return 0f;
-            case VariableType.String: return "";
-            case VariableType.Vector3: return Vector3.zero;
-            case VariableType.Type: return typeof(object);
-            default: return null;
+            _nodesDatabase = Resources.FindObjectsOfTypeAll<NodesDatabase>().FirstOrDefault();
+        }
+
+        if (_nodesDatabase != null)
+        {
+            var templates = _nodesDatabase.GetNodes();
+            // FIX: Added null check to prevent NullReferenceExceptions during type evaluation
+            var template = templates.FirstOrDefault(n => n != null && n.GetType() == nodeType);
+            if (template != null)
+            {
+                if (string.IsNullOrEmpty(finalName))
+                    finalName = template.NodeName;
+                icon = template.NodeSprite;
+            }
+        }
+
+        if (string.IsNullOrEmpty(finalName))
+            finalName = nodeType.Name.Replace("Node", "");
+
+        node.SetName(finalName);
+        node.SetIcon(icon);
+    }
+
+    /// <summary>
+    /// Finds a connector by port name. For outputs, search OutputConnectors; for inputs, search InputConnectors.
+    /// </summary>
+    private Connector FindConnector(BaseNode node, string portName, bool isOutput)
+    {
+        var logic = node.LogicView;
+        if (logic == null) return null;
+
+        if (isOutput)
+            return logic.OutputConnectors.FirstOrDefault(c => c.PortName == portName);
+        else
+            return logic.InputConnectors.FirstOrDefault(c => c.PortName == portName);
+    }
+
+    /// <summary>
+    /// Instantiates and registers a visual line between two connectors using LineRenderersController.
+    /// </summary>
+    private void CreateVisualConnectionLine(Connector a, Connector b)
+    {
+        if (LineRenderersController.Instance == null)
+        {
+            Debug.LogError("[GraphSaveLoadSystem] LineRenderersController.Instance is null!");
+            return;
+        }
+
+        var linePrefab = LineRenderersController.Instance.LineRendererPrefab;
+        if (linePrefab == null)
+        {
+            Debug.LogError("[GraphSaveLoadSystem] LineRendererPrefab not assigned in LineRenderersController!");
+            return;
+        }
+
+        // Instantiate the line prefab (parent will be set by LineRenderersController.Add)
+        var lineInstance = Instantiate(linePrefab);
+
+        // Register with the controller – it handles parenting, material, and updates.
+        LineRenderersController.Add(a, b, lineInstance);
+    }
+
+    #endregion
+
+    #region Variable Serialization Helpers
+
+    private string SerializeVariableValue(VariableNode varNode)
+    {
+        object value = varNode.GetValue();
+        if (value == null) return "";
+
+        return varNode.VariableType switch
+        {
+            VariableType.Vector3 => JsonUtility.ToJson((Vector3)value),
+            VariableType.Vector2 => JsonUtility.ToJson((Vector2)value),
+            VariableType.Color => JsonUtility.ToJson((Color)value),
+            VariableType.Type => ((Type)value).AssemblyQualifiedName,
+            _ => value.ToString()
+        };
+    }
+
+    private void DeserializeVariableValue(VariableNode varNode, string serialized)
+    {
+        if (string.IsNullOrEmpty(serialized)) return;
+
+        try
+        {
+            object value = varNode.VariableType switch
+            {
+                VariableType.Single => float.Parse(serialized, System.Globalization.CultureInfo.InvariantCulture),
+                VariableType.Int => int.Parse(serialized),
+                VariableType.Bool => bool.Parse(serialized),
+                VariableType.String => serialized,
+                VariableType.Vector3 => JsonUtility.FromJson<Vector3>(serialized),
+                VariableType.Vector2 => JsonUtility.FromJson<Vector2>(serialized),
+                VariableType.Color => JsonUtility.FromJson<Color>(serialized),
+                VariableType.Type => Type.GetType(serialized) ?? typeof(object),
+                _ => null
+            };
+            varNode.SetValue(value);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[GraphSaveLoadSystem] Failed to deserialize {varNode.VariableType}: {ex.Message}");
         }
     }
 
-    private string GetSavePath(string saveName)
+    #endregion
+
+    #region Helpers
+
+    private string GetFilePath(string saveName)
     {
-        return Path.Combine(Application.dataPath, $"{saveName}.json");
+        // Sanitize filename
+        foreach (char c in Path.GetInvalidFileNameChars())
+            saveName = saveName.Replace(c, '_');
+        return Path.Combine(SaveDirectory, saveName + _saveFileExtension);
     }
+
+    #endregion
+
+    #region Serializable Data Structures
+
+    [Serializable]
+    public class SerializableGraph
+    {
+        public string version;
+        public List<NodeData> nodes = new List<NodeData>();
+        public List<ConnectionData> connections = new List<ConnectionData>();
+
+        [Serializable]
+        public class NodeData
+        {
+            public string nodeId;
+            public string nodeType;
+            public string nodeName;
+            public SerializableVector2 position;
+            public int variableType;
+            public string serializedValue;
+        }
+
+        [Serializable]
+        public class ConnectionData
+        {
+            public string sourceNodeId;
+            public string sourcePortName;
+            public string targetNodeId;
+            public string targetPortName;
+            public bool isFlow;
+        }
+    }
+
+    [Serializable]
+    public struct SerializableVector2
+    {
+        public float x, y;
+        public SerializableVector2(Vector2 v) { x = v.x; y = v.y; }
+        public Vector2 ToVector2() => new Vector2(x, y);
+    }
+
+    #endregion
 }

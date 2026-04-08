@@ -1,178 +1,123 @@
-using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using TMPro;
 using UnityEngine;
 
 public class NodeSpawnerService : MonoBehaviour
 {
-    [Header("Dependencies")]
-    [SerializeField] private NodesDatabase _nodesDatabase;
-    [SerializeField] private VariableDatabase _variableDatabase;
+    [Header("Prefabs")]
     [SerializeField] private NodeLogic _nodeLogicPrefab;
-    [SerializeField] private ConnectorColorDatabase _colorDatabase;
-
-    [Header("Connector Prefabs")]
-    [SerializeField] private Connector _rightConnectorPrefab;
     [SerializeField] private Connector _leftConnectorPrefab;
+    [SerializeField] private Connector _rightConnectorPrefab;
+    [SerializeField] private ConnectorColorDatabase _colorDatabase;
+    [SerializeField] private VariableDatabase _variableDatabase;
 
-    private Dictionary<int, NodeLogic> _spawnedNodes = new Dictionary<int, NodeLogic>();
-    private int _nextNodeId = 1;
-
+    private Dictionary<string, NodeLogic> _spawnedNodes = new();
     public static NodeSpawnerService Instance { get; private set; }
 
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
+    private void Awake() => Instance = this;
 
-    public NodeLogic SpawnNode(NodeBase nodeInstance, Vector2 position, int nodeId = -1, bool isWorldPosition = false)
+    public NodeLogic SpawnNode(BaseNode nodeInstance, Vector2 position, string nodeId = null)
     {
-        if (nodeInstance == null)
-        {
-            return null;
-        }
+        if (nodeInstance == null) return null;
 
-        if (nodeId == -1)
-        {
-            nodeId = _nextNodeId++;
-        }
-        else
-        {
-            _nextNodeId = Mathf.Max(_nextNodeId, nodeId + 1);
-        }
+        nodeId ??= Guid.NewGuid().ToString();
 
         var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
-        
-        if (isWorldPosition)
-            nodeLogic.transform.position = position;
-        else
-            nodeLogic.transform.localPosition = position;
-        
-        nodeLogic.VariableDatabase = _variableDatabase;
+        nodeLogic.transform.localPosition = position;
 
-        nodeLogic.SetNodeBase(nodeInstance);
+        // Bind the data (no UI creation yet)
+        nodeLogic.SetNodeBase(nodeInstance, nodeId);
+
+        // Now create all UI elements (the moved logic)
+        SetupNodeVisuals(nodeLogic, nodeInstance);
 
         _spawnedNodes[nodeId] = nodeLogic;
-
         return nodeLogic;
     }
 
-    public void GenerateConnectors(NodeLogic nodeLogic, NodeBase node)
+    private void SetupNodeVisuals(NodeLogic nodeLogic, BaseNode node)
     {
-        if (node is VariableNode varNode)
+        // 1. Basic visuals
+        nodeLogic.NodeNameText.text = node.NodeName;
+        nodeLogic.NodeTypeText.text = GetNodeTypeFromPath(node);
+        nodeLogic.NodeIcon.sprite = node.NodeSprite;
+        nodeLogic.NodeIcon.color = node.NodeSprite ? Color.white : Color.clear;
+
+        // 2. ALWAYS generate connectors from NodePort attributes
+        GenerateConnectors(nodeLogic, node);
+
+        // 3. If it's a variable node, add the custom UI element (input field / dropdown)
+        if (node is TypeVariableNode converterNode)
         {
-            GenerateVariableNodeConnectors(nodeLogic, varNode);
+            nodeLogic.UIManager.CreateConverterUI(converterNode, nodeLogic.BackgroundImage);
         }
-        else
+        else if (node is VariableNode varNode)
         {
-            GenerateRegularNodeConnectors(nodeLogic, node);
+            nodeLogic.UIManager.CreateVariableUI(varNode, nodeLogic.BackgroundImage);
+        }
+
+        // 4. Resize node based on port count
+        int inputCount = node.Ports.Count(p => p.IsInput);
+        int outputCount = node.Ports.Count(p => !p.IsInput);
+        float height = 57 + (Mathf.Max(inputCount, outputCount)) * 25;
+
+        nodeLogic.BackgroundImage.rectTransform.sizeDelta = new Vector2(
+            nodeLogic.BackgroundImage.rectTransform.sizeDelta.x, height);
+
+        nodeLogic.BackgroundImage.material = new Material(nodeLogic.BackgroundImage.material);
+        nodeLogic.RecalculateMaterial();
+    }
+
+    private void GenerateConnectors(NodeLogic nodeLogic, BaseNode node)
+    {
+        foreach (var port in node.Ports)
+        {
+            var prefab = port.IsInput ? _leftConnectorPrefab : _rightConnectorPrefab;
+            var parent = port.IsInput ? nodeLogic.LeftConnectorsParent : nodeLogic.RightConnectorsParent;
+
+            var connector = Instantiate(prefab, parent);
+            connector.Setup(port.Name, port.ValueType, port.IsInput, port.IsFlow, node);
+            connector.SetColorDatabase(_colorDatabase);
+
+            if (port.IsInput)
+                nodeLogic.InputConnectors.Add(connector);
+            else
+                nodeLogic.OutputConnectors.Add(connector);
         }
     }
 
-    private void GenerateVariableNodeConnectors(NodeLogic nodeLogic, VariableNode varNode)
+    private string GetNodeTypeFromPath(BaseNode node)
     {
-        ClearConnectors(nodeLogic);
-
-        foreach (var field in varNode.outputFields)
+        var pathAttr = node.GetType().GetCustomAttribute<NodePathAttribute>();
+        if (pathAttr != null && !string.IsNullOrEmpty(pathAttr.Path))
         {
-            var connector = Instantiate(_rightConnectorPrefab, nodeLogic.RightConnectorsParent);
-            SetupConnector(connector, field, varNode);
-            nodeLogic.Node.outputConnectors.Add(connector);
+            int slash = pathAttr.Path.IndexOf('/');
+            return slash >= 0 ? pathAttr.Path.Substring(0, slash) : pathAttr.Path;
         }
-    }
-
-    private void GenerateRegularNodeConnectors(NodeLogic nodeLogic, NodeBase node)
-    {
-        ClearConnectors(nodeLogic);
-
-        foreach (var field in node.inputFields)
-        {
-            var connector = Instantiate(_leftConnectorPrefab, nodeLogic.LeftConnectorsParent);
-            SetupConnector(connector, field, node);
-            nodeLogic.Node.inputConnectors.Add(connector);
-        }
-
-        foreach (var field in node.outputFields)
-        {
-            var connector = Instantiate(_rightConnectorPrefab, nodeLogic.RightConnectorsParent);
-            SetupConnector(connector, field, node);
-            nodeLogic.Node.outputConnectors.Add(connector);
-        }
-    }
-
-    private void SetupConnector(Connector connector, NodeFieldBase field, NodeBase node)
-    {
-        connector.SetField(field);
-        connector.SetNode(node);
-        connector.SetColorDatabase(_colorDatabase);
-
-        var attribute = field.GetAttribute();
-        connector.SetData(attribute);
-    }
-
-    private void ClearConnectors(NodeLogic nodeLogic)
-    {
-        foreach (var connector in nodeLogic.Node.inputConnectors)
-        {
-            if (connector != null) Destroy(connector.gameObject);
-        }
-        foreach (var connector in nodeLogic.Node.outputConnectors)
-        {
-            if (connector != null) Destroy(connector.gameObject);
-        }
-
-        nodeLogic.Node.inputConnectors.Clear();
-        nodeLogic.Node.outputConnectors.Clear();
+        return node.GetType().Name.Replace("Node", "");
     }
 
     public void DeleteNode(NodeLogic nodeLogic)
     {
         if (nodeLogic == null) return;
 
-        var nodeId = _spawnedNodes.FirstOrDefault(x => x.Value == nodeLogic).Key;
-        if (nodeId != 0)
+        foreach (var connector in nodeLogic.InputConnectors.Concat(nodeLogic.OutputConnectors))
         {
-            _spawnedNodes.Remove(nodeId);
-        }
-
-        var allConnectors = nodeLogic.Node.inputConnectors.Concat(nodeLogic.Node.outputConnectors);
-        foreach (var connector in allConnectors)
-        {
-            foreach (var connectedConnector in connector.Connections.ToArray())
+            foreach (var other in connector.Connections.ToArray())
             {
-                LineRenderersController.Remove(connector, connectedConnector);
-                connectedConnector.Connections.Remove(connector);
-                connectedConnector.UpdateFilled();
+                ConnectionManager.Instance.Disconnect(connector, other);
             }
         }
 
+        var nodeId = _spawnedNodes.FirstOrDefault(x => x.Value == nodeLogic).Key;
+        if (nodeId != null) _spawnedNodes.Remove(nodeId);
+
         Destroy(nodeLogic.gameObject);
+        NodeRunner.Instance?.MarkDirty();
     }
 
-    public NodeLogic GetNodeById(int nodeId)
-    {
-        _spawnedNodes.TryGetValue(nodeId, out var node);
-        return node;
-    }
-
-    public IEnumerable<KeyValuePair<int, NodeLogic>> GetAllNodes()
-    {
-        return _spawnedNodes;
-    }
-
-    public void ClearAllNodes()
-    {
-        foreach (var node in _spawnedNodes.Values.ToList())
-        {
-            if (node != null) DeleteNode(node);
-        }
-        _spawnedNodes.Clear();
-        _nextNodeId = 1;
-    }
+    public IEnumerable<NodeLogic> GetAllNodes() => _spawnedNodes.Values;
 }

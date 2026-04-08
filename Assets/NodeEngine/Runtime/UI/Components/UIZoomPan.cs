@@ -9,7 +9,7 @@ public class UIZoomPan : MonoBehaviour
         get
         {
             if (instance == null)
-                instance = FindFirstObjectByType<UIZoomPan>();
+                instance = FindAnyObjectByType<UIZoomPan>();
 
             return instance;
         }

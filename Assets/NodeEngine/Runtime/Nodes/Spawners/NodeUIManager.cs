@@ -6,59 +6,48 @@ public class NodeUIManager : MonoBehaviour
 {
     public RectTransform RightConnectorsParent => _rightConnectorsParent;
     public RectTransform LeftConnectorsParent => _leftConnectorsParent;
-    public ConnectorColorDatabase ColorDatabase => _colorDatabase; // Expose the database
+    public ConnectorColorDatabase ColorDatabase => _colorDatabase;
 
     [SerializeField] private ConnectorColorDatabase _colorDatabase;
-
+    [SerializeField] private VariableDatabase _variableDatabase;
     [SerializeField] private Connector _rightConnectorPrefab;
     [SerializeField] private Connector _leftConnectorPrefab;
     [SerializeField] private RectTransform _rightConnectorsParent;
     [SerializeField] private RectTransform _leftConnectorsParent;
 
-    public void CreateConnectors(NodeBase node, List<NodeFieldBase> inputFields, List<NodeFieldBase> outputFields,
+    public void CreateConnectors(BaseNode node, List<BaseNode.NodePortInfo> inputPorts, List<BaseNode.NodePortInfo> outputPorts,
                                  List<Connector> inputConnectors, List<Connector> outputConnectors)
     {
-        GenerateInputConnectors(node, inputFields, inputConnectors);
-        GenerateOutputConnectors(node, outputFields, outputConnectors);
+        GenerateInputConnectors(node, inputPorts, inputConnectors);
+        GenerateOutputConnectors(node, outputPorts, outputConnectors);
     }
 
-    public void GenerateInputConnectors(NodeBase node, List<NodeFieldBase> inputFields, List<Connector> inputConnectors)
+    public void GenerateInputConnectors(BaseNode node, List<BaseNode.NodePortInfo> inputPorts, List<Connector> inputConnectors)
     {
-        foreach (var field in inputFields)
+        foreach (var port in inputPorts)
         {
             var connector = Instantiate(_leftConnectorPrefab, _leftConnectorsParent);
-            connector.SetField(field);
-            connector.SetNode(node);
+            connector.Setup(port.Name, port.ValueType, port.IsInput, port.IsFlow, node);
             connector.SetColorDatabase(_colorDatabase);
-
-            var attribute = field.GetAttribute();
-            connector.SetData(attribute);
-
             inputConnectors.Add(connector);
         }
     }
 
-    public void GenerateOutputConnectors(NodeBase node, List<NodeFieldBase> outputFields, List<Connector> outputConnectors)
+    public void GenerateOutputConnectors(BaseNode node, List<BaseNode.NodePortInfo> outputPorts, List<Connector> outputConnectors)
     {
-        foreach (var field in outputFields)
+        foreach (var port in outputPorts)
         {
             var connector = Instantiate(_rightConnectorPrefab, _rightConnectorsParent);
-            connector.SetField(field);
-            connector.SetNode(node);
+            connector.Setup(port.Name, port.ValueType, port.IsInput, port.IsFlow, node);
             connector.SetColorDatabase(_colorDatabase);
-
-            var attribute = field.GetAttribute();
-            connector.SetData(attribute);
-
             outputConnectors.Add(connector);
         }
     }
 
-    public void CreateVariableUI(VariableNode varNode, VariableDatabase database, Image nodeImage)
+    public void CreateVariableUI(VariableNode varNode, Image nodeImage)
     {
-        if (varNode == null || database == null) return;
-
-        var prefab = database.GetPrefabForType(varNode.VariableType);
+        if (varNode == null || _variableDatabase == null) return;
+        var prefab = _variableDatabase.GetPrefabForType(varNode.VariableType);
         if (prefab == null) return;
 
         var uiElement = Instantiate(prefab, _leftConnectorsParent);
@@ -66,7 +55,20 @@ public class NodeUIManager : MonoBehaviour
         varNode.UIElement = uiElement;
 
         varNode.SyncUIWithCachedValue();
+        UpdateNodeSizeForVariableUI(nodeImage);
+    }
 
+    public void CreateConverterUI(TypeVariableNode converterNode, Image nodeImage)
+    {
+        if (converterNode == null || _variableDatabase == null) return;
+        var prefab = _variableDatabase.ConverterUIPrefab;
+        if (prefab == null) return;
+
+        var uiElement = Instantiate(prefab, LeftConnectorsParent);
+        uiElement.Initialize(converterNode);
+        converterNode.UIElement = uiElement;
+
+        converterNode.SyncUIWithCachedValue();
         UpdateNodeSizeForVariableUI(nodeImage);
     }
 
@@ -74,9 +76,6 @@ public class NodeUIManager : MonoBehaviour
     {
         const float boxHeight = 30f;
         const float padding = 20f;
-        nodeImage.rectTransform.sizeDelta = new Vector2(
-            nodeImage.rectTransform.sizeDelta.x,
-            Mathf.Max(nodeImage.rectTransform.sizeDelta.y, boxHeight + padding)
-        );
+        nodeImage.rectTransform.sizeDelta = new Vector2(nodeImage.rectTransform.sizeDelta.x, Mathf.Max(nodeImage.rectTransform.sizeDelta.y, boxHeight + padding));
     }
 }

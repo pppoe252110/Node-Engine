@@ -1,16 +1,20 @@
+using System;
 using System.Collections.Generic;
 
 [NodePath("Events/Update")]
-public class UpdateNode : NodeBase
+public class UpdateNode : BaseNode
 {
-    [NodeValue("Update", typeof(void))]
-    public void UpdateVoid(ConnectorValueVoid value) { }
+    [NodePort("Out", false, true)] public void Out() { }
+    [NonSerialized] public int NextExitIndex = -1;
 
-    public override void Setup()
+    public override void AssignFlowIndices(Dictionary<string, int> flowTargets)
     {
-        outputFields = new()
-        {
-            new NodeFieldTyped<ConnectorValueVoid>().SetHandler(UpdateVoid).SetDefaultValue(new ConnectorValueVoid())
-        };
+        NextExitIndex = flowTargets.TryGetValue("Out", out var idx) ? idx : -1;
+    }
+
+    public override Func<GraphContext, int> Compile()
+    {
+        int exitFlow = NextExitIndex;
+        return (ctx) => exitFlow;
     }
 }

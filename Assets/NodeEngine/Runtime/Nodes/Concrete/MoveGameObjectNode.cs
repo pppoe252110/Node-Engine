@@ -1,38 +1,24 @@
+using System;
 using UnityEngine;
 
 [NodePath("Transform/Move")]
-public class MoveGameObjectNode : ExecutableNodeBase
+public class MoveGameObjectNode : BaseNode
 {
-    private ConnectorValueObject _target;  
-    private ConnectorValueObject _position;  
-    private ConnectorValueFloat _speed;
+    [NodePort("In", true, true)] public void In() { }
+    [NodePort("Target", true)] public GameObject target;
+    [NodePort("Position", true)] public Vector3 position;
 
-    [NodeValue("Target", typeof(GameObject))]
-    public void Target(ConnectorValueObject target) => _target = target;
-
-    [NodeValue("Position", typeof(Vector3))]
-    public void Position(ConnectorValueObject position) => _position = position;
-
-    [NodeValue("Speed", typeof(float))]
-    public void Speed(ConnectorValueFloat speed) => _speed = speed;
-
-    public override void Execute()
+    public override Func<GraphContext, int> Compile()
     {
-        if (_target.GetValue() is GameObject go && _position.GetValue() is Vector3 pos)
-            go.transform.position = Vector3.MoveTowards(go.transform.position, pos, _speed.GetInnerValue() * Time.deltaTime);
+        int targetId = GetInputId("Target");
+        int posId = GetInputId("Position");
 
-        base.Execute();
-    }
-
-    public override void Setup()
-    {
-        inputFields = new()
+        return (ctx) =>
         {
-            new NodeFieldTyped<ConnectorValueObject>().SetHandler(Target).SetDefaultValue(new ConnectorValueObject(null)),
-            new NodeFieldTyped<ConnectorValueObject>().SetHandler(Position).SetDefaultValue(new ConnectorValueObject(Vector3.zero)),
-            new NodeFieldTyped<ConnectorValueFloat>().SetHandler(Speed).SetDefaultValue(new ConnectorValueFloat(1f))
+            GameObject go = ctx.Memory[targetId] as GameObject;
+            Vector3 pos = (Vector3)(ctx.Memory[posId] ?? Vector3.zero);
+            if (go != null) go.transform.position = pos;
+            return -1;
         };
-
-        base.Setup();
     }
 }

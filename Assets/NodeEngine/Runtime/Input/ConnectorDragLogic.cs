@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 
 public class ConnectorDragLogic : MonoBehaviour
 {
-    [SerializeField] private NodeBase _node;
+    private BaseNode _node;
     [SerializeField] private NodeDrag _nodeDrag;
 
     private UILineRenderer _dragLineRenderer;
@@ -74,14 +74,13 @@ public class ConnectorDragLogic : MonoBehaviour
     {
         if (connector.ConnectionsCount > 0)
         {
-            foreach (var connectedConnector in connector.Connections)
+            // Copy array to avoid modification during iteration
+            var connectionsToRemove = connector.Connections.ToArray();
+            foreach (var connectedConnector in connectionsToRemove)
             {
-                LineRenderersController.Remove(connector, connectedConnector);
-                connectedConnector.Connections.Remove(connector);
-                connectedConnector.UpdateFilled();
+                // Route through the manager to ensure Logic Layer is unlinked!
+                ConnectionManager.Instance.Disconnect(connector, connectedConnector);
             }
-            connector.Connections.Clear();
-            connector.UpdateFilled();
         }
     }
 
@@ -144,28 +143,18 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private void CreateConnection(Connector targetConnector)
     {
-        LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
-        _dragLineRenderer = null;
-
-        _dragConnector.AddConnection(targetConnector);
-        targetConnector.AddConnection(_dragConnector);
-
-        _dragConnector.UpdateFilled();
-        targetConnector.UpdateFilled();
-
         if (ConnectionManager.Instance != null)
         {
-            var fromAttr = _dragConnector.Field?.GetAttribute();
-            var toAttr = targetConnector.Field?.GetAttribute();
+            // Route through the manager to ensure BOTH Visual and Logic layers update
+            bool success = ConnectionManager.Instance.CreateConnectionWithConnectors(_dragConnector, targetConnector);
 
-            if (fromAttr != null && toAttr != null)
+            if (success && _dragLineRenderer != null)
             {
-                ConnectionManager.Instance.CreateConnection(
-                    _dragConnector.Node.Guid,
-                    targetConnector.Node.Guid,
-                    fromAttr.attributeName,
-                    toAttr.attributeName
-                );
+                LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
+
+                // The manager spawns the permanent line, so we can destroy the temporary drag line
+                //Destroy(_dragLineRenderer.gameObject);
+                _dragLineRenderer = null;
             }
         }
     }
@@ -184,6 +173,6 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private bool IsCompatibleType(Type dragType, Type targetType)
     {
-        return dragType == targetType || targetType == typeof(object);
+        return TypeChangeLogic.IsCompatibleType(dragType, targetType);
     }
 }

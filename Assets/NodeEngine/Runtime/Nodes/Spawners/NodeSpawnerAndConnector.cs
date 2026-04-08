@@ -91,14 +91,13 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private bool TryConnectWithFallback(NodeLogic fromNode, NodeLogic toNode, string fromConnectorName, string toConnectorName, Type fromType, Type toType)
     {
-        if (ConnectionManager.Instance.CreateConnection(fromNode, toNode, fromConnectorName, toConnectorName))
-        {
-            return true;
-        }
+        // Find connectors on the NodeLogic view directly
+        var fromConn = fromNode.OutputConnectors.FirstOrDefault(c => c.PortName == fromConnectorName);
+        var toConn = toNode.InputConnectors.FirstOrDefault(c => c.PortName == toConnectorName);
 
-        if (ConnectionManager.Instance.CreateConnection(fromNode, toNode, fromType, toType))
+        if (fromConn != null && toConn != null)
         {
-            return true;
+            return ConnectionManager.Instance.CreateConnectionWithConnectors(fromConn, toConn);
         }
 
         Debug.Log($"Falling back to compatible connection for: {fromType.Name} → {toType.Name}");
@@ -107,17 +106,12 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private bool TryConnectAnyCompatible(NodeLogic fromNode, NodeLogic toNode, Type preferredFromType, Type preferredToType)
     {
-        if (fromNode?.Node?.outputConnectors == null || toNode?.Node?.inputConnectors == null)
-            return false;
+        if (fromNode?.OutputConnectors == null || toNode?.InputConnectors == null) return false;
 
-        foreach (var outputConnector in fromNode.Node.outputConnectors)
+        foreach (var outputConnector in fromNode.OutputConnectors)
         {
-            var outputAttr = outputConnector.Field?.GetAttribute();
-
-            foreach (var inputConnector in toNode.Node.inputConnectors)
+            foreach (var inputConnector in toNode.InputConnectors)
             {
-                var inputAttr = inputConnector.Field?.GetAttribute();
-
                 if (IsCompatibleType(outputConnector.ValueType, inputConnector.ValueType))
                 {
                     return ConnectionManager.Instance.CreateConnectionWithConnectors(outputConnector, inputConnector);
@@ -131,7 +125,6 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private bool IsCompatibleType(Type dragType, Type targetType)
     {
-        bool compatible = dragType == targetType || targetType == typeof(object);
-        return compatible;
+        return TypeChangeLogic.IsCompatibleType(dragType, targetType);
     }
 }

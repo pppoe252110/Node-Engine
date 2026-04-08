@@ -8,12 +8,12 @@ public class SerializableNode
     public VariableType variableType;
     public Sprite nodeIcon;
 
-    public NodeBase CreateInstance()
+    public BaseNode CreateInstance()
     {
         var type = System.Type.GetType(nodeType);
         if (type != null)
         {
-            var instance = System.Activator.CreateInstance(type) as NodeBase;
+            var instance = System.Activator.CreateInstance(type) as BaseNode;
 
             if (instance is VariableNode varNode)
             {

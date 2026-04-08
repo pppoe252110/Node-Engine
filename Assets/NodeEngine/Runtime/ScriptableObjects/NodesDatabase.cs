@@ -8,17 +8,17 @@ public class NodesDatabase : ScriptableObject
 {
     [SerializeField] private SerializableNode[] _serializableNodes = new SerializableNode[0];
 
-    public NodeBase[] GetNodes()
+    public BaseNode[] GetNodes()
     {
-        if (_serializableNodes == null) return new NodeBase[0];
-        var result = new NodeBase[_serializableNodes.Length];
+        if (_serializableNodes == null) return new BaseNode[0];
+        var result = new BaseNode[_serializableNodes.Length];
         for (int i = 0; i < _serializableNodes.Length; i++)
         {
 
             var nodeType = Type.GetType(_serializableNodes[i].nodeType);
             if (nodeType != null)
             {
-                result[i] = Activator.CreateInstance(nodeType) as NodeBase;
+                result[i] = Activator.CreateInstance(nodeType) as BaseNode;
                 result[i].SetName(_serializableNodes[i].nodeName);
                 result[i].SetIcon(_serializableNodes[i].nodeIcon);
             }
@@ -30,9 +30,9 @@ public class NodesDatabase : ScriptableObject
         return result;
     }
 
-    public NodeBase GetClone(NodeBase node)
+    public BaseNode GetClone(BaseNode node)
     {
-        var clone = Activator.CreateInstance(node.GetType()) as NodeBase;
+        var clone = Activator.CreateInstance(node.GetType()) as BaseNode;
 
         var setupNode = _serializableNodes.FirstOrDefault(s => s.nodeType == node.GetType().AssemblyQualifiedName);
         if (setupNode != null)
@@ -48,9 +48,9 @@ public class NodesDatabase : ScriptableObject
     public void AutoFill()
     {
         var subclassTypes = Assembly
-           .GetAssembly(typeof(NodeBase))
+           .GetAssembly(typeof(BaseNode))
            .GetTypes()
-           .Where(t => t.IsSubclassOf(typeof(NodeBase)) && !t.IsAbstract)
+           .Where(t => t.IsSubclassOf(typeof(BaseNode)) && !t.IsAbstract)
            .ToArray();
 
         var existingNodes = _serializableNodes?.ToList() ?? new System.Collections.Generic.List<SerializableNode>();

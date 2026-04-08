@@ -31,13 +31,22 @@ public class SaveLoadUI : BasePanel
     private bool _isPanelOpen = false;
     private Coroutine _fadeCoroutine;
 
+    // Lazy initialization flag
+    private bool _isSaveSystemReady = false;
+
     private void Start()
     {
+        // Ensure the save system exists before using it
+        EnsureSaveSystemExists();
         SetupUI();
-        RefreshSaveFilesList();
 
-        GraphSaveLoadSystem.Instance.OnGraphSaved += OnGraphSaved;
-        GraphSaveLoadSystem.Instance.OnGraphLoaded += OnGraphLoaded;
+        // Only refresh if system is ready
+        if (_isSaveSystemReady)
+        {
+            RefreshSaveFilesList();
+            GraphSaveLoadSystem.Instance.OnGraphSaved += OnGraphSaved;
+            GraphSaveLoadSystem.Instance.OnGraphLoaded += OnGraphLoaded;
+        }
 
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
@@ -46,9 +55,27 @@ public class SaveLoadUI : BasePanel
         PanelManager.Instance.RegisterPanel(this);
     }
 
+    private void EnsureSaveSystemExists()
+    {
+        if (GraphSaveLoadSystem.Instance == null)
+        {
+            Debug.LogWarning("[SaveLoadUI] GraphSaveLoadSystem not found in scene. Creating one automatically.");
+            GameObject go = new GameObject("GraphSaveLoadSystem");
+            go.AddComponent<GraphSaveLoadSystem>();
+            // Give Unity a frame to run Awake
+        }
+
+        // Check again after potential creation
+        _isSaveSystemReady = GraphSaveLoadSystem.Instance != null;
+        if (!_isSaveSystemReady)
+        {
+            Debug.LogError("[SaveLoadUI] GraphSaveLoadSystem could not be initialized. Save/Load will be disabled.");
+        }
+    }
+
     private void OnDestroy()
     {
-        if (GraphSaveLoadSystem.Instance != null)
+        if (_isSaveSystemReady && GraphSaveLoadSystem.Instance != null)
         {
             GraphSaveLoadSystem.Instance.OnGraphSaved -= OnGraphSaved;
             GraphSaveLoadSystem.Instance.OnGraphLoaded -= OnGraphLoaded;
@@ -63,7 +90,8 @@ public class SaveLoadUI : BasePanel
 
     protected override void OnPanelOpenedAction()
     {
-        RefreshSaveFilesList();
+        if (_isSaveSystemReady)
+            RefreshSaveFilesList();
     }
 
     private void SetupUI()
@@ -79,13 +107,16 @@ public class SaveLoadUI : BasePanel
         _deleteAllSavesButton.onClick.AddListener(DeleteAllSaves);
 
         UpdateSaveStatus("Ready to save");
-        UpdateLoadStatus($"{GetSaveFilesCount()} save files");
+        UpdateLoadStatus(_isSaveSystemReady ? $"{GetSaveFilesCount()} save files" : "Save system unavailable");
+        UpdateManagementStatus("");
 
         ClosePanel();
     }
 
     private void HandleHotkeys()
     {
+        if (!_isSaveSystemReady) return;
+
         if (Keyboard.current.f5Key.wasReleasedThisFrame) QuickSave();
         else if (Keyboard.current.f9Key.wasReleasedThisFrame) QuickLoad();
         else if (Keyboard.current.escapeKey.wasReleasedThisFrame && _isPanelOpen) ClosePanel();
@@ -93,6 +124,12 @@ public class SaveLoadUI : BasePanel
 
     public void SaveGraph()
     {
+        if (!_isSaveSystemReady)
+        {
+            UpdateSaveStatus("Save system not available", 3f);
+            return;
+        }
+
         if (string.IsNullOrEmpty(_saveNameInput.text))
         {
             UpdateSaveStatus("Please enter a save name", 3f);
@@ -105,6 +142,11 @@ public class SaveLoadUI : BasePanel
 
     public void QuickSave()
     {
+        if (!_isSaveSystemReady)
+        {
+            UpdateSaveStatus("Save system not available", 3f);
+            return;
+        }
         UpdateSaveStatus("Quick saving...", 0f);
         GraphSaveLoadSystem.Instance.QuickSave();
     }
@@ -116,12 +158,19 @@ public class SaveLoadUI : BasePanel
 
     public void QuickLoad()
     {
+        if (!_isSaveSystemReady)
+        {
+            UpdateLoadStatus("Save system not available", 3f);
+            return;
+        }
         UpdateLoadStatus("Quick loading...", 0f);
         GraphSaveLoadSystem.Instance.QuickLoad();
     }
 
     public void RefreshSaveFilesList()
     {
+        if (!_isSaveSystemReady) return;
+
         ClearSaveFilesList();
 
         var saveFiles = GraphSaveLoadSystem.Instance.GetSaveFiles();
@@ -144,7 +193,6 @@ public class SaveLoadUI : BasePanel
         if (_saveFileEntryPrefab == null) return;
 
         var entryUI = Instantiate(_saveFileEntryPrefab, _saveFilesContainer);
-
         if (entryUI != null)
         {
             entryUI.Initialize(saveName, OnLoadFile, OnDeleteFile);
@@ -163,12 +211,14 @@ public class SaveLoadUI : BasePanel
 
     private void OnLoadFile(string saveName)
     {
+        if (!_isSaveSystemReady) return;
         UpdateLoadStatus($"Loading {saveName}...", 0f);
         GraphSaveLoadSystem.Instance.LoadGraph(saveName);
     }
 
     private void OnDeleteFile(string saveName)
     {
+        if (!_isSaveSystemReady) return;
         GraphSaveLoadSystem.Instance.DeleteSaveFile(saveName);
         RefreshSaveFilesList();
         UpdateManagementStatus($"Deleted {saveName}", 3f);
@@ -176,6 +226,7 @@ public class SaveLoadUI : BasePanel
 
     public void DeleteAllSaves()
     {
+        if (!_isSaveSystemReady) return;
         GraphSaveLoadSystem.Instance.DeleteAllSaves();
         RefreshSaveFilesList();
         UpdateManagementStatus("All saves deleted", 3f);
@@ -194,20 +245,29 @@ public class SaveLoadUI : BasePanel
 
     private void UpdateSaveStatus(string message, float displayTime = 0f)
     {
-        _saveStatusText.text = message;
-        if (displayTime > 0) _statusDisplayTimer = displayTime;
+        if (_saveStatusText != null)
+        {
+            _saveStatusText.text = message;
+            if (displayTime > 0) _statusDisplayTimer = displayTime;
+        }
     }
 
     private void UpdateLoadStatus(string message, float displayTime = 0f)
     {
-        _loadStatusText.text = message;
-        if (displayTime > 0) _statusDisplayTimer = displayTime;
+        if (_loadStatusText != null)
+        {
+            _loadStatusText.text = message;
+            if (displayTime > 0) _statusDisplayTimer = displayTime;
+        }
     }
 
     private void UpdateManagementStatus(string message, float displayTime = 0f)
     {
-        _managementStatusText.text = message;
-        if (displayTime > 0) _statusDisplayTimer = displayTime;
+        if (_managementStatusText != null)
+        {
+            _managementStatusText.text = message;
+            if (displayTime > 0) _statusDisplayTimer = displayTime;
+        }
     }
 
     private void UpdateStatusTimers()
@@ -218,10 +278,14 @@ public class SaveLoadUI : BasePanel
             if (_statusDisplayTimer <= 0)
             {
                 UpdateSaveStatus("Ready to save");
-                UpdateLoadStatus($"{GetSaveFilesCount()} save files");
+                UpdateLoadStatus(_isSaveSystemReady ? $"{GetSaveFilesCount()} save files" : "Save system unavailable");
             }
         }
     }
 
-    private int GetSaveFilesCount() => GraphSaveLoadSystem.Instance.GetSaveFiles().Count;
+    private int GetSaveFilesCount()
+    {
+        if (!_isSaveSystemReady || GraphSaveLoadSystem.Instance == null) return 0;
+        return GraphSaveLoadSystem.Instance.GetSaveFiles().Count;
+    }
 }

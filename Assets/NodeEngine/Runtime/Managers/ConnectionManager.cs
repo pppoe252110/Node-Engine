@@ -1,260 +1,112 @@
-using Radishmouse;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ConnectionManager : MonoBehaviour
 {
-    [Serializable]
-    public class ConnectionData
-    {
-        public int fromNodeId;
-        public int toNodeId;
-        public string fromConnectorName;
-        public string toConnectorName;
-        public string fromConnectorType;      // Type name as string
-        public string toConnectorType;        // Type name as string
-        public string fromConnectorAssembly;  // Assembly qualified name
-        public string toConnectorAssembly;    // Assembly qualified name
-
-        public ConnectionData(int fromNode, int toNode, string fromName, string toName,
-                             string fromType, string toType, Type fromTypeObj = null, Type toTypeObj = null)
-        {
-            fromNodeId = fromNode;
-            toNodeId = toNode;
-            fromConnectorName = fromName;
-            toConnectorName = toName;
-            fromConnectorType = fromType;
-            toConnectorType = toType;
-
-            // Save assembly qualified names for proper type reconstruction
-            fromConnectorAssembly = fromTypeObj?.AssemblyQualifiedName ?? "";
-            toConnectorAssembly = toTypeObj?.AssemblyQualifiedName ?? "";
-        }
-    }
-
-    private List<ConnectionData> _connections = new List<ConnectionData>();
-
     public static ConnectionManager Instance { get; private set; }
 
-    private void Awake()
+    // Global trackers for the Compiler
+    public List<DataConnection> ActiveDataConnections { get; private set; } = new List<DataConnection>();
+    public List<FlowConnection> ActiveFlowConnections { get; private set; } = new List<FlowConnection>();
+
+    private void Awake() => Instance = this;
+
+    public bool CreateConnectionWithConnectors(Connector from, Connector to)
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
+        if (from == null || to == null || from.Node == to.Node) return false;
 
-    public bool CreateConnection(NodeLogic fromNode, NodeLogic toNode, Type outputType, Type inputType)
-    {
-        if (fromNode == null || toNode == null) return false;
-        if (fromNode.Node == null || toNode.Node == null) return false;
+        BindLogic(from, to);
+        from.AddVisualConnection(to);
+        to.AddVisualConnection(from);
 
-        var fromConnector = FindOutputConnectorByType(fromNode, outputType);
-        var toConnector = FindInputConnectorByType(toNode, inputType);
+        NotifyConnection(from, to);
 
-        if (fromConnector == null || toConnector == null) return false;
-
-        return CreateConnectionWithConnectors(fromConnector, toConnector);
-    }
-
-    private Connector FindOutputConnectorByType(NodeLogic node, Type type)
-    {
-        if (node?.Node?.outputConnectors == null) return null;
-
-        var connector = node.Node.outputConnectors.FirstOrDefault(c => c.ValueType == type);
-        if (connector != null) return connector;
-
-        connector = node.Node.outputConnectors.FirstOrDefault(c => c.ValueType.Name == type.Name);
-        if (connector != null) return connector;
-
-        if (type == typeof(void))
-        {
-            connector = node.Node.outputConnectors.FirstOrDefault(c =>
-                c.ValueType == typeof(void) ||
-                typeof(IExecutableConnector).IsAssignableFrom(c.ValueType));
-        }
-
-        return connector;
-    }
-
-    private Connector FindInputConnectorByType(NodeLogic node, Type type)
-    {
-        if (node?.Node?.inputConnectors == null) return null;
-
-        var connector = node.Node.inputConnectors.FirstOrDefault(c => c.ValueType == type);
-        if (connector != null) return connector;
-
-        connector = node.Node.inputConnectors.FirstOrDefault(c => c.ValueType.Name == type.Name);
-        if (connector != null) return connector;
-
-        if (type == typeof(object))
-        {
-            connector = node.Node.inputConnectors.FirstOrDefault();
-        }
-
-        if (type == typeof(void))
-        {
-            connector = node.Node.inputConnectors.FirstOrDefault(c =>
-                c.ValueType == typeof(void) ||
-                typeof(IExecutableConnector).IsAssignableFrom(c.ValueType));
-        }
-
-        return connector;
-    }
-
-    public bool CreateConnection(NodeLogic fromNode, NodeLogic toNode, string outputConnectorName, string inputConnectorName)
-    {
-        if (fromNode == null || toNode == null) return false;
-
-        var fromConnector = fromNode.Node.outputConnectors.FirstOrDefault(c =>
-            c.Field?.GetAttribute()?.attributeName == outputConnectorName);
-        var toConnector = toNode.Node.inputConnectors.FirstOrDefault(c =>
-            c.Field?.GetAttribute()?.attributeName == inputConnectorName);
-
-        if (fromConnector == null || toConnector == null) return false;
-
-        return CreateConnectionWithConnectors(fromConnector, toConnector);
-    }
-
-    public bool CreateConnectionWithConnectors(Connector fromConnector, Connector toConnector)
-    {
-        if (fromConnector == null || toConnector == null) return false;
-
-        var fromAttr = fromConnector.Field?.GetAttribute();
-        var toAttr = toConnector.Field?.GetAttribute();
-
-        if (fromAttr == null || toAttr == null ||
-            string.IsNullOrEmpty(fromAttr.attributeName) || fromAttr.attributeName == "Unknown" ||
-            string.IsNullOrEmpty(toAttr.attributeName) || toAttr.attributeName == "Unknown")
-        {
-            Debug.LogWarning($"Rejected invalid connection: {fromConnector.Node.GetType().Name}.{fromAttr?.attributeName ?? "Unknown"} -> {toConnector.Node.GetType().Name}.{toAttr?.attributeName ?? "Unknown"}");
-            return false;
-        }
-
-        if (fromConnector.Node == toConnector.Node || WouldCreateInvalidLoop(fromConnector, toConnector))
-        {
-            Debug.LogWarning($"Rejected loop/self-connection: {fromConnector.Node.GetType().Name} -> {toConnector.Node.GetType().Name}");
-            return false;
-        }
-
-        if (LineRenderersController.Instance == null) return false;
-
-        var lineRendererPrefab = LineRenderersController.Instance.LineRendererPrefab;
-        if (lineRendererPrefab == null)
-        {
-            CreateConnectionWithoutVisual(fromConnector, toConnector);
-            return true;
-        }
-
-        var lineRenderer = Instantiate(lineRendererPrefab);
-        if (lineRenderer == null)
-        {
-            CreateConnectionWithoutVisual(fromConnector, toConnector);
-            return true;
-        }
-
-        LineRenderersController.Add(fromConnector, toConnector, lineRenderer);
-
-        fromConnector.AddConnection(toConnector);
-        fromConnector.UpdateFilled();
-        toConnector.AddConnection(fromConnector);
-        toConnector.UpdateFilled();
-
-        var fromNodeId = fromConnector.Node.Guid;
-        var toNodeId = toConnector.Node.Guid;
-        var fromAttrFinal = fromConnector.Field?.GetAttribute();
-        var toAttrFinal = toConnector.Field?.GetAttribute();
-
-        var connection = new ConnectionData(
-            fromNodeId, toNodeId,
-            fromAttrFinal?.attributeName ?? "Unknown",
-            toAttrFinal?.attributeName ?? "Unknown",
-            fromConnector.ValueType.Name,
-            toConnector.ValueType.Name,
-            fromConnector.ValueType,
-            toConnector.ValueType
-        );
-
-        _connections.Add(connection);
-
+        NodeRunner.Instance?.MarkDirty();
         return true;
     }
 
-    private bool WouldCreateInvalidLoop(Connector outputConnector, Connector inputConnector)
+    public void Disconnect(Connector from, Connector to)
     {
-        if (outputConnector.Node == inputConnector.Node)
+        UnbindLogic(from, to);
+        from.RemoveVisualConnection(to);
+        to.RemoveVisualConnection(from);
+
+        LineRenderersController.Remove(from, to);
+
+        NotifyDisconnection(from, to);
+
+        NodeRunner.Instance?.MarkDirty();
+    }
+
+    private void NotifyConnection(Connector fromConnector, Connector toConnector)
+    {
+        if (fromConnector.Node is IConnectionListener fromListener)
+            fromListener.OnConnected(fromConnector, toConnector);
+
+        if (toConnector.Node is IConnectionListener toListener)
+            toListener.OnConnected(toConnector, fromConnector);
+    }
+
+    private void NotifyDisconnection(Connector fromConnector, Connector toConnector)
+    {
+        if (fromConnector.Node is IConnectionListener fromListener)
+            fromListener.OnDisconnected(fromConnector, toConnector);
+
+        if (toConnector.Node is IConnectionListener toListener)
+            toListener.OnDisconnected(toConnector, fromConnector);
+    }
+
+    private void BindLogic(Connector from, Connector to)
+    {
+        if (from.IsFlow)
         {
-            Debug.LogWarning("Rejected self-connection: Node cannot connect to itself");
-            return true;
+            ActiveFlowConnections.Add(new FlowConnection
+            {
+                SourceNode = from.Node,
+                SourcePortName = from.PortName,
+                TargetNode = to.Node,
+                TargetPortName = to.PortName
+            });
         }
-
-        return false;
-    }
-
-    private void CreateConnectionWithoutVisual(Connector fromConnector, Connector toConnector)
-    {
-        fromConnector.AddConnection(toConnector);
-        fromConnector.UpdateFilled();
-        toConnector.AddConnection(fromConnector);
-        toConnector.UpdateFilled();
-
-        var fromNodeId = fromConnector.Node.Guid;
-        var toNodeId = toConnector.Node.Guid;
-        var fromAttr = fromConnector.Field?.GetAttribute();
-        var toAttr = toConnector.Field?.GetAttribute();
-
-        var connection = new ConnectionData(
-            fromNodeId, toNodeId,
-            fromAttr?.attributeName ?? "Unknown",
-            toAttr?.attributeName ?? "Unknown",
-            fromConnector.ValueType.Name,
-            toConnector.ValueType.Name
-        );
-
-        _connections.Add(connection);
-    }
-
-    public bool CreateConnection(int fromNodeId, int toNodeId, string outputType, string inputType)
-    {
-        var fromNode = NodeSpawnerService.Instance.GetNodeById(fromNodeId);
-        var toNode = NodeSpawnerService.Instance.GetNodeById(toNodeId);
-
-        if (fromNode == null || toNode == null) return false;
-
-        var outputTypeObj = Type.GetType(outputType) ?? GetTypeFromName(outputType);
-        var inputTypeObj = Type.GetType(inputType) ?? GetTypeFromName(inputType);
-
-        return CreateConnection(fromNode, toNode, outputTypeObj, inputTypeObj);
-    }
-
-    private Type GetTypeFromName(string typeName)
-    {
-        return typeName switch
+        else
         {
-            "Int32" => typeof(int),
-            "Single" => typeof(float),
-            "Boolean" => typeof(bool),
-            "String" => typeof(string),
-            "Void" => typeof(void),
-            "Vector3" => typeof(Vector3),
-            "GameObject" => typeof(GameObject),
-            "Object" => typeof(object),
-            _ => typeof(object)
-        };
+            ActiveDataConnections.Add(new DataConnection
+            {
+                SourceNode = from.Node,
+                OutputPortName = from.PortName,
+                TargetNode = to.Node,
+                InputPortName = to.PortName
+            });
+        }
     }
 
-    public List<ConnectionData> GetAllConnections()
+    private void UnbindLogic(Connector from, Connector to)
     {
-        return new List<ConnectionData>(_connections);
+        if (from.IsFlow)
+        {
+            ActiveFlowConnections.RemoveAll(c => c.SourceNode == from.Node && c.SourcePortName == from.PortName && c.TargetNode == to.Node);
+        }
+        else
+        {
+            ActiveDataConnections.RemoveAll(c =>
+                c.SourceNode == from.Node && c.OutputPortName == from.PortName &&
+                c.TargetNode == to.Node && c.InputPortName == to.PortName);
+        }
     }
+}
 
-    public void ClearAllConnections()
-    {
-        _connections.Clear();
-        LineRenderersController.ClearAllConnections();
-    }
+public class DataConnection
+{
+    public BaseNode SourceNode;
+    public string OutputPortName;
+    public BaseNode TargetNode;
+    public string InputPortName;
+}
+
+public class FlowConnection
+{
+    public BaseNode SourceNode;
+    public string SourcePortName;
+    public BaseNode TargetNode;
+    public string TargetPortName;
 }

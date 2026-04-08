@@ -1,88 +1,40 @@
-using UnityEngine;
+using System;
+using System.Collections.Generic;
 
-[NodePath("Control Flow/For Loop")]
-public class ForLoopNode : ExecutableNodeBase
+[NodePath("Flow/ForLoop")]
+public class ForLoopNode : BaseNode
 {
-    private ConnectorValueInt _count;
-    private NodeFieldTyped<ConnectorValueInt> _countField;
-    private ConnectorValueInt _index;
+    [NodePort("In", true, true)] public void In() { }
+    [NodePort("Count", true)] public int count;
+    [NodePort("Loop", false, true)] public void LoopBody() { }
+    [NodePort("Done", false, true)] public void Completed() { }
+    [NodePort("Index", false)] public int currentIndex;
 
-    private NodeField _bodyField;
-    private NodeFieldTyped<ConnectorValueInt> _indexField;
+    [NonSerialized] public int LoopFlowIndex = -1;
+    [NonSerialized] public int DoneFlowIndex = -1;
 
-    [NodeValue("Count", typeof(int))]
-    public void Count(ConnectorValueInt count)
+    public override void AssignFlowIndices(Dictionary<string, int> flowTargets)
     {
-        _count = count;
+        LoopFlowIndex = flowTargets.TryGetValue("Loop", out var loopIdx) ? loopIdx : -1;
+        DoneFlowIndex = flowTargets.TryGetValue("Done", out var doneIdx) ? doneIdx : -1;
     }
 
-    [NodeValue("Body", typeof(void))]
-    public void Body(IConnectorValue body)
+    public override Func<GraphContext, int> Compile()
     {
+        int countId = GetInputId("Count");
+        int indexId = GetOutputId("Index");
+        int loopFlow = LoopFlowIndex;
+        int doneFlow = DoneFlowIndex;
 
-    }
-
-    [NodeValue("Index", typeof(int))]
-    public void Index(ConnectorValueInt index)
-    {
-        _index = index;
-    }
-
-    public override void Execute()
-    {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-
-        _countField.ProceedValue();
-
-        var indexField = _indexField;
-        var bodyField = _bodyField;
-        var indexValue = _index;
-
-        int loopCount = _count?.GetInnerValue() ?? 0;
-
-        for (int i = 0; i < loopCount; i++)
+        return (ctx) =>
         {
-            if (indexField != null)
+            int max = Read<int>(ctx, countId);
+            for (int i = 0; i < max; i++)
             {
-                indexValue.SetInnerValue(i);
+                Write(ctx, indexId, i);
+                if (loopFlow >= 0) ctx.ExecuteFlow(loopFlow);
             }
-
-            if (bodyField != null)
-            {
-                bodyField.ProceedValue();
-            }
-        }
-
-        sw.Stop();
-        Debug.LogError(sw.ElapsedMilliseconds + "ms");
-        base.Execute();
-    }
-
-    public override void Setup()
-    {
-        _countField = new NodeFieldTyped<ConnectorValueInt>()
-            .SetHandler(Count)
-            .SetDefaultValue(new ConnectorValueInt(5));
-
-        _index = new ConnectorValueInt(0);
-
-        _indexField = new NodeFieldTyped<ConnectorValueInt>()
-            .SetHandler(Index)
-            .SetDefaultValue(_index);
-
-        _bodyField = new NodeField().SetHandler(Body);
-
-        inputFields = new()
-        {
-            _countField
+            return doneFlow;
         };
-
-        outputFields = new()
-        {
-            _bodyField,
-            _indexField
-        };
-
-        base.Setup();
     }
 }

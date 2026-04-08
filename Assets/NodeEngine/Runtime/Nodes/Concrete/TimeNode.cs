@@ -1,42 +1,25 @@
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 [NodePath("Engine/Time")]
-public class TimeNode : NodeBase
+public class TimeNode : BaseNode
 {
-    private ConnectorValueFloat _deltaTime;
-    private ConnectorValueFloat _time;
-    private ConnectorValueFloat _realTime;
+    [NodePort("DeltaTime", false)] public float deltaTime;
+    [NodePort("Time", false)] public float time;
+    [NodePort("RealTime", false)] public float realTime;
 
-    [NodeValue("DeltaTime", typeof(float))]
-    public void DeltaTime(ConnectorValueFloat value)
+    public override Func<GraphContext, int> Compile()
     {
-        _deltaTime.SetInnerValue(UnityEngine.Time.deltaTime);
-    }
+        int dtId = GetOutputId("DeltaTime");
+        int tId = GetOutputId("Time");
+        int rtId = GetOutputId("RealTime");
 
-    [NodeValue("Time", typeof(float))]
-    public void Time(ConnectorValueFloat value)
-    {
-        _time.SetInnerValue(UnityEngine.Time.time);
-    }
-
-    [NodeValue("RealTime", typeof(float))]
-    public void RealTime(ConnectorValueFloat value)
-    {
-        _realTime.SetInnerValue(UnityEngine.Time.realtimeSinceStartup);
-    }
-
-    public override void Setup()
-    {
-        _deltaTime = new(0);
-        _time = new(0);
-        _realTime = new(0);
-
-        outputFields = new()
+        return (ctx) =>
         {
-            new NodeFieldTyped<ConnectorValueFloat>().SetHandler(DeltaTime).SetDefaultValue(_deltaTime),
-            new NodeFieldTyped<ConnectorValueFloat>().SetHandler(Time).SetDefaultValue(_time),
-            new NodeFieldTyped<ConnectorValueFloat>().SetHandler(RealTime).SetDefaultValue(_realTime)
+            Write(ctx, dtId, Time.deltaTime);
+            Write(ctx, tId, Time.time);
+            Write(ctx, rtId, Time.realtimeSinceStartup);
+            return -1;
         };
     }
 }
