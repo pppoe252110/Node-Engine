@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class Connector : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class Connector : MonoBehaviour
     [SerializeField] private Image _connectorImageFill;
 
     private ConnectorColorDatabase _colorDatabase;
+    private LineRenderersController _lineRenderersController;
 
     // --- Core Metadata ---
     public BaseNode Node { get; private set; }
@@ -20,11 +22,17 @@ public class Connector : MonoBehaviour
     public bool IsFlow { get; private set; }
 
     // --- Visual State ---
-    public List<Connector> Connections { get; } = new List<Connector>();
+    public List<Connector> Connections { get; } = new();
     public int ConnectionsCount => Connections.Count;
     public Vector3 DragPoint => _connectorImage.rectTransform.position;
     public Vector3 AnchoredPositionPoint => _connectorImage.rectTransform.position;
     public Color Color => GetConnectorColor();
+
+    [Inject]
+    public void Construct(LineRenderersController lineRenderersController)
+    {
+        _lineRenderersController = lineRenderersController;
+    }
 
     public void Setup(string portName, Type type, bool isInput, bool isFlow, BaseNode owner)
     {
@@ -68,7 +76,6 @@ public class Connector : MonoBehaviour
 
     private Color GetConnectorColor()
     {
-        if (IsFlow) return Color.white; // Default flow color
         if (_colorDatabase != null) return _colorDatabase.GetColorForType(ValueType);
         return Color.gray;
     }
@@ -79,15 +86,13 @@ public class Connector : MonoBehaviour
         if (_connectorImage != null) _connectorImage.color = color;
         if (_connectorImageFill != null) _connectorImageFill.color = color;
 
-        if (LineRenderersController.Instance != null)
-        {
-            LineRenderersController.UpdateConnectionColors(this);
-        }
+        _lineRenderersController?.UpdateConnectionColors(this);
     }
 
     public void AddVisualConnection(Connector other)
     {
-        if (!Connections.Contains(other)) Connections.Add(other);
+        if (!Connections.Contains(other))
+            Connections.Add(other);
         UpdateFilled();
     }
 

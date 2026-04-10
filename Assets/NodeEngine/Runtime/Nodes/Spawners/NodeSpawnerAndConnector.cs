@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using VContainer;
 
 public class NodeSpawnerAndConnector : MonoBehaviour
 {
@@ -9,10 +10,24 @@ public class NodeSpawnerAndConnector : MonoBehaviour
     [SerializeField] private NodesDatabase _nodesDatabase;
     [SerializeField] private bool _enabled = false;
 
+    private NodeSpawnerService _nodeSpawnerService;
+    private ConnectionManager _connectionManager;
+    private INodeFactory _nodeFactory;
+
+    [Inject]
+    public void Construct(
+        NodeSpawnerService spawnerService,
+        ConnectionManager connectionManager,
+        INodeFactory nodeFactory)
+    {
+        _nodeSpawnerService = spawnerService;
+        _connectionManager = connectionManager;
+        _nodeFactory = nodeFactory;
+    }
+
     private void Update()
     {
-        if (!_enabled)
-            return;
+        if (!_enabled) return;
 
         if (Keyboard.current.quoteKey.wasReleasedThisFrame)
         {
@@ -22,38 +37,70 @@ public class NodeSpawnerAndConnector : MonoBehaviour
 
     private void SpawnAndConnectNodes()
     {
-        var nodes = _nodesDatabase.GetNodes();
+        var allNodeData = _nodesDatabase.GetAllNodeData().ToList();
 
-        var updateNode = nodes.FirstOrDefault(n => n.GetType().Name == "UpdateNode");
-        var intVariableNode = nodes.FirstOrDefault(n => n is IntVariableNode);
-        var forLoopNode = nodes.FirstOrDefault(n => n.GetType().Name == "ForLoopNode");
-        var toStringNode = nodes.FirstOrDefault(n => n.GetType().Name == "ToStringNode");
-        var debugNode = nodes.FirstOrDefault(n => n.GetType().Name == "DebugNode");
+        // Find required node data by their type names (or custom criteria)
+        var updateData = FindNodeDataByTypeName(allNodeData, "UpdateNode");
+        var intVarData = FindNodeDataByTypeName(allNodeData, "IntVariableNode");
+        var forLoopData = FindNodeDataByTypeName(allNodeData, "ForLoopNode");
+        var toStringData = FindNodeDataByTypeName(allNodeData, "ToStringNode");
+        var debugData = FindNodeDataByTypeName(allNodeData, "DebugNode");
 
-        if (updateNode == null || intVariableNode == null || forLoopNode == null || toStringNode == null || debugNode == null)
+        if (updateData == null || intVarData == null || forLoopData == null ||
+            toStringData == null || debugData == null)
         {
-            Debug.LogWarning("One or more required nodes not found in database");
+            Debug.LogWarning("One or more required node types not found in database");
             return;
         }
 
         Vector2 startPos = new Vector2(0, 0);
         float spacing = 200f;
 
-        var updateNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(updateNode), startPos);
-        var intNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(intVariableNode), startPos + new Vector2(spacing, 50));
-        var forLoopNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(forLoopNode), startPos + new Vector2(spacing * 2, 0));
-        var toStringNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(toStringNode), startPos + new Vector2(spacing * 3, 50));
-        var debugNodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(debugNode), startPos + new Vector2(spacing * 4, 0));
+        var updateLogic = SpawnNodeFromData(updateData, startPos);
+        var intLogic = SpawnNodeFromData(intVarData, startPos + new Vector2(spacing, 50));
+        var forLoopLogic = SpawnNodeFromData(forLoopData, startPos + new Vector2(spacing * 2, 0));
+        var toStringLogic = SpawnNodeFromData(toStringData, startPos + new Vector2(spacing * 3, 50));
+        var debugLogic = SpawnNodeFromData(debugData, startPos + new Vector2(spacing * 4, 0));
 
-        if (updateNodeLogic == null || intNodeLogic == null || forLoopNodeLogic == null || toStringNodeLogic == null || debugNodeLogic == null)
+        if (updateLogic == null || intLogic == null || forLoopLogic == null ||
+            toStringLogic == null || debugLogic == null)
         {
             Debug.LogWarning("Failed to spawn one or more nodes");
             return;
         }
 
-        ConnectNodes(updateNodeLogic, intNodeLogic, forLoopNodeLogic, toStringNodeLogic, debugNodeLogic);
+        ConnectNodes(updateLogic, intLogic, forLoopLogic, toStringLogic, debugLogic);
     }
 
+    private SerializableNode FindNodeDataByTypeName(System.Collections.Generic.IEnumerable<SerializableNode> nodeData, string typeName)
+    {
+        return nodeData.FirstOrDefault(data =>
+        {
+            Type t = Type.GetType(data.nodeType);
+            return t != null && t.Name == typeName;
+        });
+    }
+
+    private NodeLogic SpawnNodeFromData(SerializableNode nodeData, Vector2 position)
+    {
+        Type type = Type.GetType(nodeData.nodeType);
+        if (type == null)
+        {
+            Debug.LogError($"Cannot resolve type: {nodeData.nodeType}");
+            return null;
+        }
+
+        // Create a fresh instance via factory
+        BaseNode instance = _nodeFactory.CreateNode(type);
+
+        // Apply metadata (name, icon) from database
+        _nodesDatabase.ApplyMetadata(instance);
+
+        // Spawn visual node
+        return _nodeSpawnerService.SpawnNode(instance, position);
+    }
+
+    // The rest of the connection logic remains unchanged
     private void ConnectNodes(NodeLogic updateNode, NodeLogic intNode, NodeLogic forLoopNode,
                              NodeLogic toStringNode, NodeLogic debugNode)
     {
@@ -84,21 +131,16 @@ public class NodeSpawnerAndConnector : MonoBehaviour
             allSuccess = false;
 
         if (!allSuccess)
-        {
             Debug.LogWarning("Some node connections failed");
-        }
     }
 
     private bool TryConnectWithFallback(NodeLogic fromNode, NodeLogic toNode, string fromConnectorName, string toConnectorName, Type fromType, Type toType)
     {
-        // Find connectors on the NodeLogic view directly
         var fromConn = fromNode.OutputConnectors.FirstOrDefault(c => c.PortName == fromConnectorName);
         var toConn = toNode.InputConnectors.FirstOrDefault(c => c.PortName == toConnectorName);
 
         if (fromConn != null && toConn != null)
-        {
-            return ConnectionManager.Instance.CreateConnectionWithConnectors(fromConn, toConn);
-        }
+            return _connectionManager.CreateConnectionWithConnectors(fromConn, toConn);
 
         Debug.Log($"Falling back to compatible connection for: {fromType.Name} → {toType.Name}");
         return TryConnectAnyCompatible(fromNode, toNode, fromType, toType);
@@ -113,9 +155,7 @@ public class NodeSpawnerAndConnector : MonoBehaviour
             foreach (var inputConnector in toNode.InputConnectors)
             {
                 if (IsCompatibleType(outputConnector.ValueType, inputConnector.ValueType))
-                {
-                    return ConnectionManager.Instance.CreateConnectionWithConnectors(outputConnector, inputConnector);
-                }
+                    return _connectionManager.CreateConnectionWithConnectors(outputConnector, inputConnector);
             }
         }
 

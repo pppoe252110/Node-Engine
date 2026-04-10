@@ -1,9 +1,10 @@
 ﻿using System;
+using UnityEngine;
 
 [Serializable]
 public class NodeValue
 {
-    // Serialized so Unity can save the value set in the Inspector/UI
+    [SerializeReference]
     private object _value;
 
     public NodeValue(object defaultValue = null) => _value = defaultValue;

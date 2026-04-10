@@ -1,62 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class GraphContext
 {
     public object[] Memory;
-    public Func<GraphContext, int>[] Instructions;
+    public Func<GraphContext, ExecutionResult>[] Instructions;
 
-    // Maximum number of flow steps before forced termination (prevents freeze)
-    private const int MAX_EXECUTION_STEPS = 10_000;
-
+    /// <summary>
+    /// Executes the graph synchronously starting from the given instruction index.
+    /// </summary>
     public void ExecuteFlow(int startIndex)
     {
-        int ip = startIndex;
-        int stepCount = 0;
+        Stack<int> callStack = new Stack<int>();
+        callStack.Push(startIndex);
 
-        while (ip >= 0 && ip < Instructions.Length)
+        while (callStack.Count > 0)
         {
-            stepCount++;
-            if (stepCount > MAX_EXECUTION_STEPS)
-            {
-                Debug.LogError($"[GraphContext] Execution exceeded {MAX_EXECUTION_STEPS} steps. Possible infinite loop. Halting.");
-                break;
-            }
+            int ip = callStack.Pop();
+            if (ip < 0 || ip >= Instructions.Length)
+                continue;
 
-            try
+            var result = Instructions[ip](this);
+
+            switch (result.Type)
             {
-                ip = Instructions[ip](this);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[GraphContext] Exception at instruction {ip}: {ex.Message}\n{ex.StackTrace}");
-                break;
+                case ExecutionResultType.Continue:
+                    if (result.NextIndex >= 0)
+                        callStack.Push(result.NextIndex);
+                    break;
+
+                case ExecutionResultType.Stop:
+                    callStack.Clear();
+                    break;
             }
         }
     }
 }
 
-public class CompiledGraph
+public enum ExecutionResultType
 {
-    public GraphContext Context;
-    public Dictionary<BaseNode, int> NodeToIndex;
+    Continue,
+    Stop
+}
 
-    public CompiledGraph(Func<GraphContext, int>[] instructions, int memorySize, Dictionary<BaseNode, int> nodeToIndex)
-    {
-        Context = new GraphContext
-        {
-            Memory = new object[memorySize],
-            Instructions = instructions
-        };
-        NodeToIndex = nodeToIndex;
-    }
+public struct ExecutionResult
+{
+    public ExecutionResultType Type;
+    public int NextIndex;
 
-    public void ExecuteNode(BaseNode node)
+    public static ExecutionResult Continue(int nextIndex) => new()
     {
-        if (NodeToIndex.TryGetValue(node, out int idx))
-        {
-            Context.ExecuteFlow(idx);
-        }
-    }
+        Type = ExecutionResultType.Continue,
+        NextIndex = nextIndex
+    };
+
+    public static ExecutionResult Stop() => new()
+    {
+        Type = ExecutionResultType.Stop
+    };
 }

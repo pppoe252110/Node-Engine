@@ -13,13 +13,13 @@ public class ForLoopNode : BaseNode
     [NonSerialized] public int LoopFlowIndex = -1;
     [NonSerialized] public int DoneFlowIndex = -1;
 
-    public override void AssignFlowIndices(Dictionary<string, int> flowTargets)
+    public override void SetFlowTargets(Dictionary<string, int> flowTargets)
     {
         LoopFlowIndex = flowTargets.TryGetValue("Loop", out var loopIdx) ? loopIdx : -1;
         DoneFlowIndex = flowTargets.TryGetValue("Done", out var doneIdx) ? doneIdx : -1;
     }
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int countId = GetInputId("Count");
         int indexId = GetOutputId("Index");
@@ -32,9 +32,11 @@ public class ForLoopNode : BaseNode
             for (int i = 0; i < max; i++)
             {
                 Write(ctx, indexId, i);
-                if (loopFlow >= 0) ctx.ExecuteFlow(loopFlow);
+                // Execute loop body inline (synchronous)
+                if (loopFlow >= 0)
+                    ctx.ExecuteFlow(loopFlow);
             }
-            return doneFlow;
+            return ExecutionResult.Continue(doneFlow);
         };
     }
 }

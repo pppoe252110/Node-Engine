@@ -1,31 +1,26 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 public static class TypeChangeLogic
 {
-    public static void CheckAndDisconnectIncompatible(Connector connector, Type newType)
+    public static void CheckAndDisconnectIncompatible(
+        Connector connector,
+        Type newType,
+        ConnectionManager connectionManager)
     {
-        if (connector == null) return;
+        if (connector == null || connectionManager == null) return;
 
         var connectionsToCheck = connector.Connections.ToList();
 
         foreach (var connectedConnector in connectionsToCheck)
         {
             if (connectedConnector == null) continue;
-
             bool isCompatible = IsCompatibleType(newType, connectedConnector.ValueType);
-
             if (!isCompatible)
             {
                 Debug.LogWarning($"Disconnecting incompatible connection: {newType.Name} -> {connectedConnector.ValueType.Name}");
-
-                if (ConnectionManager.Instance != null)
-                {
-                    // REFACTORED: This single call now handles Logic, Visuals, and the OnDisconnected event
-                    ConnectionManager.Instance.Disconnect(connector, connectedConnector);
-                }
+                connectionManager.Disconnect(connector, connectedConnector);
             }
         }
     }
@@ -40,9 +35,6 @@ public static class TypeChangeLogic
         {
             return GetNumericPrecedence(source) <= GetNumericPrecedence(target);
         }
-
-        // Custom converter exists? (You can extend this)
-        // if (TypeConverterRegistry.CanConvert(source, target)) return true;
 
         return false;
     }

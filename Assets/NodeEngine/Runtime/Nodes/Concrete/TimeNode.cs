@@ -8,18 +8,17 @@ public class TimeNode : BaseNode
     [NodePort("Time", false)] public float time;
     [NodePort("RealTime", false)] public float realTime;
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int dtId = GetOutputId("DeltaTime");
         int tId = GetOutputId("Time");
         int rtId = GetOutputId("RealTime");
 
-        return (ctx) =>
-        {
+        return (ctx) => {
             Write(ctx, dtId, Time.deltaTime);
             Write(ctx, tId, Time.time);
             Write(ctx, rtId, Time.realtimeSinceStartup);
-            return -1;
+            return ExecutionResult.Continue(-1);
         };
     }
 }

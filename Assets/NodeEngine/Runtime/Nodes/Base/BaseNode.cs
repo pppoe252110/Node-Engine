@@ -1,15 +1,9 @@
-// ===== Assets/NodeEngine/Runtime/Nodes/Base/BaseNode.cs =====
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-
-public struct DataLink
-{
-    public BaseNode SourceNode;
-    public string OutputPortName;
-}
+using VContainer;
 
 public abstract class BaseNode : IConnectionListener
 {
@@ -17,19 +11,30 @@ public abstract class BaseNode : IConnectionListener
     public string NodeName { get; protected set; }
     public Sprite NodeSprite { get; protected set; }
     public string NodeId { get; protected set; }
+    public int RuntimeId { get; internal set; } = -1;
     public NodeLogic LogicView { get; protected set; }
 
     public int[] InputMemoryIndices;
     public int[] OutputMemoryIndices;
     public List<NodePortInfo> Ports = new List<NodePortInfo>();
 
-    // --- Cached API Maps ---
+    // --- Cached maps filled by the compiler ---
     protected Dictionary<string, int> _inMap = new();
     protected Dictionary<string, int> _outMap = new();
     protected Dictionary<string, int> _flowMap = new();
+
+    // --- Dynamic type forwarding ---
     protected Dictionary<string, List<string>> _dynamicTypes = new();
 
+    private TypeChangeService _typeChangeService;
+
     public BaseNode() => DiscoverPorts();
+
+    [Inject]
+    public void Construct(TypeChangeService typeChangeService)
+    {
+        _typeChangeService = typeChangeService;
+    }
 
     public virtual void Initialize(NodeLogic logic, string guid)
     {
@@ -90,71 +95,30 @@ public abstract class BaseNode : IConnectionListener
         _flowMap = flowTargets;
     }
 
-    public abstract Func<GraphContext, int> Compile();
-
-    // ==========================================
-    // EASY COMPILER API
-    // ==========================================
-
-    protected T GetInput<T>(GraphContext ctx, string portName, T fallback = default)
+    public virtual void SetFlowTargets(Dictionary<string, int> flowTargets)
     {
-        if (_inMap.TryGetValue(portName, out int memIdx) && memIdx >= 0 && memIdx < ctx.Memory.Length)
-        {
-            var val = ctx.Memory[memIdx];
-            if (val is T castedVal) return castedVal;
-
-            try
-            {
-                if (val is IConvertible) return (T)Convert.ChangeType(val, typeof(T));
-            }
-            catch { }
-        }
-        return fallback;
+        AssignFlowIndices(flowTargets);
     }
 
-    protected object GetInput(GraphContext ctx, string portName)
-    {
-        if (_inMap.TryGetValue(portName, out int memIdx) && memIdx >= 0 && memIdx < ctx.Memory.Length)
-            return ctx.Memory[memIdx];
-        return null;
-    }
-
-    protected void SetOutput(GraphContext ctx, string portName, object value)
-    {
-        if (_outMap.TryGetValue(portName, out int memIdx) && memIdx >= 0 && memIdx < ctx.Memory.Length)
-            ctx.Memory[memIdx] = value;
-    }
-
-    protected int GetFlow(string portName)
-    {
-        return _flowMap.TryGetValue(portName, out int idx) ? idx : -1;
-    }
+    public abstract Func<GraphContext, ExecutionResult> Compile();
 
     // ==========================================
-    // 1. COMPILATION PHASE LOOKUPS (Run Once)
+    // COMPILATION PHASE LOOKUPS (Run Once)
     // ==========================================
-
     protected int GetInputId(string portName) => _inMap.TryGetValue(portName, out int idx) ? idx : -1;
     protected int GetOutputId(string portName) => _outMap.TryGetValue(portName, out int idx) ? idx : -1;
     protected int GetFlowId(string portName) => _flowMap.TryGetValue(portName, out int idx) ? idx : -1;
 
-
     // ==========================================
-    // 2. EXECUTION PHASE HELPERS (Blazing Fast)
+    // EXECUTION PHASE HELPERS (Fast path)
     // ==========================================
-
     protected T Read<T>(GraphContext ctx, int memoryId, T fallback = default)
     {
         if (memoryId >= 0 && memoryId < ctx.Memory.Length)
         {
             var val = ctx.Memory[memoryId];
             if (val is T castedVal) return castedVal;
-
-            try
-            {
-                if (val is IConvertible) return (T)Convert.ChangeType(val, typeof(T));
-            }
-            catch { }
+            try { if (val is IConvertible) return (T)Convert.ChangeType(val, typeof(T)); } catch { }
         }
         return fallback;
     }
@@ -166,26 +130,27 @@ public abstract class BaseNode : IConnectionListener
     }
 
     // ==========================================
-    // DYNAMIC TYPING SETUP
+    // DYNAMIC TYPING
     // ==========================================
-
     protected void BindDynamicType(string sourcePort, string targetPort)
     {
         if (!_dynamicTypes.ContainsKey(sourcePort))
             _dynamicTypes[sourcePort] = new List<string>();
-
         if (!_dynamicTypes[sourcePort].Contains(targetPort))
             _dynamicTypes[sourcePort].Add(targetPort);
     }
 
     public virtual void OnConnected(Connector myConnector, Connector otherConnector)
     {
+        if (_dynamicTypes == null) return;
+
         if (_dynamicTypes.TryGetValue(myConnector.PortName, out var targets))
         {
             if (otherConnector.Node is TypeVariableNode typeNode)
             {
+                Type selectedType = typeNode.SelectedType; // May be null
                 foreach (var target in targets)
-                    UpdatePortType(target, typeNode.SelectedType);
+                    UpdatePortType(target, selectedType);
             }
         }
     }
@@ -202,12 +167,10 @@ public abstract class BaseNode : IConnectionListener
     protected void UpdatePortType(string portName, Type newType)
     {
         Type resolvedType = newType ?? typeof(object);
-        var connector = LogicView?.InputConnectors.Find(c => c.PortName == portName) ??
-                        LogicView?.OutputConnectors.Find(c => c.PortName == portName);
-
+        var connector = LogicView?.OutputConnectors.Find(c => c.PortName == portName);
         if (connector != null)
         {
-            TypeChangeService.TryChangeConnectorType(connector, resolvedType);
+            _typeChangeService.TryChangeConnectorType(connector, resolvedType);
         }
         else
         {

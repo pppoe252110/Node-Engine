@@ -1,6 +1,8 @@
+using UniMediator.Runtime;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using VContainer;
 
 public class UIZoomPan : MonoBehaviour
 {
@@ -32,6 +34,16 @@ public class UIZoomPan : MonoBehaviour
 
     private Vector2 _lastMousePos;
 
+    private CanvasService _canvasService;
+    private IMediator _mediator;
+
+    [Inject]
+    public void Construct(CanvasService canvasService, IMediator mediator)
+    {
+        _canvasService = canvasService;
+        _mediator = mediator;
+    }
+
     void Start()
     {
         _mat = new Material(_mat);
@@ -42,11 +54,11 @@ public class UIZoomPan : MonoBehaviour
     void Update()
     {
         float scrollDelta = Mouse.current.scroll.value.y;
-        Vector2 mousePos = Mouse.current.position.value / UIInstance.NodesCanvas.scaleFactor;
+        Vector2 mousePos = Mouse.current.position.value / _canvasService.NodesCanvas.scaleFactor;
 
         if (scrollDelta != 0.0f)
         {
-            Vector2 mouseDir = mousePos - new Vector2(UIInstance.NodesCanvas.renderingDisplaySize.x / 2f, UIInstance.NodesCanvas.renderingDisplaySize.y / 2f) / UIInstance.NodesCanvas.scaleFactor;
+            Vector2 mouseDir = mousePos - new Vector2(_canvasService.NodesCanvas.renderingDisplaySize.x / 2f, _canvasService.NodesCanvas.renderingDisplaySize.y / 2f) / _canvasService.NodesCanvas.scaleFactor;
 
             var targetScale = _rectTransform.localScale.x * (1f + scrollDelta * _zoomSpeed);
 
@@ -59,6 +71,12 @@ public class UIZoomPan : MonoBehaviour
             _rectTransform.localScale = targetScaleClamped * Vector3.one;
             _rectTransform.anchoredPosition -= (1f - (1f + scrollDelta * -_zoomSpeed)) * (1f - Mathf.Abs(clamp)) * (mouseDir - _rectTransform.anchoredPosition);
 
+            _mat.SetVector("_GridOffset", -_rectTransform.anchoredPosition);
+            _mat.SetFloat("_GridScaleOffset", 1f / _rectTransform.localScale.x);
+
+            _canvasService.CanvasSize = _rectTransform.localScale;
+
+            _mediator.Publish(new UpdateLinesNotification());
         }
 
         if (Mouse.current.middleButton.wasPressedThisFrame)
@@ -72,9 +90,14 @@ public class UIZoomPan : MonoBehaviour
             _rectTransform.anchoredPosition += mouseMoveDir;
 
             _lastMousePos = mousePos;
+
+            _mat.SetVector("_GridOffset", -_rectTransform.anchoredPosition);
+            _mat.SetFloat("_GridScaleOffset", 1f / _rectTransform.localScale.x);
+            
+            _canvasService.CanvasSize = _rectTransform.localScale;
+            
+            _mediator.Publish(new UpdateLinesNotification());
         }
-        UIInstance.SetNodesCanvasSize(_rectTransform.localScale.x);
-        _mat.SetVector("_GridOffset", -_rectTransform.anchoredPosition);
-        _mat.SetFloat("_GridScaleOffset", 1f / _rectTransform.localScale.x);
+
     }
 }

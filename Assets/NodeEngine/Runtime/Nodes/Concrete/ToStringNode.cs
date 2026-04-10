@@ -6,16 +6,15 @@ public class ToStringNode : BaseNode
     [NodePort("Input", true)] public object input;
     [NodePort("Result", false)] public string result;
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int inId = GetInputId("Input");
         int outId = GetOutputId("Result");
 
-        return (ctx) =>
-        {
+        return (ctx) => {
             object val = ctx.Memory[inId];
             Write(ctx, outId, val?.ToString() ?? "null");
-            return -1;
+            return ExecutionResult.Continue(-1);
         };
     }
 }

@@ -8,6 +8,7 @@
   <Project Path="UniTask.csproj" />
   <Project Path="Unity.Searcher.Editor.csproj" />
   <Project Path="Unity.Burst.csproj" />
+  <Project Path="VContainer.csproj" />
   <Project Path="Unity.AI.Navigation.Editor.csproj" />
   <Project Path="Unity.VisualStudio.Editor.csproj" />
   <Project Path="Unity.AI.Navigation.Editor.ConversionSystem.csproj" />
@@ -15,7 +16,9 @@
   <Project Path="Unity.PerformanceTesting.csproj" />
   <Project Path="Unity.AI.Navigation.csproj" />
   <Project Path="UniTask.Linq.csproj" />
+  <Project Path="UniMediator.Runtime.csproj" />
   <Project Path="Unity.Burst.Editor.csproj" />
+  <Project Path="VContainer.Editor.csproj" />
   <Project Path="Unity.AI.Navigation.Updater.csproj" />
   <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="NodeEngine.Editor.csproj" />

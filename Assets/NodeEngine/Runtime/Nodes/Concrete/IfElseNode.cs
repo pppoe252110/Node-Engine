@@ -17,16 +17,15 @@ public class IfElseNode : BaseNode
         FalseExitIndex = flowTargets.TryGetValue("False", out var fIdx) ? fIdx : -1;
     }
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int condId = GetInputId("Condition");
         int trueIdx = TrueExitIndex;
         int falseIdx = FalseExitIndex;
 
-        return (ctx) =>
-        {
+        return (ctx) => {
             bool cond = Read<bool>(ctx, condId);
-            return cond ? trueIdx : falseIdx;
+            return ExecutionResult.Continue(cond ? trueIdx : falseIdx);
         };
     }
 }

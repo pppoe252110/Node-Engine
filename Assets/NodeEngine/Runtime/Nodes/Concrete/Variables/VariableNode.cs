@@ -31,14 +31,13 @@ public abstract class VariableNode : BaseNode
         };
     }
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int outId = GetOutputId("Value");
         var storage = CachedValue;
-        return (ctx) =>
-        {
+        return (ctx) => {
             Write(ctx, outId, storage.GetInnerValue());
-            return -1;
+            return ExecutionResult.Continue(-1);
         };
     }
 

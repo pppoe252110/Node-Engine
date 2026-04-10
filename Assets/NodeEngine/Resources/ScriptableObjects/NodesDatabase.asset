@@ -90,11 +90,11 @@ MonoBehaviour:
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 68f459f9f4d4fa04383fb2d16eaca0c7, type: 3}
   - nodeName: Start
-    nodeType: Assets.NodeEngine.Runtime.Nodes.Concrete.StartNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: StartNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 7527009d223c96340808d6a22d757d24, type: 3}
   - nodeName: Test
-    nodeType: Assets.NodeEngine.Runtime.Nodes.Concrete.TestNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: TestNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 56b4ad2a6381d9545bc4753fb2249396, type: 3}
   - nodeName: SetGlobal
@@ -105,3 +105,11 @@ MonoBehaviour:
     nodeType: GetGlobalNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 63eb2535a3c92f84585326fbd1fea345, type: 3}
+  - nodeName: While
+    nodeType: WhileNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 21300000, guid: 2c0755244c2dc524f9c206de2e55dc48, type: 3}
+  - nodeName: Throttle
+    nodeType: ThrottleNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 21300000, guid: 8fc1b91495e352e48844de114090265b, type: 3}

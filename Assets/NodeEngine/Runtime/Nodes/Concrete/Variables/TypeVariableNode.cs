@@ -11,15 +11,6 @@ public class TypeVariableNode : VariableNode
     {
         Debug.Log($"TypeVariableNode.ChangeSelectedType: {newType?.Name}");
         SetValue(newType);
-
-        var myConnector = LogicView?.OutputConnectors.Find(c => c.PortName == "Value");
-        if (myConnector != null)
-        {
-            foreach (var conn in myConnector.Connections)
-            {
-                if (conn.Node is ConvertNode convertNode)
-                    convertNode.UpdateOutputType(newType);
-            }
-        }
+        UpdatePortType("Value", newType);
     }
 }

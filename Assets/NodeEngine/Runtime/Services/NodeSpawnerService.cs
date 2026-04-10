@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using TMPro;
+using UniMediator.Runtime;
 using UnityEngine;
+using UnityEngine.UI;
+using VContainer;
+using VContainer.Unity;
 
 public class NodeSpawnerService : MonoBehaviour
 {
@@ -15,57 +18,94 @@ public class NodeSpawnerService : MonoBehaviour
     [SerializeField] private VariableDatabase _variableDatabase;
 
     private Dictionary<string, NodeLogic> _spawnedNodes = new();
-    public static NodeSpawnerService Instance { get; private set; }
 
-    private void Awake() => Instance = this;
+    private IObjectResolver _objectResolver;
+    private IMediator _mediator;
+    private ConnectionManager _connectionManager;
 
+    [Inject]
+    public void Construct(IObjectResolver objectResolver, IMediator mediator, ConnectionManager connectionManager)
+    {
+        _objectResolver = objectResolver;
+        _mediator = mediator;
+        _connectionManager = connectionManager;
+    }
+
+    /// <summary>
+    /// Spawns a visual node for the given node instance.
+    /// </summary>
     public NodeLogic SpawnNode(BaseNode nodeInstance, Vector2 position, string nodeId = null)
     {
         if (nodeInstance == null) return null;
 
         nodeId ??= Guid.NewGuid().ToString();
 
-        var nodeLogic = Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
+        var nodeLogic = _objectResolver.Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
         nodeLogic.transform.localPosition = position;
 
-        // Bind the data (no UI creation yet)
         nodeLogic.SetNodeBase(nodeInstance, nodeId);
-
-        // Now create all UI elements (the moved logic)
         SetupNodeVisuals(nodeLogic, nodeInstance);
 
         _spawnedNodes[nodeId] = nodeLogic;
+
+        _mediator.Publish(new MarkGraphDirtyNotification());
         return nodeLogic;
     }
 
+    /// <summary>
+    /// Deletes a node and all its connections.
+    /// </summary>
+    public void DeleteNode(NodeLogic nodeLogic)
+    {
+        if (nodeLogic == null) return;
+
+        // Disconnect all connectors on this node
+        var allConnectors = nodeLogic.InputConnectors.Concat(nodeLogic.OutputConnectors).ToList();
+        foreach (var connector in allConnectors)
+        {
+            // Use a copy of the connections list because Disconnect modifies it
+            foreach (var other in connector.Connections.ToArray())
+            {
+                _connectionManager.Disconnect(connector, other);
+            }
+        }
+
+        // Remove from dictionary
+        var nodeId = _spawnedNodes.FirstOrDefault(x => x.Value == nodeLogic).Key;
+        if (nodeId != null) _spawnedNodes.Remove(nodeId);
+
+        Destroy(nodeLogic.gameObject);
+        _mediator.Publish(new MarkGraphDirtyNotification());
+    }
+
+    /// <summary>
+    /// Returns all currently spawned node views.
+    /// </summary>
+    public IEnumerable<NodeLogic> GetAllNodes() => _spawnedNodes.Values;
+
+    #region Private Setup Methods
+
     private void SetupNodeVisuals(NodeLogic nodeLogic, BaseNode node)
     {
-        // 1. Basic visuals
         nodeLogic.NodeNameText.text = node.NodeName;
         nodeLogic.NodeTypeText.text = GetNodeTypeFromPath(node);
         nodeLogic.NodeIcon.sprite = node.NodeSprite;
         nodeLogic.NodeIcon.color = node.NodeSprite ? Color.white : Color.clear;
 
-        // 2. ALWAYS generate connectors from NodePort attributes
         GenerateConnectors(nodeLogic, node);
 
-        // 3. If it's a variable node, add the custom UI element (input field / dropdown)
+        // Create variable/converter UI if needed
         if (node is TypeVariableNode converterNode)
-        {
             nodeLogic.UIManager.CreateConverterUI(converterNode, nodeLogic.BackgroundImage);
-        }
         else if (node is VariableNode varNode)
-        {
             nodeLogic.UIManager.CreateVariableUI(varNode, nodeLogic.BackgroundImage);
-        }
 
-        // 4. Resize node based on port count
+        // Adjust node size based on port count
         int inputCount = node.Ports.Count(p => p.IsInput);
         int outputCount = node.Ports.Count(p => !p.IsInput);
-        float height = 57 + (Mathf.Max(inputCount, outputCount)) * 25;
-
-        nodeLogic.BackgroundImage.rectTransform.sizeDelta = new Vector2(
-            nodeLogic.BackgroundImage.rectTransform.sizeDelta.x, height);
+        float height = 57 + Mathf.Max(inputCount, outputCount) * 25;
+        nodeLogic.BackgroundImage.rectTransform.sizeDelta =
+            new Vector2(nodeLogic.BackgroundImage.rectTransform.sizeDelta.x, height);
 
         nodeLogic.BackgroundImage.material = new Material(nodeLogic.BackgroundImage.material);
         nodeLogic.RecalculateMaterial();
@@ -87,6 +127,9 @@ public class NodeSpawnerService : MonoBehaviour
             else
                 nodeLogic.OutputConnectors.Add(connector);
         }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(nodeLogic.LeftConnectorsParent);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(nodeLogic.RightConnectorsParent);
     }
 
     private string GetNodeTypeFromPath(BaseNode node)
@@ -100,24 +143,5 @@ public class NodeSpawnerService : MonoBehaviour
         return node.GetType().Name.Replace("Node", "");
     }
 
-    public void DeleteNode(NodeLogic nodeLogic)
-    {
-        if (nodeLogic == null) return;
-
-        foreach (var connector in nodeLogic.InputConnectors.Concat(nodeLogic.OutputConnectors))
-        {
-            foreach (var other in connector.Connections.ToArray())
-            {
-                ConnectionManager.Instance.Disconnect(connector, other);
-            }
-        }
-
-        var nodeId = _spawnedNodes.FirstOrDefault(x => x.Value == nodeLogic).Key;
-        if (nodeId != null) _spawnedNodes.Remove(nodeId);
-
-        Destroy(nodeLogic.gameObject);
-        NodeRunner.Instance?.MarkDirty();
-    }
-
-    public IEnumerable<NodeLogic> GetAllNodes() => _spawnedNodes.Values;
+    #endregion
 }

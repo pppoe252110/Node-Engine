@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 [NodePath("Variables/Get Global")]
-public class GetGlobalNode : BaseNode, IConnectionListener
+public class GetGlobalNode : BaseNode
 {
     [NodePort("In", true, true)] public void Enter() { }
     [NodePort("Out", false, true)] public void Exit() { }
@@ -12,16 +12,22 @@ public class GetGlobalNode : BaseNode, IConnectionListener
 
     [NonSerialized] public int NextExitIndex = -1;
 
+    public GetGlobalNode()
+    {
+        BindDynamicType("Type", "Value");
+    }
+
     public override void AssignFlowIndices(Dictionary<string, int> flowTargets)
     {
         NextExitIndex = flowTargets.TryGetValue("Out", out var idx) ? idx : -1;
     }
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int nameId = GetInputId("Name");
         int typeId = GetInputId("Type");
         int outId = GetOutputId("Value");
+        int exitFlow = NextExitIndex;
 
         return (ctx) =>
         {
@@ -34,32 +40,7 @@ public class GetGlobalNode : BaseNode, IConnectionListener
             else
                 Write(ctx, outId, null);
 
-            return NextExitIndex;
+            return ExecutionResult.Continue(exitFlow);
         };
-    }
-
-    public void OnConnected(Connector myConnector, Connector otherConnector)
-    {
-        if (myConnector.PortName == "Type" && otherConnector.Node is TypeVariableNode typeNode)
-            UpdateOutputType(typeNode.SelectedType);
-    }
-
-    public void OnDisconnected(Connector myConnector, Connector otherConnector)
-    {
-        if (myConnector.PortName == "Type")
-            UpdateOutputType(typeof(object));
-    }
-
-    private void UpdateOutputType(Type newType)
-    {
-        Type resolvedType = newType ?? typeof(object);
-        var outputConnector = LogicView?.OutputConnectors.Find(c => c.PortName == "Value");
-        if (outputConnector != null)
-            TypeChangeService.TryChangeConnectorType(outputConnector, resolvedType);
-        else
-        {
-            var portInfo = Ports.Find(p => p.Name == "Value" && !p.IsInput);
-            if (portInfo != null) portInfo.ValueType = resolvedType;
-        }
     }
 }

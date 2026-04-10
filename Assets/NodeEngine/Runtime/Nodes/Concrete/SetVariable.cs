@@ -16,25 +16,18 @@ public class SetGlobalNode : BaseNode
         BindDynamicType("Value", "Value");
     }
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
-        // 1. COMPILATION: Resolve indices ONCE. Zero cost at runtime.
         int nameId = GetInputId("Name");
         int valId = GetInputId("Value");
         int exitFlow = GetFlowId("Exit");
 
-        // 2. EXECUTION: Pure integer array access.
-        return (ctx) =>
-        {
+        return (ctx) => {
             string name = Read<string>(ctx, nameId);
-            object val = ctx.Memory[valId]; // Direct array access
-
+            object val = ctx.Memory[valId];
             if (!string.IsNullOrEmpty(name))
-            {
                 _globalVariables[name] = val;
-            }
-
-            return exitFlow; // Returning a captured int!
+            return ExecutionResult.Continue(exitFlow);
         };
     }
 

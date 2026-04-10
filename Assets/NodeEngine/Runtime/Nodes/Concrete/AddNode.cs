@@ -7,18 +7,17 @@ public class AddNode : BaseNode
     [NodePort("B", true)] public float b;
     [NodePort("Result", false)] public float result;
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int aId = GetInputId("A");
         int bId = GetInputId("B");
         int resultId = GetOutputId("Result");
 
-        return (ctx) =>
-        {
+        return (ctx) => {
             float inA = Read<float>(ctx, aId);
             float inB = Read<float>(ctx, bId);
             Write(ctx, resultId, inA + inB);
-            return -1;
+            return ExecutionResult.Continue(-1);
         };
     }
 }

@@ -16,16 +16,15 @@ public class LogNode : BaseNode
         NextExitIndex = flowTargets.TryGetValue("Out", out var idx) ? idx : -1;
     }
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int msgId = GetInputId("Message");
         int exitFlow = NextExitIndex;
 
-        return (ctx) =>
-        {
+        return (ctx) => {
             object msg = ctx.Memory[msgId];
             Debug.Log($"[NodeLog] {msg ?? "null"}");
-            return exitFlow;
+            return ExecutionResult.Continue(exitFlow);
         };
     }
 }

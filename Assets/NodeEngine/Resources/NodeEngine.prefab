@@ -1,5 +1,53 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1723356008353432846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4953284109887381288}
+  - component: {fileID: 4826746070640242654}
+  m_Layer: 0
+  m_Name: GraphSaveLoadSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4953284109887381288
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1723356008353432846}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8154144855530634116}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4826746070640242654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1723356008353432846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3754fdf2093943947a8500f9f1b53120, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NodeEngine.Runtime::GraphSaveLoadSystem
+  _saveFileExtension: .json
+  _quickSaveSlotName: QuickSave
+  _prettyPrint: 1
+  _nodesDatabase: {fileID: 11400000, guid: ead416cb3a8d0ee42b068ab20013e6eb, type: 2}
 --- !u!1 &1836765117867198089
 GameObject:
   m_ObjectHideFlags: 0
@@ -167,6 +215,7 @@ Transform:
   - {fileID: 4858027401457696412}
   - {fileID: 3324605215680891815}
   - {fileID: 708094794029438505}
+  - {fileID: 4953284109887381288}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7393820960370443455
@@ -200,6 +249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2523678ca50b0c5469fd4ee0a08980e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _logExecutionTime: 0
 --- !u!114 &4662335473029687767
 MonoBehaviour:
   m_ObjectHideFlags: 0

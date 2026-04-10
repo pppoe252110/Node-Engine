@@ -1,122 +1,79 @@
 using Radishmouse;
-using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using VContainer;
 
 public class ConnectorDragLogic : MonoBehaviour
 {
-    private BaseNode _node;
-    [SerializeField] private NodeDrag _nodeDrag;
-
     private UILineRenderer _dragLineRenderer;
     private Connector _dragConnector;
     private bool _isDragging = false;
 
-    private void OnEnable()
-    {
-        _nodeDrag.OnBeginDragCallback.AddListener(OnNodeDrag);
-        _nodeDrag.OnStopDragCallback.AddListener(OnNodeStopDrag);
-        _nodeDrag.OnClickCallback.AddListener(OnNodeClick);
-    }
+    private ConnectionManager _connectionManager;
+    private LineRenderersController _lineRenderersController;
 
-    private void OnDisable()
+    [Inject]
+    public void Construct(ConnectionManager connectionManager, LineRenderersController lineRenderersController)
     {
-        _nodeDrag.OnBeginDragCallback.RemoveListener(OnNodeDrag);
-        _nodeDrag.OnStopDragCallback.RemoveListener(OnNodeStopDrag);
-        _nodeDrag.OnClickCallback.RemoveListener(OnNodeClick);
+        _connectionManager = connectionManager;
+        _lineRenderersController = lineRenderersController;
     }
 
     private void Update()
     {
         if (_isDragging && _dragLineRenderer != null)
-        {
             UpdateDragLine();
-        }
     }
 
-    private void UpdateDragLine()
-    {
-        if (LineRenderersController.Instance == null)
-        {
-            Debug.LogError("LineRenderersController instance not found!");
-            return;
-        }
-
-        var startPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint);
-        var endPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value);
-
-        float pixelDistance = Vector2.Distance(startPoint, endPoint);
-
-        int pointsCount = LineRenderersController.Instance.CalculateDynamicPointsCount(pixelDistance);
-        float dynamicCurveIntensity = LineRenderersController.Instance.CalculateDynamicCurveIntensity(pixelDistance);
-
-        _dragLineRenderer.points = BezierFromTwoPoints.GetPoints(startPoint, endPoint, dynamicCurveIntensity, pointsCount);
-        _dragLineRenderer.SetAllDirty();
-    }
-    private void OnNodeClick(PointerEventData eventData, GameObject clickedObject)
-    {
-        if (eventData.button == PointerEventData.InputButton.Right)
-        {
-            HandleRightClick(clickedObject);
-        }
-    }
-
-    private void HandleRightClick(GameObject clickedObject)
-    {
-        if (clickedObject.transform.parent.TryGetComponent(out Connector connector))
-        {
-            ClearConnectorConnections(connector);
-        }
-    }
-
-    private void ClearConnectorConnections(Connector connector)
-    {
-        if (connector.ConnectionsCount > 0)
-        {
-            // Copy array to avoid modification during iteration
-            var connectionsToRemove = connector.Connections.ToArray();
-            foreach (var connectedConnector in connectionsToRemove)
-            {
-                // Route through the manager to ensure Logic Layer is unlinked!
-                ConnectionManager.Instance.Disconnect(connector, connectedConnector);
-            }
-        }
-    }
-
-    private void OnNodeDrag(PointerEventData eventData, GameObject draggedObject)
+    // Called by NodeDrag
+    public void HandleDragStarted(PointerEventData eventData, Connector connector)
     {
         if (eventData.button != PointerEventData.InputButton.Left) return;
+        _dragConnector = connector;
+        StartDragConnection();
+    }
 
-        if (draggedObject.transform.parent.TryGetComponent(out _dragConnector))
-        {
-            StartDragConnection();
-        }
+    // Called by NodeDrag
+    public void HandleDragEnded(PointerEventData eventData)
+    {
+        if (_dragConnector == null || eventData.button != PointerEventData.InputButton.Left) return;
+        TryCreateConnection(eventData);
+        CleanupDrag();
+    }
+
+    // Called by NodeDrag
+    public void HandleClicked(PointerEventData eventData, Connector connector)
+    {
+        if (eventData.button == PointerEventData.InputButton.Right)
+            ClearConnectorConnections(connector);
     }
 
     private void StartDragConnection()
     {
-        _dragLineRenderer = Instantiate(LineRenderersController.Instance.LineRendererPrefab, transform);
+        if (_lineRenderersController?.LineRendererPrefab == null)
+        {
+            Debug.LogError("[ConnectorDragLogic] LineRendererPrefab is not assigned in LineRenderersController!");
+            return;
+        }
+
+        _dragLineRenderer = Instantiate(_lineRenderersController.LineRendererPrefab, transform);
         _dragLineRenderer.material = CreateLineMaterial(_dragConnector.Color);
         _isDragging = true;
-
         UpdateDragLine();
     }
 
-    private Material CreateLineMaterial(Color color)
+    private void UpdateDragLine()
     {
-        var material = new Material(_dragLineRenderer.material);
-        material.SetColor("_Color1", color);
-        material.SetColor("_Color2", color);
-        return material;
-    }
+        var startPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(_dragConnector.DragPoint);
+        var endPoint = _dragLineRenderer.rectTransform.InverseTransformPoint(Mouse.current.position.value);
 
-    private void OnNodeStopDrag(PointerEventData eventData)
-    {
-        if (_dragConnector == null || eventData.button != PointerEventData.InputButton.Left) return;
+        float pixelDistance = Vector2.Distance(startPoint, endPoint);
+        int pointsCount = _lineRenderersController.CalculateDynamicPointsCount(pixelDistance);
+        float dynamicCurveIntensity = _lineRenderersController.CalculateDynamicCurveIntensity(pixelDistance);
 
-        TryCreateConnection(eventData);
-        CleanupDrag();
+        _dragLineRenderer.points = BezierFromTwoPoints.GetPoints(startPoint, endPoint, dynamicCurveIntensity, pointsCount);
+        _dragLineRenderer.SetAllDirty();
     }
 
     private void TryCreateConnection(PointerEventData eventData)
@@ -138,24 +95,14 @@ public class ConnectorDragLogic : MonoBehaviour
     {
         return _dragConnector.Node != targetConnector.Node &&
                targetConnector.ConnectionsCount == 0 &&
-               IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType);
+               TypeChangeLogic.IsCompatibleType(_dragConnector.ValueType, targetConnector.ValueType);
     }
 
     private void CreateConnection(Connector targetConnector)
     {
-        if (ConnectionManager.Instance != null)
+        if (_connectionManager != null)
         {
-            // Route through the manager to ensure BOTH Visual and Logic layers update
-            bool success = ConnectionManager.Instance.CreateConnectionWithConnectors(_dragConnector, targetConnector);
-
-            if (success && _dragLineRenderer != null)
-            {
-                LineRenderersController.Add(_dragConnector, targetConnector, _dragLineRenderer);
-
-                // The manager spawns the permanent line, so we can destroy the temporary drag line
-                //Destroy(_dragLineRenderer.gameObject);
-                _dragLineRenderer = null;
-            }
+            _connectionManager.CreateConnectionWithConnectors(_dragConnector, targetConnector);
         }
     }
 
@@ -165,14 +112,28 @@ public class ConnectorDragLogic : MonoBehaviour
         {
             Destroy(_dragLineRenderer.gameObject);
         }
-
         _dragLineRenderer = null;
         _dragConnector = null;
         _isDragging = false;
     }
 
-    private bool IsCompatibleType(Type dragType, Type targetType)
+    private void ClearConnectorConnections(Connector connector)
     {
-        return TypeChangeLogic.IsCompatibleType(dragType, targetType);
+        if (connector.ConnectionsCount > 0)
+        {
+            var connectionsToRemove = connector.Connections.ToArray();
+            foreach (var connectedConnector in connectionsToRemove)
+            {
+                _connectionManager.Disconnect(connector, connectedConnector);
+            }
+        }
+    }
+
+    private Material CreateLineMaterial(Color color)
+    {
+        var material = new Material(_dragLineRenderer.material);
+        material.SetColor("_Color1", color);
+        material.SetColor("_Color2", color);
+        return material;
     }
 }

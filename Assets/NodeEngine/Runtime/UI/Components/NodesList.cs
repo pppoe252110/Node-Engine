@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using VContainer;
 
 public class NodesList : MonoBehaviour
 {
@@ -18,21 +19,30 @@ public class NodesList : MonoBehaviour
     [Header("Search")]
     [SerializeField] private TMP_InputField _searchInputField;
 
-    private Dictionary<string, List<(NodesListItem item, int originalIndex)>> _groupedItems = new Dictionary<string, List<(NodesListItem item, int originalIndex)>>();
-    private Dictionary<string, NodesListGroup> _groupHeaders = new Dictionary<string, NodesListGroup>();
-    private Dictionary<string, RectTransform> _groupContainers = new Dictionary<string, RectTransform>();
+    private Dictionary<string, List<(NodesListItem item, int originalIndex)>> _groupedItems = new();
+    private Dictionary<string, NodesListGroup> _groupHeaders = new();
+    private Dictionary<string, RectTransform> _groupContainers = new();
     private string _currentSearch = "";
+
+    // Dependencies
+    private INodeFactory _nodeFactory;
+    private NodeSpawnerService _nodeSpawnerService;
+
+    [Inject]
+    public void Construct(INodeFactory nodeFactory, NodeSpawnerService nodeSpawner)
+    {
+        _nodeFactory = nodeFactory;
+        _nodeSpawnerService = nodeSpawner;
+    }
 
     private void Start()
     {
         _nodesListView.gameObject.SetActive(false);
 
         if (_searchInputField != null)
-        {
             _searchInputField.onValueChanged.AddListener(OnSearchValueChanged);
-        }
 
-        SpawnNodes();
+        BuildNodeList();
     }
 
     private void Update()
@@ -44,28 +54,28 @@ public class NodesList : MonoBehaviour
             _searchInputField.ActivateInputField();
 
             if (_nodesListView.gameObject.activeSelf)
-            {
                 ClearSearch();
-            }
         }
     }
 
-    public void SpawnNodes()
+    /// <summary>
+    /// Builds the UI list using SerializableNode data from the database.
+    /// </summary>
+    public void BuildNodeList()
     {
-        var nodes = _nodesDatabase.GetNodes();
+        var allNodeData = _nodesDatabase.GetAllNodeData().ToList();
         _groupedItems.Clear();
         _groupHeaders.Clear();
         _groupContainers.Clear();
 
+        // Clear existing UI
         foreach (Transform child in _nodesListParent)
-        {
             Destroy(child.gameObject);
-        }
 
-        for (int i = 0; i < nodes.Length; i++)
+        for (int i = 0; i < allNodeData.Count; i++)
         {
-            var node = nodes[i];
-            var (groupName, itemName) = GetNodeGroupAndName(node);
+            var nodeData = allNodeData[i];
+            var (groupName, itemName) = GetNodeGroupAndName(nodeData);
 
             if (!_groupedItems.ContainsKey(groupName))
             {
@@ -77,51 +87,37 @@ public class NodesList : MonoBehaviour
             item.SetUp(this, i);
             item.SetNodeName(itemName);
 
-            _groupedItems[groupName].Add((item: item, originalIndex: i));
+            _groupedItems[groupName].Add((item, originalIndex: i));
 
-            if (_groupContainers.ContainsKey(groupName))
-            {
-                item.transform.SetParent(_groupContainers[groupName]);
-            }
+            if (_groupContainers.TryGetValue(groupName, out var container))
+                item.transform.SetParent(container);
         }
 
         var sortedGroups = _groupedItems.OrderBy(g => g.Key).ToList();
-
         ReorganizeHierarchy(sortedGroups);
-
         ApplySearchFilter();
     }
 
-    private (string groupName, string itemName) GetNodeGroupAndName(BaseNode node)
+    private (string groupName, string itemName) GetNodeGroupAndName(SerializableNode nodeData)
     {
-        var nodeType = node.GetType();
-        var pathAttribute = nodeType.GetCustomAttributes(typeof(NodePathAttribute), false)
-                                  .FirstOrDefault() as NodePathAttribute;
+        Type nodeType = Type.GetType(nodeData.nodeType);
+        if (nodeType == null)
+            return ("Other", nodeData.nodeName);
 
-        string itemName = node.NodeName;
+        var pathAttr = nodeType.GetCustomAttributes(typeof(NodePathAttribute), false)
+                              .FirstOrDefault() as NodePathAttribute;
 
-        if (pathAttribute != null && !string.IsNullOrEmpty(pathAttribute.Path))
+        if (pathAttr != null && !string.IsNullOrEmpty(pathAttr.Path))
         {
-            var path = pathAttribute.Path;
+            var path = pathAttr.Path;
             var lastSlash = path.LastIndexOf('/');
-
             if (lastSlash >= 0)
-            {
-
-                string groupName = path.Substring(0, lastSlash);
-                return (groupName, itemName);
-            }
+                return (path.Substring(0, lastSlash), nodeData.nodeName);
             else
-            {
-
-                return ("Other", itemName);
-            }
+                return ("Other", nodeData.nodeName);
         }
-        else
-        {
 
-            return ("Other", itemName);
-        }
+        return ("Other", nodeData.nodeName);
     }
 
     private void CreateGroupHeader(string groupName)
@@ -150,11 +146,8 @@ public class NodesList : MonoBehaviour
             groupContainer.transform.SetAsLastSibling();
 
             var sortedItems = group.Value.OrderBy(x => x.item.nodeName.text).ToList();
-
             foreach (var tuple in sortedItems)
-            {
                 tuple.item.transform.SetParent(groupContainer);
-            }
         }
     }
 
@@ -175,25 +168,18 @@ public class NodesList : MonoBehaviour
                 if (tuple.item == null) continue;
 
                 bool shouldShow = string.IsNullOrEmpty(_currentSearch) ||
-                                tuple.item.nodeName.text.IndexOf(_currentSearch, StringComparison.OrdinalIgnoreCase) >= 0;
+                                  tuple.item.nodeName.text.IndexOf(_currentSearch, StringComparison.OrdinalIgnoreCase) >= 0;
 
                 tuple.item.gameObject.SetActive(shouldShow);
-
-                if (shouldShow)
-                {
-                    hasVisibleItemsInGroup = true;
-                }
+                if (shouldShow) hasVisibleItemsInGroup = true;
             }
 
-            if (_groupHeaders.ContainsKey(group.Key))
+            if (_groupHeaders.TryGetValue(group.Key, out var header))
             {
-                bool shouldShowGroup = hasVisibleItemsInGroup;
-                _groupHeaders[group.Key].gameObject.SetActive(shouldShowGroup);
-
-                if (_groupContainers.ContainsKey(group.Key))
-                {
-                    _groupContainers[group.Key].gameObject.SetActive(shouldShowGroup && _groupHeaders[group.Key].IsExpanded);
-                }
+                bool showGroup = hasVisibleItemsInGroup;
+                header.gameObject.SetActive(showGroup);
+                if (_groupContainers.TryGetValue(group.Key, out var container))
+                    container.gameObject.SetActive(showGroup && header.IsExpanded);
             }
         }
     }
@@ -201,22 +187,37 @@ public class NodesList : MonoBehaviour
     private void ClearSearch()
     {
         if (_searchInputField != null)
-        {
             _searchInputField.text = "";
-        }
         _currentSearch = "";
         ApplySearchFilter();
     }
 
+    /// <summary>
+    /// Called when a node is selected from the list.
+    /// Creates a new node instance via factory, applies metadata, and spawns it.
+    /// </summary>
     internal void SpawnNodeFromOriginalIndex(int originalIndex)
     {
-        var nodes = _nodesDatabase.GetNodes();
+        var allNodeData = _nodesDatabase.GetAllNodeData().ToList();
+        if (originalIndex < 0 || originalIndex >= allNodeData.Count)
+            return;
 
-        if (originalIndex >= 0 && originalIndex < nodes.Length)
+        var nodeData = allNodeData[originalIndex];
+        Type nodeType = Type.GetType(nodeData.nodeType);
+        if (nodeType == null)
         {
-            var targetNode = nodes[originalIndex];
-            var nodeLogic = NodeSpawnerService.Instance.SpawnNode(_nodesDatabase.GetClone(targetNode), _nodesListView.position);
+            Debug.LogError($"Cannot resolve type: {nodeData.nodeType}");
+            return;
         }
+
+        // Create a fresh node instance
+        BaseNode nodeInstance = _nodeFactory.CreateNode(nodeType);
+
+        // Apply name and icon from the database
+        _nodesDatabase.ApplyMetadata(nodeInstance);
+
+        // Spawn the visual node at the list's current position
+        _nodeSpawnerService.SpawnNode(nodeInstance, _nodesListView.localPosition);
 
         _nodesListView.gameObject.SetActive(false);
     }
@@ -226,9 +227,7 @@ public class NodesList : MonoBehaviour
         foreach (var group in _groupHeaders.Values)
         {
             if (group != null)
-            {
                 group.OnExpansionChanged -= OnGroupExpansionChanged;
-            }
         }
     }
 }

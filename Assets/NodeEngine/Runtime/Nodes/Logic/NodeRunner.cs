@@ -1,15 +1,42 @@
+using System.Collections.Generic;
 using System.Linq;
+using UniMediator.Runtime;
 using UnityEngine;
+using VContainer;
 
-public class NodeRunner : MonoBehaviour
+public class NodeRunner : MonoBehaviour, INotificationHandler<MarkGraphDirtyNotification>
 {
-    public static NodeRunner Instance;
-    private CompiledGraph _currentGraph;
-    private bool _isDirty = true;
+    [Header("Settings")]
+    [SerializeField] private bool _logExecutionTime = false;
+
+    private NodeCompiler.CompiledGraph _currentGraph;
+    private bool _isDirty = false;
     private bool _hasStarted = false;
 
-    private void Awake() => Instance = this;
-    public void MarkDirty() => _isDirty = true;
+    private readonly List<StartNode> _startNodes = new();
+    private readonly List<UpdateNode> _updateNodes = new();
+    private readonly List<TestNode> _testNodes = new();
+
+    private NodeSpawnerService _nodeSpawner;
+    private ConnectionManager _connectionManager;
+
+    [Inject]
+    public void Construct(NodeSpawnerService nodeSpawner, ConnectionManager connectionManager)
+    {
+        _nodeSpawner = nodeSpawner;
+        _connectionManager = connectionManager;
+    }
+
+    public void Handle(MarkGraphDirtyNotification notification)
+    {
+        MarkDirty();
+    }
+
+    public void MarkDirty()
+    {
+        _isDirty = true;
+        _hasStarted = false;
+    }
 
     private void Update()
     {
@@ -17,51 +44,83 @@ public class NodeRunner : MonoBehaviour
         {
             Recompile();
             _isDirty = false;
-            _hasStarted = false; // Reset Start logic when graph changes
+            _hasStarted = false;
         }
 
         if (_currentGraph == null) return;
 
-        // Execute "On Play" nodes only once per compile
         if (!_hasStarted)
         {
-            ExecuteNodesOfType<StartNode>();
+            for (int i = 0; i < _startNodes.Count; i++)
+                _currentGraph.ExecuteNode(_startNodes[i]);
             _hasStarted = true;
         }
 
-        // Execute continuous tick nodes
-        ExecuteNodesOfType<UpdateNode>();
+        for (int i = 0; i < _updateNodes.Count; i++)
+            _currentGraph.ExecuteNode(_updateNodes[i]);
     }
 
     public void ExecuteTest()
     {
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-        ExecuteNodesOfType<TestNode>();
-
-        stopwatch.Stop();
-        Debug.LogError(stopwatch.ElapsedMilliseconds);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        for (int i = 0; i < _testNodes.Count; i++)
+            _currentGraph.ExecuteNode(_testNodes[i]);
+        sw.Stop();
+        if (_logExecutionTime) Debug.Log($"[NodeRunner] Graph test execution time: {sw.ElapsedMilliseconds} ms");
     }
 
-    private void ExecuteNodesOfType<T>() where T : BaseNode
+    public void ExecuteNodeWithData(BaseNode node, Dictionary<string, object> externalData = null)
     {
-        var nodes = NodeSpawnerService.Instance.GetAllNodes()
-            .Select(n => n.Node)
-            .OfType<T>();
+        if (_currentGraph == null || node == null) return;
 
-        foreach (var node in nodes)
+        if (externalData != null && _currentGraph.NodeToIndex.TryGetValue(node, out int idx))
         {
-            _currentGraph.ExecuteNode(node);
+            var ctx = _currentGraph.Context;
+            foreach (var kvp in externalData)
+            {
+                var port = node.Ports.Find(p => p.Name == kvp.Key && p.IsInput);
+                if (port != null && node.InputMemoryIndices != null)
+                {
+                    int portIdx = node.Ports.IndexOf(port);
+                    if (portIdx < node.InputMemoryIndices.Length)
+                    {
+                        int memIdx = node.InputMemoryIndices[portIdx];
+                        if (memIdx >= 0 && memIdx < ctx.Memory.Length)
+                            ctx.Memory[memIdx] = kvp.Value;
+                    }
+                }
+            }
         }
+
+        _currentGraph.ExecuteNode(node);
     }
 
     private void Recompile()
     {
-        if (NodeSpawnerService.Instance == null || ConnectionManager.Instance == null) return;
-        var nodes = NodeSpawnerService.Instance.GetAllNodes().Select(n => n.Node).ToList();
-        var dataConns = ConnectionManager.Instance.ActiveDataConnections;
-        var flowConns = ConnectionManager.Instance.ActiveFlowConnections;
+        if (_nodeSpawner == null || _connectionManager == null) return;
+
+        _startNodes.Clear();
+        _updateNodes.Clear();
+        _testNodes.Clear();
+
+        var allLogics = _nodeSpawner.GetAllNodes();
+        var nodes = new List<BaseNode>(allLogics.Count());
+
+        foreach (var logic in allLogics)
+        {
+            var node = logic.Node;
+            if (node == null) continue;
+            nodes.Add(node);
+
+            if (node is StartNode sn) _startNodes.Add(sn);
+            else if (node is UpdateNode un) _updateNodes.Add(un);
+            else if (node is TestNode tn) _testNodes.Add(tn);
+        }
+
+        var dataConns = _connectionManager.ActiveDataConnections;
+        var flowConns = _connectionManager.ActiveFlowConnections;
 
         _currentGraph = NodeCompiler.Compile(nodes, dataConns, flowConns);
+        Debug.Log($"[NodeRunner] Graph compiled with {nodes.Count} nodes.");
     }
 }

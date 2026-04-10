@@ -12,9 +12,9 @@ public class UpdateNode : BaseNode
         NextExitIndex = flowTargets.TryGetValue("Out", out var idx) ? idx : -1;
     }
 
-    public override Func<GraphContext, int> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile()
     {
         int exitFlow = NextExitIndex;
-        return (ctx) => exitFlow;
+        return (ctx) => ExecutionResult.Continue(exitFlow);
     }
 }

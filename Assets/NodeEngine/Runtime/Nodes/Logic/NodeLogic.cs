@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class NodeLogic : MonoBehaviour
 {
@@ -11,7 +12,6 @@ public class NodeLogic : MonoBehaviour
     public List<Connector> InputConnectors { get; private set; } = new List<Connector>();
     public List<Connector> OutputConnectors { get; private set; } = new List<Connector>();
 
-    // Expose UI elements for the spawner
     public Image BackgroundImage => _image;
     public Image NodeIcon => _nodeIcon;
     public TextMeshProUGUI NodeNameText => _nodeName;
@@ -19,6 +19,7 @@ public class NodeLogic : MonoBehaviour
     public NodeUIManager UIManager => _nodeUIManager;
 
     private BaseNode _node;
+    private NodeSpawnerService _nodeSpawnerService;
 
     [Header("References")]
     [SerializeField] private NodeUIManager _nodeUIManager;
@@ -27,7 +28,12 @@ public class NodeLogic : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _nodeName;
     [SerializeField] private TextMeshProUGUI _nodeType;
 
-    // Now only sets the data – NO UI instantiation
+    [Inject]
+    public void Construct(NodeSpawnerService spawnerService)
+    {
+        _nodeSpawnerService = spawnerService;
+    }
+
     public void SetNodeBase(BaseNode nodeBase, string guid)
     {
         if (nodeBase == null) return;
@@ -43,6 +49,6 @@ public class NodeLogic : MonoBehaviour
     public void DeleteNode()
     {
         if (_node == null) return;
-        NodeSpawnerService.Instance.DeleteNode(this);
+        _nodeSpawnerService?.DeleteNode(this);
     }
 }
