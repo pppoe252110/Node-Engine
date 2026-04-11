@@ -16,12 +16,12 @@ Allow your players to create, edit, and execute node‑based logic directly insi
 - [What is This?](#-what-is-this)
 - [Features](#-features)
 - [Installation](#-installation)
-- [Quick Setup](#%EF%B8%8F-quick-setup)
+- [Quick Setup](#-quick-setup)
 - [Controls](#-controls)
 - [Save & Load System](#-save--load-system)
 - [Node Categories](#-node-categories)
 - [Creating Custom Nodes](#-creating-custom-nodes)
-- [Architecture Overview](#%EF%B8%8F-architecture-overview)
+- [Architecture Overview](#-architecture-overview)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -89,7 +89,7 @@ https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine
 ---
 
 
-## 🛠️ Quick Setup
+## ⚒ Quick Setup
 
 1. Run Setup `Tools > Node Engine > Setup`
 
@@ -242,7 +242,7 @@ If your node’s output type depends on an input type (e.g. a `Convert` node), u
 
 ---
 
-## 🏗️ Architecture Overview
+## 🦺 Architecture Overview
 
 | Component | Responsibility |
 |-----------|----------------|
