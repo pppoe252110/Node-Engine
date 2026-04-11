@@ -1,366 +1,289 @@
-# 🎮 In-Game Node Engine
+# 🎮 In‑Game Node Engine
 
-<div align="center">
-
-A complete in-game visual scripting system that allows players to create, edit, and execute node-based logic directly within your Unity game.
+**A complete runtime visual scripting system for Unity games.**  
+Allow your players to create, edit, and execute node‑based logic directly inside your game.
 
 [![Unity Version](https://img.shields.io/badge/Unity-6000.1+-blue.svg)](https://unity3d.com/get-unity/download)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-⚠️ **IN DEVELOPMENT** ⚠️
-</div>
+⚠️ **Active Development** – features and APIs are evolving.
 
-## ⚡ Performance Improvements
-
-**Version 0.3 is 1.5x faster than Version 0.2**
-
-This performance boost comes from two key optimizations:
-
-1. **UI Variables Caching** - Variable nodes now cache their values, eliminating redundant UI updates and value conversions
-2. **Execution Flow Refactoring** - Complete overhaul of node execution logic with optimized value propagation and reduced processing overhead
+---
 
 ## 📖 Table of Contents
+
 - [What is This?](#-what-is-this)
-- [✨ Features](#-features)
-- [📦 Installation](#-installation)
-- [🛠️ Setup Instructions](#️-setup-instructions)
-- [💾 Save/Load System](#-saveload-system)
-- [🎮 Controls](#-controls)
-- [🔗 Connection System](#-connection-system)
-- [📊 Available Node Types](#-available-node-types)
-- [🔧 Advanced Usage](#-advanced-usage)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+- [Features](#-features)
+- [Installation](#-installation)
+- [Quick Setup](#%EF%B8%8F-quick-setup)
+- [Controls](#-controls)
+- [Save & Load System](#-save--load-system)
+- [Node Categories](#-node-categories)
+- [Creating Custom Nodes](#-creating-custom-nodes)
+- [Architecture Overview](#%EF%B8%8F-architecture-overview)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
 
 ## 🎯 What is This?
 
-The In-Game Node Engine is a **player-facing visual scripting system** that empowers your players to become creators without writing a single line of code. It provides a powerful node-based interface directly within your game, enabling:
+The **In‑Game Node Engine** is a **player‑facing visual scripting framework**.  
+Players can build their own logic using a node graph, without writing code.  
+It runs entirely at runtime, making it perfect for modding, user‑generated content, or in‑game automation.
 
-- 🛠️ **In-game logic creation** - Players build their own scripts without coding
-- ⚡ **Real-time execution** - Node graphs run directly in gameplay
-- 🎨 **Visual programming** - Intuitive drag-and-drop interface accessible to non-programmers
-- 🔧 **Modding & customization** - Players can create custom game mechanics and content
-- 🧩 **Extensible architecture** - Easily add new node types to fit your game's needs
-<img width="1918" height="882" alt="image" src="https://github.com/user-attachments/assets/6c14af94-4fc4-4615-b5f6-c43e431b6bb2" />
-<img width="1917" height="881" alt="image" src="https://github.com/user-attachments/assets/7e37b673-802f-438e-b7de-9ca81e1ce16a" />
+- 🎨 Visual drag‑and‑drop interface
+- ⚡ Real‑time execution during gameplay
+- 🧩 Fully extensible – create your own node types
+- 💾 Built‑in save/load for node graphs
+- 🔌 Strongly typed connection system with visual feedback
+
+---
 
 ## ✨ Features
 
-### 🎮 Player Experience
-- **Intuitive Interface**: Clean, user-friendly design that's easy to learn
-- **No Coding Required**: Create complex behaviors through visual connections
-- **Real-time Preview**: See results immediately as you build
-- **Drag & Drop**: Simple node creation and connection system
+### For Players
+- **Intuitive Node Editor** – pan, zoom, connect, and arrange nodes.
+- **Type‑Safe Connections** – colour‑coded ports prevent invalid links.
+- **Flow & Data Connections** – control execution order and pass values.
+- **Live Execution** – graphs run inside the game world.
 
-### 🛠️ Developer Tools
-- **Easy Integration**: Simple setup process for any Unity project
-- **Custom Node Creation**: Extend the system with your own specialized nodes
-- **Performance Optimized**: Efficient execution even with complex node graphs
-- **Robust Type System**: Prevents errors with strong type validation
-- **Save/Load System**: Persistent storage of node graphs
-- **Console Debugging**: Built-in console for debugging node execution
+### For Developers
+- **Zero‑Editor‑Only Code** – everything is built for runtime.
+- **Attribute‑Based Node Definition** – define ports with simple C# attributes.
+- **Compilation Pipeline** – graphs are compiled into efficient, stack‑based bytecode‑like instructions.
+- **Dependency Injection Ready** – uses `VContainer` for clean, testable architecture.
+- **Extensible Persistence** – custom `IValuePersister` for any data type.
+- **Save/Load API** – easily store and restore complete node graphs.
+
+---
 
 ## 📦 Installation
 
-This package has a dependency on **UniTask**. Because of how Unity's Package Manager handles Git dependencies, you must install UniTask first.
+The Node Engine depends on three lightweight libraries. Install them in order:
 
-Please follow one of the methods below carefully.
-
-### Option 1: Using Package Manager UI (Recommended)
-
-This method uses the Unity Editor's interface and gives you visual feedback.
-
-**Step 1: Install UniTask Dependency**
-
-1.  In Unity, navigate to **Window > Package Manager**.
-2.  Click the **`+`** icon in the top-left corner and select **"Add package from git URL..."**.
-3.  Enter the following URL and click **Add**:
-    ```
-    https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask
-    ```
-4.  Wait for the package to install. You should see "UniTask" appear in your Package Manager list.
-
-**Step 2: Install the Node Engine**
-
-1.  With UniTask successfully installed, click the **`+`** icon in the Package Manager again.
-2.  Select **"Add package from git URL..."**.
-3.  Enter the following URL and click **Add**:
-    ```
-    https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine
-    ```
-
-The installation should now complete without errors.
-
-### Option 2: Using `manifest.json` (Advanced)
-
-This method involves editing a project file directly.
-
-1.  **Open your project's `manifest.json` file.** You can find it at `YourProject/Packages/manifest.json`.
-2.  **Add both packages** to the `dependencies` object. It should look something like this:
-
-```json
-{
-  "dependencies": {
-    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
-    "com.parity.nodeengine": "https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine",
-    "com.unity.modules.ui": "1.0.0",
-    "com.unity.modules.imgui": "1.0.0"
-  }
-}
+### 1️⃣ UniTask
+```
+https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask
 ```
 
-## 🛠️ Setup Instructions
+### 2️⃣ VContainer
+```
+https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer
+```
 
-### Quick Setup (5 minutes)
+### 3️⃣ UniMediator
+```
+https://github.com/pppoe252110/UniMediator.git?path=Assets/Plugins/UniMediator
+```
 
-1. **Install the package** using one of the methods above
-2. **Run the Setup Wizard**:
-   - In Unity Editor, go to **Tools → Node Engine → Setup**
-   - This will open the setup window automatically on first import
-   - Check the options you want (recommended: both options enabled)
-   - Click **"Run Setup"** to copy resources and fix references
+### 4️⃣ Node Engine
+```
+https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine
+```
 
-3. **Add the NodeEngine to your scene**:
-   - Navigate to `Assets/Resources/NodeEngine/` in your Project window
-   - Drag the `NodeEngine.prefab` into your scene
+> **Method:** In Unity, open **Window → Package Manager → + → Add package from git URL…** and paste each URL.  
+> Alternatively, add all four entries directly to `Packages/manifest.json`.
 
-4. **Test it out**:
-   - Press **Play** in Unity
-   - Press **Space** to open the node spawn menu
-   - Start creating nodes and connecting them!
+---
 
-### Setup Wizard Features
 
-The setup wizard automatically handles:
+## 🛠️ Quick Setup
 
-- **Resource Copying**: Copies necessary files from the package to your project
-- **GUID Fixing**: Updates all internal references to work in your project
-- **Example Graphs**: Provides sample node graphs to learn from
-- **Version Checking**: Automatically checks for updates
-- **Status Tracking**: Shows current setup status
+1. Run Setup `Tools > Node Engine > Setup`
 
-## 💾 Save/Load System
+2. **Add the Prefab**  
+ Drag `Assets/Resources/NodeEngine/NodeEngine.prefab` into your starting scene.
 
-The Node Engine includes a robust save/load system that allows players to:
+3. **Press Play**  
+ The node editor is ready. Press `Space` to open the spawn menu.
 
-- **Save Node Graphs**: Store complete node configurations for later use
-- **Load Node Graphs**: Restore previously saved node configurations
-- **Quick Save/Load**: Fast access to frequently used graphs
-- **Export/Import**: Share node graphs between projects or with other players
+4. **Create Your First Graph**  
+ - Spawn an `Update` node (from **Events**)  
+ - Add a `Debug/Log` node  
+ - Connect the flow output of `Update` to the input of `Log`  
+ - Connect a `String Variable` node to the `Message` port  
+ - Enter some text in the variable node and watch the console.
 
-### Save/Load Controls
-
-| Action | Control | Description |
-|--------|---------|-------------|
-| **Quick Save** | `F5` | Save the current node graph as "quicksave" |
-| **Quick Load** | `F9` | Load the "quicksave" graph |
-| **Save Menu** | `Save Button` | Access the full save/load interface |
-
-### Save File Management
-
-- **Location**: Save files are stored in your project's `Assets` folder as `.json` files
-- **Compatibility**: Saved graphs are compatible across different Unity versions
-- **Backup**: Automatic backup system prevents data loss
-- **Versioning**: Save files include version information for future compatibility
-<img width="1918" height="882" alt="image" src="https://github.com/user-attachments/assets/23ea0681-59d4-4ef5-b6f9-eab61b018624" />
+---
 
 ## 🎮 Controls
 
-### Basic Navigation
+| Action | Control |
+|--------|---------|
+| Open spawn menu | `Space` (at mouse position) |
+| Close spawn menu | Click outside |
+| Pan canvas | `Middle Mouse` drag |
+| Zoom | `Mouse Wheel` |
+| Select / Move node | `Left Click` drag on node header |
+| Create connection | Drag from an output port to an input port |
+| Delete connection | `Right Click` on a port |
+| Delete node | `Right Click` → Delete (context menu) |
+| Save / Load | UI buttons (Quick Save `F5`, Quick Load `F9`) |
 
-| Action | Control | Description |
-|--------|---------|-------------|
-| **Open/Close Menu** | `Space` | Open/close node spawn menu at mouse position |
-| **Context Menu** | `Right Click` | Access context menus for node management |
-| **Pan Canvas** | `Middle Mouse` | Move around the node canvas |
-| **Zoom** | `Mouse Wheel` | Zoom in/out of the canvas |
-| **Connect Nodes** | `Drag` | Create connections between node ports |
-| **Delete Connection** | `Right Click on Connector` | Remove existing connections |
+---
 
-## 🔗 Connection System
+## 💾 Save & Load System
 
-The node engine features a robust connection system with visual feedback:
+Graphs are serialised to JSON and can be saved/loaded at runtime.
 
-### Connection Types
+| Method | Description |
+|--------|-------------|
+| `SaveGraph(string name)` | Save current graph to persistent storage. |
+| `LoadGraph(string name)` | Load and restore a previously saved graph. |
+| `QuickSave()` / `QuickLoad()` | Use a fixed quick‑save slot. |
+| `GetSaveFiles()` | List all available saves. |
 
-- **Color-coded Types**: Different connection types are represented by different colors:
-  - 🔴 **Red**: Integer values (`Int32`) - whole numbers
-  - 🟢 **Green**: Float values (`Single`) - decimal numbers  
-  - 🔵 **Blue**: Boolean values (`Boolean`) - true/false
-  - 🟡 **Yellow**: String values (`String`) - text
-  - 🟣 **Purple**: Void/Events (`Void`) - execution flow
-  - 🟠 **Orange**: Vector3 values (`Vector3`) - 3D vectors
-  - 🔷 **Cyan**: GameObject references (`GameObject`) - Unity objects
-  - 🟣 **Magenta**: Object/Generic types (`Object`) - any object
-  - ⚫ **Gray**: Fallback/Unknown types
+- Saved files are stored in `Application.persistentDataPath/NodeGraphs/`.  
+- Each save includes node positions, port connections, and variable values.
 
-### Connection Rules
+---
 
-- **Type Validation**: Prevents incompatible connections with visual feedback
-- **Connection Flow**: Data flows from left to right
-- **Multi-connections**: One output can connect to multiple inputs, but inputs can only have one connection
-
-### Connection Creation
-
-1. **Click and drag** from any output connector (right side of node)
-2. **Drag to** any compatible input connector (left side of another node)
-3. **Release** to create the connection
-4. **Right-click** on any connector to remove all its connections
-
-## 📊 Available Node Types
+## 📊 Node Categories
 
 ### 🎯 Control Flow
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **Update** | Executes on play event | None | Execute |
-| **For Loop** | Iterates through a range of values | Count, Execute | Body, Index, End |
-| **If-Else** | Conditional branching | Condition, Execute | True, False |
+| Node | Description |
+|------|-------------|
+| **Start** | Entry point executed once when graph is marked ready. |
+| **Update** | Fires every frame. |
+| **Branch** | If‑Else condition. |
+| **For Loop** | Iterates a fixed number of times. |
+| **While** | Loops while condition is true. |
+| **Sequence** | Executes multiple outputs in order. |
+| **Throttle** | Limits execution rate by time interval. |
 
-### 💾 Variables
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **Int** | Integer variable | None | Value |
-| **Float** | Floating-point variable | None | Value |
-| **Bool** | Boolean variable | None | Value |
-| **String** | Text variable | None | Value |
-| **Vector3** | 3D vector variable | None | Value |
-| **Set Variable** | Store value in variable | Value, Name, Execute | Execute |
+### ➕ Math
+- Add, Subtract, Multiply, Divide, Modulo  
+- Abs, Ceil, Floor, Round, Sign, Clamp  
+- Sin, Cos, Tan, Asin, Acos, Atan, Atan2  
+- Lerp, InverseLerp, Power, Sqrt, Deg/Rad conversion  
+- Min, Max, PI constant
 
-### ➕ Math Operations
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **Add** | Adds two values | A, B | Result |
-| **Subtract** | Subtracts one value from another | A, B | Result |
-| **Multiply** | Multiplies two values | A, B | Result |
-| **Divide** | Divides one value by another | A, B | Result |
-| **Clamp** | Restricts a value between min and max | Value, Min, Max | Result |
-
-### 🎮 Game Objects
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **Move GameObject** | Changes position of GameObject | Target, Position, Speed, Execute | Execute |
-| *More GameObject nodes coming soon* | | | |
+### 🧠 Logic
+- **Comparison** (Equal, NotEqual, Greater, Less, etc.)  
 
 ### 🔄 Conversion
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **ToString** | Converts any value to string | Input | Output |
+- **Convert** – change type (e.g. int → float)  
+- **ToString** – convert any value to string  
 
-### 🐛 Debug & Output
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **Debug Log** | Outputs message to console | LogString, Execute | Execute |
+### 🎮 Game Objects
+- **Move GameObject** – set Transform position(not done yet)  
 
-### ⏱️ Time & Events
-| Node | Description | Inputs | Outputs |
-|------|-------------|--------|---------|
-| **Time** | Provides time-based values | None | DeltaTime, Time, RealTime |
+### 💾 Variables
+- **Int, Float, Bool, String, Vector3, Type, ComparisonOperation**  
+- **Get Global / Set Global** – share values across graphs  
 
-## 🔧 Advanced Usage
+### 🐛 Debug
+- **Log** – print message to Unity console  
+
+### ⏱️ Engine
+- **Time** – provides `deltaTime`, `time`, `realtimeSinceStartup`
+
+---
 
 ## 🔧 Creating Custom Nodes
 
-Here's an example of creating a custom Debug node that outputs messages to the console:
+Define a new node by inheriting from `BaseNode` and using attributes.
 
 ```csharp
-[NodePath("Debug/Log")]
-public class DebugNode : ExecutableNodeBase
+[NodePath("String/Replace")]
+public class StringReplaceNode : BaseNode
 {
-    private ConnectorValueString _logText;
-    private NodeField<ConnectorValueString> _inputField;
+    [NodePort("In", true, true)]
+    public void Enter() { }
 
-    [NodeValue("LogString", typeof(string))]
-    public void LogString(ConnectorValueString value)
+    [NodePort("Source", true)]
+    public string source;
+
+    [NodePort("Old", true)]
+    public string oldValue;
+
+    [NodePort("New", true)]
+    public string replacement;
+
+    [NodePort("Result", false)]
+    public string result;
+
+    [NodePort("Out", false, true)]
+    public void Exit() { }
+
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        _logText = value;
-    }
+        int sourceId = context.GetInputId("Source");
+        int oldId    = context.GetInputId("Old");
+        int newId    = context.GetInputId("New");
+        int resultId = context.GetOutputId("Result");
+        int exitFlow = context.GetFlowId("Out");
 
-    public override void Execute()
-    {
-        _inputField.ProceedValue();
-        string text = _logText?.GetInnerValue() ?? "null";
-        if (ConsoleUI.Instance != null)
+        return ctx =>
         {
-            ConsoleUI.Instance.LogMessage($"[Debug] {text}");
-        }
-        else
-        {
-            Debug.Log($"[Debug] {text}");
-        }
+            string src = ctx.Read<string>(sourceId) ?? string.Empty;
+            string old = ctx.Read<string>(oldId) ?? string.Empty;
+            string repl = ctx.Read<string>(newId) ?? string.Empty;
 
-        base.Execute();
-    }
+            string replaced = src.Replace(old, repl);
+            ctx.Write(resultId, replaced);
 
-    public override void Setup()
-    {
-        _logText = new ConnectorValueString();
-        _inputField = new NodeField<ConnectorValueString>().SetHandler(LogString).SetDefaultValue(_logText);
-
-        inputFields = new()
-        {
-            _inputField
+            return ExecutionResult.Continue(exitFlow);
         };
-        
-        base.Setup();
     }
 }
 ```
+### Port Attributes
 
-## 🔧 Advanced Usage
+- `[NodePort("Name", isInput, isFlow = false, order = 0)]`  
+- Flow ports (`isFlow = true`) are used for execution control.  
+- Non‑flow ports carry typed data.
 
-### Performance Optimization
+### Dynamic Type Binding
 
-- Implement **caching** for frequently accessed values
-- Use **void connections** for execution flow to avoid unnecessary data processing
-- **Batch process** nodes when possible to reduce per-frame overhead
+If your node’s output type depends on an input type (e.g. a `Convert` node), use `BindDynamicType` in the constructor to automatically update port types when a `Type` variable is connected.
 
-### Debugging Tips
+---
 
-- Use the **Console UI** to see real-time execution logs
-- Check **connection colors** to verify data types are compatible
-- Use **Debug nodes** to output intermediate values
-- Enable **execution visualization** to see data flow through the graph
+## 🏗️ Architecture Overview
+
+| Component | Responsibility |
+|-----------|----------------|
+| `BaseNode` | Core node logic, port definition, compilation. |
+| `NodeCompiler` / `CompilationPipeline` | Transforms graph into executable delegates. |
+| `GraphContext` | Holds runtime memory and execution stack. |
+| `ConnectionManager` / `ConnectionService` | Manages data & flow connections. |
+| `NodeSpawnerService` | Instantiates and manages node UI. |
+| `NodeRunner` | Executes compiled graph (Start/Update/Test). |
+| `GraphSnapshotBuilder` / `GraphRestorer` | Serialise / deserialise graph state. |
+| `PersistenceService` | Delegates variable serialisation to `IValuePersister` implementations. |
+
+### Execution Flow
+1. Graph is compiled into a `CompiledGraph` containing a delegate per node.  
+2. `NodeRunner` calls `ExecuteNode(startNode)` → stack‑based execution begins.  
+3. Data flows through shared memory (array of `object`).  
+4. Flow connections determine which nodes are executed next.
+
+---
 
 ## 🤝 Contributing
 
-I'm open to contributions! Whether you're fixing bugs, adding new features, or improving documentation, your help is appreciated.
+Contributions are welcome!  
+Open an issue or a pull request for:
 
-### How to Contribute
+- New node types  
+- Bug fixes  
+- Performance improvements  
+- Documentation updates  
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add some amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-### Contribution Areas
-
-- **New Node Types**: Add functionality specific to your game
-- **UI Improvements**: Enhance the user experience
-- **Performance Optimizations**: Make the system faster
-- **Documentation**: Help others learn to use the system
-- **Bug Fixes**: Squash those pesky issues
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Thanks to all the contributors who have helped make this project possible
-- Inspired by other visual scripting tools like Unreal Blueprint and Unity Bolt
-- Built with [UniTask](https://github.com/Cysharp/UniTask) for async operations
-- Uses custom UI components for optimal performance
+MIT License – see [LICENSE](LICENSE) for full text.
 
 ---
 
 <div align="center">
 
-**Happy Node Building!** 🎉
-
-Made with ❤️ by pppoe252110
-
-*If you use this in your project, let me know! I'd love to see what you create.*
+**Happy Building!** 🎉  
+Made with ❤️ by [pppoe252110](https://github.com/pppoe252110)
 
 </div>
