@@ -91,15 +91,16 @@ https://github.com/pppoe252110/Node-Engine.git?path=/Assets/NodeEngine
 
 ## ⚒ Quick Setup
 
-1. Run Setup `Tools > Node Engine > Setup`
+1. **Run Setup**  
+ Open Setup Window `Tools > Node Engine > Setup`
 
-2. **Add the Prefab**  
+3. **Add the Prefab**  
  Drag `Assets/Resources/NodeEngine/NodeEngine.prefab` into your starting scene.
 
-3. **Press Play**  
+4. **Press Play**  
  The node editor is ready. Press `Space` to open the spawn menu.
 
-4. **Create Your First Graph**  
+5. **Create Your First Graph**  
  - Spawn an `Update` node (from **Events**)  
  - Add a `Debug/Log` node  
  - Connect the flow output of `Update` to the input of `Log`  
