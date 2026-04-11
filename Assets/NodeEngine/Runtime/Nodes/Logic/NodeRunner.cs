@@ -73,24 +73,8 @@ public class NodeRunner : MonoBehaviour, INotificationHandler<MarkGraphDirtyNoti
     {
         if (_currentGraph == null || node == null) return;
 
-        if (externalData != null && _currentGraph.NodeToIndex.TryGetValue(node, out int idx))
-        {
-            var ctx = _currentGraph.Context;
-            foreach (var kvp in externalData)
-            {
-                var port = node.Ports.Find(p => p.Name == kvp.Key && p.IsInput);
-                if (port != null && node.InputMemoryIndices != null)
-                {
-                    int portIdx = node.Ports.IndexOf(port);
-                    if (portIdx < node.InputMemoryIndices.Length)
-                    {
-                        int memIdx = node.InputMemoryIndices[portIdx];
-                        if (memIdx >= 0 && memIdx < ctx.Memory.Length)
-                            ctx.Memory[memIdx] = kvp.Value;
-                    }
-                }
-            }
-        }
+        if (externalData != null)
+            _currentGraph.SetNodeInputData(node, externalData);
 
         _currentGraph.ExecuteNode(node);
     }

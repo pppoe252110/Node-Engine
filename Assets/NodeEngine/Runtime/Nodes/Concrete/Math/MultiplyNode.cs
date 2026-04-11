@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 
 [NodePath("Math/Multiply")]
@@ -7,11 +8,11 @@ public class MultiplyNode : BaseNode
     [NodePort("B", true)] public float b;
     [NodePort("Result", false)] public float result;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int aId = GetInputId("A");
-        int bId = GetInputId("B");
-        int resId = GetOutputId("Result");
+        int aId = context.GetInputId("A");
+        int bId = context.GetInputId("B");
+        int resId = context.GetOutputId("Result");
 
         return (ctx) => {
             float a = Read<float>(ctx, aId);

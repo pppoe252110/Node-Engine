@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 using UnityEngine;
 
 public enum ComparisonOperation
@@ -19,12 +20,12 @@ public class ComparisonNode : BaseNode
     [NodePort("Operation", true)] public ComparisonOperation operation;
     [NodePort("Result", false)] public bool result;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int aId = GetInputId("A");
-        int bId = GetInputId("B");
-        int opId = GetInputId("Operation");
-        int resId = GetOutputId("Result");
+        int aId = context.GetInputId("A");
+        int bId = context.GetInputId("B");
+        int opId = context.GetInputId("Operation");
+        int resId = context.GetOutputId("Result");
 
         return (ctx) =>
         {

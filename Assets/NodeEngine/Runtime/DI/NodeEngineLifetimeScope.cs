@@ -1,8 +1,9 @@
-﻿using System.Linq;
+﻿using NodeEngine.GraphPersistence;
+using System.Linq;
+using UniMediator.Runtime.VContainer;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
-using UniMediator.Runtime.VContainer;
 
 public class NodeEngineLifetimeScope : LifetimeScope
 {
@@ -16,9 +17,14 @@ public class NodeEngineLifetimeScope : LifetimeScope
     [SerializeField] private UIZoomPan _UIZoomPan;
     [SerializeField] private Canvas _mainCanvas;
     [SerializeField] private ConnectionVisualsHandler _connectionVisualsHandler;
+    [SerializeField] private VariableUIRegistry _variableUIRegistry;
+    [SerializeField] private NodesDatabase nodesDatabase;
 
     protected override void Configure(IContainerBuilder builder)
     {
+        builder.RegisterInstance(nodesDatabase);
+        builder.RegisterInstance(_variableUIRegistry);
+
         builder.RegisterComponent(_mainCanvas);
 
         builder.RegisterMediator();
@@ -28,9 +34,24 @@ public class NodeEngineLifetimeScope : LifetimeScope
             new LocalGraphStorage(Application.persistentDataPath + "/NodeGraphs/", ".json"),
             Lifetime.Singleton);
 
+        var persisterTypes = typeof(IValuePersister).Assembly.GetTypes()
+            .Where(t => typeof(IValuePersister).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+        foreach (var type in persisterTypes)
+        {
+            builder.Register(type, Lifetime.Singleton).As<IValuePersister>();
+        }
+
+        builder.Register<PersistenceService>(Lifetime.Singleton);
+
+        builder.Register<GraphSaveService>(Lifetime.Singleton);
+        builder.Register<GraphLoadService>(Lifetime.Singleton);
+        builder.Register<GraphSnapshotBuilder>(Lifetime.Singleton);
+        builder.Register<GraphRestorer>(Lifetime.Singleton);
         builder.Register<GraphSerializer>(Lifetime.Singleton);
+
         builder.Register<TypeChangeService>(Lifetime.Singleton);
         builder.Register<INodeFactory, NodeFactory>(Lifetime.Singleton);
+        builder.Register<ConnectionService>(Lifetime.Singleton);
 
         RegisterAllNodeTypes(builder);
 

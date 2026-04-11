@@ -4,31 +4,30 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using VContainer;
+using NodeEngine.Compilation;
 
-public abstract class BaseNode : IConnectionListener
+public abstract class BaseNode
 {
-    // --- UI & Editor Properties ---
+    // --- UI & Editor Properties (unchanged) ---
     public string NodeName { get; protected set; }
     public Sprite NodeSprite { get; protected set; }
     public string NodeId { get; protected set; }
     public int RuntimeId { get; internal set; } = -1;
     public NodeLogic LogicView { get; protected set; }
 
-    public int[] InputMemoryIndices;
-    public int[] OutputMemoryIndices;
-    public List<NodePortInfo> Ports = new List<NodePortInfo>();
+    // Port definition (readonly after construction)
+    public List<NodePortInfo> Ports { get; private set; }
 
-    // --- Cached maps filled by the compiler ---
-    protected Dictionary<string, int> _inMap = new();
-    protected Dictionary<string, int> _outMap = new();
-    protected Dictionary<string, int> _flowMap = new();
-
-    // --- Dynamic type forwarding ---
+    // Dynamic type forwarding (still needed for UI/editor interactions)
     protected Dictionary<string, List<string>> _dynamicTypes = new();
 
+    // Services (unchanged)
     private TypeChangeService _typeChangeService;
 
-    public BaseNode() => DiscoverPorts();
+    public BaseNode()
+    {
+        DiscoverPorts();
+    }
 
     [Inject]
     public void Construct(TypeChangeService typeChangeService)
@@ -45,6 +44,7 @@ public abstract class BaseNode : IConnectionListener
     public void SetName(string name) => NodeName = name;
     public void SetIcon(Sprite icon) => NodeSprite = icon;
 
+    // --- Port Discovery (unchanged) ---
     private void DiscoverPorts()
     {
         var portsList = new List<NodePortInfo>();
@@ -59,8 +59,7 @@ public abstract class BaseNode : IConnectionListener
             else if (member is MethodInfo m)
             {
                 var parameters = m.GetParameters();
-                if (parameters.Length > 0) portType = parameters[0].ParameterType;
-                else portType = typeof(void);
+                portType = parameters.Length > 0 ? parameters[0].ParameterType : typeof(void);
             }
 
             portsList.Add(new NodePortInfo
@@ -75,63 +74,26 @@ public abstract class BaseNode : IConnectionListener
         Ports = portsList.OrderBy(p => p.Name).ToList();
     }
 
-    // Called by the compiler to map names to memory blocks
-    public void SetMemoryIndices(int[] inputs, int[] outputs)
+    // Helper to find port index by name
+    public bool TryGetPortIndex(string name, bool isInput, out int index)
     {
-        InputMemoryIndices = inputs;
-        OutputMemoryIndices = outputs;
-
-        int inIdx = 0, outIdx = 0;
-        foreach (var port in Ports)
+        index = -1;
+        for (int i = 0; i < Ports.Count; i++)
         {
-            if (port.IsFlow) continue;
-            if (port.IsInput) _inMap[port.Name] = inputs[inIdx++];
-            else _outMap[port.Name] = outputs[outIdx++];
+            var p = Ports[i];
+            if (p.Name == name && p.IsInput == isInput)
+            {
+                index = i;
+                return true;
+            }
         }
+        return false;
     }
 
-    public virtual void AssignFlowIndices(Dictionary<string, int> flowTargets)
-    {
-        _flowMap = flowTargets;
-    }
+    // --- Compilation: Now receives context ---
+    public abstract Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context);
 
-    public virtual void SetFlowTargets(Dictionary<string, int> flowTargets)
-    {
-        AssignFlowIndices(flowTargets);
-    }
-
-    public abstract Func<GraphContext, ExecutionResult> Compile();
-
-    // ==========================================
-    // COMPILATION PHASE LOOKUPS (Run Once)
-    // ==========================================
-    protected int GetInputId(string portName) => _inMap.TryGetValue(portName, out int idx) ? idx : -1;
-    protected int GetOutputId(string portName) => _outMap.TryGetValue(portName, out int idx) ? idx : -1;
-    protected int GetFlowId(string portName) => _flowMap.TryGetValue(portName, out int idx) ? idx : -1;
-
-    // ==========================================
-    // EXECUTION PHASE HELPERS (Fast path)
-    // ==========================================
-    protected T Read<T>(GraphContext ctx, int memoryId, T fallback = default)
-    {
-        if (memoryId >= 0 && memoryId < ctx.Memory.Length)
-        {
-            var val = ctx.Memory[memoryId];
-            if (val is T castedVal) return castedVal;
-            try { if (val is IConvertible) return (T)Convert.ChangeType(val, typeof(T)); } catch { }
-        }
-        return fallback;
-    }
-
-    protected void Write(GraphContext ctx, int memoryId, object value)
-    {
-        if (memoryId >= 0 && memoryId < ctx.Memory.Length)
-            ctx.Memory[memoryId] = value;
-    }
-
-    // ==========================================
-    // DYNAMIC TYPING
-    // ==========================================
+    // --- Dynamic Type Binding (UI callbacks remain on BaseNode for now) ---
     protected void BindDynamicType(string sourcePort, string targetPort)
     {
         if (!_dynamicTypes.ContainsKey(sourcePort))
@@ -146,9 +108,9 @@ public abstract class BaseNode : IConnectionListener
 
         if (_dynamicTypes.TryGetValue(myConnector.PortName, out var targets))
         {
-            if (otherConnector.Node is TypeVariableNode typeNode)
+            if (otherConnector.Node is IVariableNode varNode && varNode.ValueType == typeof(Type))
             {
-                Type selectedType = typeNode.SelectedType; // May be null
+                Type selectedType = varNode.GetUntypedValue() as Type;
                 foreach (var target in targets)
                     UpdatePortType(target, selectedType);
             }
@@ -179,6 +141,25 @@ public abstract class BaseNode : IConnectionListener
         }
     }
 
+    // --- Static Read/Write Helpers (moved from instance) ---
+    protected static T Read<T>(GraphContext ctx, int memoryId, T fallback = default)
+    {
+        if (memoryId >= 0 && memoryId < ctx.Memory.Length)
+        {
+            var val = ctx.Memory[memoryId];
+            if (val is T castedVal) return castedVal;
+            try { if (val is IConvertible) return (T)Convert.ChangeType(val, typeof(T)); } catch { }
+        }
+        return fallback;
+    }
+
+    protected static void Write(GraphContext ctx, int memoryId, object value)
+    {
+        if (memoryId >= 0 && memoryId < ctx.Memory.Length)
+            ctx.Memory[memoryId] = value;
+    }
+
+    // --- NodePortInfo nested class (unchanged) ---
     public class NodePortInfo
     {
         public string Name;

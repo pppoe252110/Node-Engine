@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 using System.Collections.Generic;
 
@@ -5,16 +6,10 @@ using System.Collections.Generic;
 public class UpdateNode : BaseNode
 {
     [NodePort("Out", false, true)] public void Out() { }
-    [NonSerialized] public int NextExitIndex = -1;
 
-    public override void AssignFlowIndices(Dictionary<string, int> flowTargets)
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        NextExitIndex = flowTargets.TryGetValue("Out", out var idx) ? idx : -1;
-    }
-
-    public override Func<GraphContext, ExecutionResult> Compile()
-    {
-        int exitFlow = NextExitIndex;
+        int exitFlow = context.GetFlowId("Out");
         return (ctx) => ExecutionResult.Continue(exitFlow);
     }
 }

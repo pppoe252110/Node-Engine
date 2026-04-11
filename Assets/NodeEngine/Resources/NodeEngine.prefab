@@ -45,8 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: NodeEngine.Runtime::GraphSaveLoadSystem
   _quickSaveSlotName: QuickSave
-  _prettyPrint: 1
-  _nodesDatabase: {fileID: 11400000, guid: ead416cb3a8d0ee42b068ab20013e6eb, type: 2}
 --- !u!1 &1836765117867198089
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,9 +211,9 @@ GameObject:
   - component: {fileID: 7393820960370443455}
   - component: {fileID: 8654043050027066769}
   - component: {fileID: 4662335473029687767}
-  - component: {fileID: 2560725165827358077}
   - component: {fileID: 2860056924530611628}
   - component: {fileID: 9197445569043198495}
+  - component: {fileID: 433342395729140972}
   - component: {fileID: 7274180256946966886}
   m_Layer: 0
   m_Name: NodeEngine
@@ -265,7 +263,6 @@ MonoBehaviour:
   _nodesListParent: {fileID: 228432788389565850}
   _nodesListItem: {fileID: 1293711094400406869, guid: ee66206b18228d8468f6cae990bee9b3, type: 3}
   _nodesListGroupPrefab: {fileID: 7216151869433471916, guid: df4c03a508ed61b4085da661f8ee2da5, type: 3}
-  _nodesDatabase: {fileID: 11400000, guid: ead416cb3a8d0ee42b068ab20013e6eb, type: 2}
   _searchInputField: {fileID: 5214714785893123960}
 --- !u!114 &8654043050027066769
 MonoBehaviour:
@@ -296,19 +293,6 @@ MonoBehaviour:
   _leftConnectorPrefab: {fileID: 2487793888308749303, guid: d0d8c4f4fc7af284aba64a6615b2168a, type: 3}
   _rightConnectorPrefab: {fileID: 2548461084981960448, guid: 4cc3a768abfbf9240a4b7bac530b8c40, type: 3}
   _colorDatabase: {fileID: 11400000, guid: 2f6c70b353899ae45b3542a144ea11be, type: 2}
-  _variableDatabase: {fileID: 11400000, guid: 476f0885a49d78143981d5a5dd82a44d, type: 2}
---- !u!114 &2560725165827358077
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4742852334566858359}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 604b26bfbb4f23f479f5df8c76274373, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: NodeEngine.Runtime::ConnectionManager
 --- !u!114 &2860056924530611628
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,6 +317,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa8a011dd0fec2947ab46db81c48ffa6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NodeEngine.Runtime::UIController
+--- !u!114 &433342395729140972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4742852334566858359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31f62cbacee252141a64445b52855f51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NodeEngine.Runtime::ConnectionManager
 --- !u!114 &7274180256946966886
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -349,7 +345,7 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
-  _connectionManager: {fileID: 2560725165827358077}
+  _connectionManager: {fileID: 433342395729140972}
   _nodeRunner: {fileID: 8654043050027066769}
   _nodeSpawnerService: {fileID: 4662335473029687767}
   _graphCoordinator: {fileID: 4826746070640242654}
@@ -359,6 +355,8 @@ MonoBehaviour:
   _UIZoomPan: {fileID: 2582477214690006996}
   _mainCanvas: {fileID: 8251886707821778455}
   _connectionVisualsHandler: {fileID: 7785092641133106204}
+  _variableUIRegistry: {fileID: 11400000, guid: 476f0885a49d78143981d5a5dd82a44d, type: 2}
+  nodesDatabase: {fileID: 11400000, guid: ead416cb3a8d0ee42b068ab20013e6eb, type: 2}
 --- !u!1 &7026269880497142289
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,7 +401,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7f9952a02daa7e40a4e31136c115cb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NodeSpawnerAndConnector
-  _nodesDatabase: {fileID: 11400000, guid: ead416cb3a8d0ee42b068ab20013e6eb, type: 2}
   _enabled: 1
 --- !u!1001 &4957249776816390371
 PrefabInstance:

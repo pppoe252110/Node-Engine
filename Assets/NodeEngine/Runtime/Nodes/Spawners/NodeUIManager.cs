@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using VContainer;
 
 public class NodeUIManager : MonoBehaviour
 {
@@ -9,11 +10,12 @@ public class NodeUIManager : MonoBehaviour
     public ConnectorColorDatabase ColorDatabase => _colorDatabase;
 
     [SerializeField] private ConnectorColorDatabase _colorDatabase;
-    [SerializeField] private VariableDatabase _variableDatabase;
     [SerializeField] private Connector _rightConnectorPrefab;
     [SerializeField] private Connector _leftConnectorPrefab;
     [SerializeField] private RectTransform _rightConnectorsParent;
     [SerializeField] private RectTransform _leftConnectorsParent;
+
+    [Inject] private VariableUIRegistry _variableUIRegistry;
 
     public void CreateConnectors(BaseNode node, List<BaseNode.NodePortInfo> inputPorts, List<BaseNode.NodePortInfo> outputPorts,
                                  List<Connector> inputConnectors, List<Connector> outputConnectors)
@@ -44,31 +46,15 @@ public class NodeUIManager : MonoBehaviour
         }
     }
 
-    public void CreateVariableUI(VariableNode varNode, Image nodeImage)
+    public void CreateVariableUI(IVariableNode varNode, Image nodeImage)
     {
-        if (varNode == null || _variableDatabase == null) return;
-
-        var prefab = _variableDatabase.GetPrefabForType(varNode.VariableType);
+        var prefab = _variableUIRegistry.GetPrefabForNode(varNode);
         if (prefab == null) return;
 
-        var uiElement = Instantiate(prefab, _leftConnectorsParent);
+        var ui = Instantiate(prefab, LeftConnectorsParent);
+        ui.Bind(varNode);
 
-        uiElement.Initialize(varNode, varNode.VariableType);
-
-        UpdateNodeSizeForVariableUI(nodeImage);
-    }
-
-    public void CreateConverterUI(TypeVariableNode converterNode, Image nodeImage)
-    {
-        if (converterNode == null || _variableDatabase == null) return;
-
-        var prefab = _variableDatabase.ConverterUIPrefab;
-        if (prefab == null) return;
-
-        var uiElement = Instantiate(prefab, _leftConnectorsParent);
-
-        uiElement.Initialize(converterNode, converterNode.VariableType);
-
+        // Adjust node size (you may want to move this logic into the UI element itself)
         UpdateNodeSizeForVariableUI(nodeImage);
     }
 

@@ -382,7 +382,7 @@ public class ConnectorColorDatabaseEditor : Editor
 
     private List<Type> FindAllUsedTypes()
     {
-        var foundTypes = new List<Type>();
+        var foundTypes = new HashSet<Type>();
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
         foreach (var assembly in assemblies)
@@ -392,24 +392,27 @@ public class ConnectorColorDatabaseEditor : Editor
                 var types = assembly.GetTypes();
                 foreach (var type in types)
                 {
-                    var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                    foreach (var method in methods)
+                    // Look at fields with NodePortAttribute
+                    foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     {
-                        var attributes = method.GetCustomAttributes(typeof(NodeValueAttribute), true);
-                        foreach (NodeValueAttribute attribute in attributes)
+                        if (field.GetCustomAttribute<NodePortAttribute>() != null)
                         {
-                            if (attribute.type != null && !foundTypes.Contains(attribute.type))
-                            {
-                                foundTypes.Add(attribute.type);
-                            }
+                            foundTypes.Add(field.FieldType);
+                        }
+                    }
+                    // Also check methods with NodePortAttribute (for flow ports)
+                    foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                    {
+                        if (method.GetCustomAttribute<NodePortAttribute>() != null)
+                        {
+                            var parameters = method.GetParameters();
+                            if (parameters.Length > 0)
+                                foundTypes.Add(parameters[0].ParameterType);
                         }
                     }
                 }
             }
-            catch (ReflectionTypeLoadException)
-            {
-                continue;
-            }
+            catch (ReflectionTypeLoadException) { continue; }
         }
 
         return foundTypes.OrderBy(t => t.Name).ToList();
@@ -427,32 +430,31 @@ public class ConnectorColorDatabaseEditor : Editor
                 var assemblyTypes = assembly.GetTypes();
                 foreach (var type in assemblyTypes)
                 {
-                    var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                    foreach (var method in methods)
+                    // Fields with NodePortAttribute
+                    foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     {
-                        var attributes = method.GetCustomAttributes(typeof(NodeValueAttribute), true);
-                        foreach (NodeValueAttribute attribute in attributes)
+                        if (field.GetCustomAttribute<NodePortAttribute>() != null)
                         {
-                            if (attribute.type != null)
+                            string typeName = field.FieldType.Name;
+                            counts[typeName] = counts.TryGetValue(typeName, out int c) ? c + 1 : 1;
+                        }
+                    }
+                    // Methods with NodePortAttribute
+                    foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                    {
+                        if (method.GetCustomAttribute<NodePortAttribute>() != null)
+                        {
+                            var parameters = method.GetParameters();
+                            if (parameters.Length > 0)
                             {
-                                string typeName = attribute.type.Name;
-                                if (counts.ContainsKey(typeName))
-                                {
-                                    counts[typeName]++;
-                                }
-                                else
-                                {
-                                    counts[typeName] = 1;
-                                }
+                                string typeName = parameters[0].ParameterType.Name;
+                                counts[typeName] = counts.TryGetValue(typeName, out int c) ? c + 1 : 1;
                             }
                         }
                     }
                 }
             }
-            catch (ReflectionTypeLoadException)
-            {
-                continue;
-            }
+            catch (ReflectionTypeLoadException) { continue; }
         }
 
         return counts;

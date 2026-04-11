@@ -1,51 +1,53 @@
+using NodeEngine.Compilation;
 using System;
-using UnityEngine;
+using UniMediator.Runtime;
+using VContainer;
 
-public abstract class VariableNode : BaseNode
+public abstract class VariableNode<T> : BaseNode, IVariableNode
 {
-    [NodePort("Value", false)] public object value;
-    public NodeValue CachedValue = new NodeValue();
-    public abstract VariableType VariableType { get; }
-    public event Action<object> OnValueChanged;
+    [NodePort("Value", false)] public T value;
 
-    public VariableNode() : base()
+    private T _cachedValue;
+    public event Action<T> OnValueChanged;
+    public event Action<object> OnUntypedValueChanged;
+
+    private IMediator _mediator;
+
+    public VariableNode()
     {
         var port = Ports.Find(p => p.Name == "Value");
         if (port != null)
-            port.ValueType = GetSystemType(VariableType);
+            port.ValueType = typeof(T);
     }
 
-    public static Type GetSystemType(VariableType type)
+    [Inject]
+    public void ConstructVariable(IMediator mediator) 
     {
-        return type switch
+        _mediator = mediator;
+    }
+
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
+    {
+        int outId = context.GetOutputId("Value");
+        T val = _cachedValue;
+        return ctx =>
         {
-            VariableType.Single => typeof(float),
-            VariableType.Int => typeof(int),
-            VariableType.String => typeof(string),
-            VariableType.Bool => typeof(bool),
-            VariableType.Vector2 => typeof(Vector2),
-            VariableType.Vector3 => typeof(Vector3),
-            VariableType.Color => typeof(Color),
-            VariableType.Type => typeof(Type),
-            VariableType.ComparisonOperation => typeof(ComparisonOperation),
-            _ => typeof(object)
-        };
-    }
-
-    public override Func<GraphContext, ExecutionResult> Compile()
-    {
-        int outId = GetOutputId("Value");
-        var storage = CachedValue;
-        return (ctx) => {
-            Write(ctx, outId, storage.GetInnerValue());
+            Write(ctx, outId, val);
             return ExecutionResult.Continue(-1);
         };
     }
 
-    public object GetValue() => CachedValue.GetInnerValue();
-    public void SetValue(object newValue)
+    public T GetValue() => _cachedValue;
+    public void SetValue(T newValue)
     {
-        CachedValue.SetInnerValue(newValue);
+        _cachedValue = newValue;
         OnValueChanged?.Invoke(newValue);
+        OnUntypedValueChanged?.Invoke(newValue);
+
+        _mediator?.Publish(new MarkGraphDirtyNotification());
     }
+
+    object IVariableNode.GetUntypedValue() => GetValue();
+    void IVariableNode.SetUntypedValue(object value) => SetValue((T)value);
+    Type IVariableNode.ValueType => typeof(T);
 }

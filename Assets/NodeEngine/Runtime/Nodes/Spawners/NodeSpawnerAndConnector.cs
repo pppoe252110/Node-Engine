@@ -7,9 +7,9 @@ using VContainer;
 public class NodeSpawnerAndConnector : MonoBehaviour
 {
     [Header("Dependencies")]
-    [SerializeField] private NodesDatabase _nodesDatabase;
     [SerializeField] private bool _enabled = false;
 
+    private NodesDatabase _nodesDatabase;
     private NodeSpawnerService _nodeSpawnerService;
     private ConnectionManager _connectionManager;
     private INodeFactory _nodeFactory;
@@ -17,9 +17,11 @@ public class NodeSpawnerAndConnector : MonoBehaviour
     [Inject]
     public void Construct(
         NodeSpawnerService spawnerService,
+        NodesDatabase nodesDatabase,
         ConnectionManager connectionManager,
         INodeFactory nodeFactory)
     {
+        _nodesDatabase = nodesDatabase;
         _nodeSpawnerService = spawnerService;
         _connectionManager = connectionManager;
         _nodeFactory = nodeFactory;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,18 +10,12 @@ public class ThrottleNode : BaseNode
     [NodePort("Interval", true)] public float interval;
     [NodePort("Out", false, true)] public void Exit() { }
 
-    [NonSerialized] public int NextExitIndex = -1;
     private float _lastPassTime = float.MinValue;
 
-    public override void SetFlowTargets(Dictionary<string, int> flowTargets)
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        NextExitIndex = flowTargets.TryGetValue("Out", out var idx) ? idx : -1;
-    }
-
-    public override Func<GraphContext, ExecutionResult> Compile()
-    {
-        int intervalId = GetInputId("Interval");
-        int exitFlow = NextExitIndex;
+        int intervalId = context.GetInputId("Interval");
+        int exitFlow = context.GetFlowId("Out");
 
         return (ctx) =>
         {

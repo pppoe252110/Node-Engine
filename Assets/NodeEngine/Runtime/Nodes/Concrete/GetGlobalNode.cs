@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 using System.Collections.Generic;
 
 [NodePath("Variables/Get Global")]
@@ -10,24 +11,17 @@ public class GetGlobalNode : BaseNode
     [NodePort("Type", true)] public Type expectedType;
     [NodePort("Value", false)] public object value;
 
-    [NonSerialized] public int NextExitIndex = -1;
-
     public GetGlobalNode()
     {
         BindDynamicType("Type", "Value");
     }
 
-    public override void AssignFlowIndices(Dictionary<string, int> flowTargets)
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        NextExitIndex = flowTargets.TryGetValue("Out", out var idx) ? idx : -1;
-    }
-
-    public override Func<GraphContext, ExecutionResult> Compile()
-    {
-        int nameId = GetInputId("Name");
-        int typeId = GetInputId("Type");
-        int outId = GetOutputId("Value");
-        int exitFlow = NextExitIndex;
+        int nameId = context.GetInputId("Name");
+        int typeId = context.GetInputId("Type");
+        int outId = context.GetOutputId("Value");
+        int exitFlow = context.GetFlowId("Out");
 
         return (ctx) =>
         {

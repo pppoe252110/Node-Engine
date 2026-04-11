@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 using UnityEngine;
 
@@ -8,11 +9,11 @@ public class TimeNode : BaseNode
     [NodePort("Time", false)] public float time;
     [NodePort("RealTime", false)] public float realTime;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int dtId = GetOutputId("DeltaTime");
-        int tId = GetOutputId("Time");
-        int rtId = GetOutputId("RealTime");
+        int dtId = context.GetOutputId("DeltaTime");
+        int tId = context.GetOutputId("Time");
+        int rtId = context.GetOutputId("RealTime");
 
         return (ctx) => {
             Write(ctx, dtId, Time.deltaTime);

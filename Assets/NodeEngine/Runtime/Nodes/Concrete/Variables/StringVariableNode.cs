@@ -1,5 +1,2 @@
 [NodePath("Variables/String")]
-public class StringVariableNode : VariableNode
-{
-    public override VariableType VariableType => VariableType.String;
-}
+public class StringVariableNode : VariableNode<string> { }

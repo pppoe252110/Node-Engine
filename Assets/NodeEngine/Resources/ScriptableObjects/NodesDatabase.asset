@@ -133,10 +133,10 @@ MonoBehaviour:
       PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 0}
-  - nodeName: ComparisonOperationVariable
+  - nodeName: OperatorVariable
     nodeType: ComparisonOperationVariableNode, NodeEngine.Runtime, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
-    variableType: 0
+    variableType: 10
     nodeIcon: {fileID: 0}
   - nodeName: Abs
     nodeType: AbsNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null

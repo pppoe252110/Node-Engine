@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 using System.Collections.Generic;
 
@@ -16,11 +17,11 @@ public class SetGlobalNode : BaseNode
         BindDynamicType("Value", "Value");
     }
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int nameId = GetInputId("Name");
-        int valId = GetInputId("Value");
-        int exitFlow = GetFlowId("Exit");
+        int nameId = context.GetInputId("Name");
+        int valId = context.GetInputId("Value");
+        int exitFlow = context.GetFlowId("Exit");
 
         return (ctx) => {
             string name = Read<string>(ctx, nameId);

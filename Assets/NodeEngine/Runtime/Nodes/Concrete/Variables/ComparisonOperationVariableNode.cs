@@ -1,10 +1,5 @@
-﻿[NodePath("Variables/Comparison Operation")]
-public class ComparisonOperationVariableNode : VariableNode
+﻿[NodePath("Variables/ComparisonOperation")]
+public class ComparisonOperationVariableNode : VariableNode<ComparisonOperation>
 {
-    public override VariableType VariableType => VariableType.ComparisonOperation;
-
-    public ComparisonOperationVariableNode()
-    {
-        SetValue(ComparisonOperation.Equal);
-    }
+    public ComparisonOperationVariableNode() => SetValue(ComparisonOperation.Equal);
 }

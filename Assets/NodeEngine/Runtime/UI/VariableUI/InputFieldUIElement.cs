@@ -1,4 +1,4 @@
-using System.Globalization;
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -6,304 +6,42 @@ public class InputFieldUIElement : VariableUIElement
 {
     [SerializeField] private TMP_InputField _inputField;
 
-    private object _value;
-    private CultureInfo _culture;
-
-    public override void Initialize(VariableNode node, VariableType type)
+    // This UI element can bind to strings, ints, and floats!
+    public override bool CanBind(Type valueType)
     {
-        base.Initialize(node, type);
-
-        _type = type;
-        _culture = CultureInfo.InvariantCulture;
-
-        SetupInputFieldForType();
-
-        // 1. Start with defaults
-        SetDefaultValue();
-
-        // 2. Setup listeners
-        _inputField.onValueChanged.AddListener(UpdateValue);
-        _inputField.onEndEdit.AddListener(OnEndEdit);
-
-        if (_node != null)
-        {
-            _node.OnValueChanged += OnNodeValueChanged;
-
-            object existingValue = _node.GetValue();
-            if (existingValue != null)
-            {
-                SetValue(existingValue);
-            }
-        }
+        return valueType == typeof(string) ||
+               valueType == typeof(int) ||
+               valueType == typeof(float);
     }
 
-    private void SetupInputFieldForType()
+    public override void Bind(IVariableNode node)
     {
-        switch (_type)
-        {
-            case VariableType.Int:
-                _inputField.contentType = TMP_InputField.ContentType.IntegerNumber;
-                _inputField.characterLimit = 10;
-                break;
-            case VariableType.Single:
-                _inputField.contentType = TMP_InputField.ContentType.DecimalNumber;
-                _inputField.characterLimit = 15;
-                break;
-            case VariableType.String:
-                _inputField.contentType = TMP_InputField.ContentType.Standard;
-                _inputField.characterLimit = 0;
-                break;
-            case VariableType.Vector3:
-                _inputField.contentType = TMP_InputField.ContentType.Standard; 
-                _inputField.characterLimit = 50;
-                if (_inputField.placeholder != null)
-                    _inputField.placeholder.GetComponent<TMP_Text>().text = "x; y; z  (use semicolons)";
-                break;
-        }
+        base.Bind(node);
+        _inputField.onValueChanged.AddListener(OnUIInputValueChanged);
     }
 
-    public void UpdateValue(string value)
+    private void OnUIInputValueChanged(string input)
     {
-        if (string.IsNullOrEmpty(value))
-        {
-            SetDefaultValue();
-            return;
-        }
-
-        bool isValid = false;
-        object newValue = null;
+        if (TargetNode == null) return;
 
         try
         {
-            switch (_type)
-            {
-                case VariableType.Int:
-                    if (int.TryParse(value, NumberStyles.Integer, _culture, out int i))
-                    {
-                        newValue = i;
-                        isValid = true;
-                        
-                        _inputField.SetTextWithoutNotify(i.ToString(_culture));
-                    }
-                    break;
-                case VariableType.Single:
-                    if (float.TryParse(value, NumberStyles.Float, _culture, out float f))
-                    {
-                        newValue = f;
-                        isValid = true;
-                        _inputField.SetTextWithoutNotify(f.ToString("0.00", _culture));  
-                    }
-                    break;
-                case VariableType.String:
-                    newValue = value;
-                    isValid = true;
-                    
-                    break;
-                case VariableType.Vector3:
-                    
-                    ParseVector3Value(value);
-                    if (_value is Vector3)  
-                    {
-                        isValid = true;
-                        FormatVector3Value();
-                    }
-                    break;
-            }
+            // Dynamically convert the string to the node's required type
+            object parsedValue = Convert.ChangeType(input, TargetNode.ValueType, System.Globalization.CultureInfo.InvariantCulture);
+            TargetNode.SetUntypedValue(parsedValue);
         }
-        catch (System.Exception e)
+        catch
         {
-            Debug.LogWarning($"Failed to parse value '{value}' for type {_type}: {e.Message}");
-        }
-
-        if (isValid && newValue != null)
-        {
-            _value = newValue;
-        }
-        else
-        {
-            
-            FormatCurrentValue();
+            // Invalid input (e.g., typing "abc" into an int field). Ignore or show warning.
         }
     }
 
-    private void ParseVector3Value(string value)
+    protected override void OnNodeValueChanged(object newValue)
     {
-        
-        string[] separators = new string[] { ";", "|", " " }; 
-        string[] parts = value.Split(separators, System.StringSplitOptions.RemoveEmptyEntries);
-
-        if (parts.Length >= 3)
+        if (newValue != null)
         {
-            
-            string xStr = parts[0].Trim();
-            string yStr = parts[1].Trim();
-            string zStr = parts[2].Trim();
-
-            xStr = xStr.Replace(",", ".");
-            yStr = yStr.Replace(",", ".");
-            zStr = zStr.Replace(",", ".");
-
-            if (float.TryParse(xStr, NumberStyles.Float, _culture, out float x) &&
-                float.TryParse(yStr, NumberStyles.Float, _culture, out float y) &&
-                float.TryParse(zStr, NumberStyles.Float, _culture, out float z))
-            {
-                _value = new Vector3(x, y, z);
-                FormatVector3Value();
-                return;
-            }
-        }
-        else if (parts.Length == 1)
-        {
-            
-            string singleValue = parts[0].Trim().Replace(",", ".");
-            if (float.TryParse(singleValue, NumberStyles.Float, _culture, out float uniformValue))
-            {
-                _value = new Vector3(uniformValue, uniformValue, uniformValue);
-                FormatVector3Value();
-                return;
-            }
-        }
-
-        SetDefaultValue();
-    }
-
-    private void SetDefaultValue()
-    {
-        switch (_type)
-        {
-            case VariableType.Int:
-                _value = 0;
-                _inputField.text = "0";
-                break;
-            case VariableType.Single:
-                _value = 0f;
-                _inputField.text = "0.0";
-                break;
-            case VariableType.String:
-                _value = "";
-                _inputField.text = "";
-                break;
-            case VariableType.Vector3:
-                _value = Vector3.zero;
-                _inputField.text = "0.0; 0.0; 0.0";
-                break;
-        }
-    }
-
-    private void FormatCurrentValue()
-    {
-        switch (_type)
-        {
-            case VariableType.Int:
-                FormatIntValue();
-                break;
-            case VariableType.Single:
-                FormatFloatValue();
-                break;
-            case VariableType.Vector3:
-                FormatVector3Value();
-                break;
-        }
-    }
-
-    private void FormatIntValue()
-    {
-        if (_value is int intValue)
-        {
-            _inputField.SetTextWithoutNotify(intValue.ToString(_culture));
-        }
-    }
-
-    private void FormatFloatValue()
-    {
-        if (_value is float floatValue)
-        {
-            
-            _inputField.SetTextWithoutNotify(floatValue.ToString("0.00", _culture));
-        }
-    }
-
-    private void FormatVector3Value()
-    {
-        if (_value is Vector3 vectorValue)
-        {
-            
-            string formatted = $"{vectorValue.x:0.00}; {vectorValue.y:0.00}; {vectorValue.z:0.00}";
-            _inputField.SetTextWithoutNotify(formatted);
-        }
-    }
-
-    public override void SetValue(object value)
-    {
-        if (_inputField == null) return;
-        if (value == null)
-        {
-            _inputField.SetTextWithoutNotify("");
-            return;
-        }
-
-        _value = value;
-
-        switch (_type)
-        {
-            case VariableType.Single:
-                if (value is float floatValue)
-                {
-                    _inputField.SetTextWithoutNotify(floatValue.ToString(System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.'));
-                }
-                else
-                    _inputField.SetTextWithoutNotify(value.ToString());
-                break;
-
-            case VariableType.Vector3:
-                if (value is Vector3 vec)
-                    _inputField.SetTextWithoutNotify($"{vec.x.ToString(System.Globalization.CultureInfo.InvariantCulture)}; {vec.y.ToString(System.Globalization.CultureInfo.InvariantCulture)}; {vec.z.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
-                else
-                    _inputField.SetTextWithoutNotify(value.ToString());
-                break;
-
-            case VariableType.Int:
-            case VariableType.Bool:
-            case VariableType.String:
-            default:
-                _inputField.SetTextWithoutNotify(value.ToString());
-                break;
-        }
-    }
-
-    private void OnNodeValueChanged(object newValue)
-    {
-        SetValue(newValue);
-    }
-
-    public override object GetValue() => _value;
-
-    private void Start()
-    {
-        _inputField.onEndEdit.AddListener(OnEndEdit);
-    }
-
-    private void OnEndEdit(string value)
-    {
-        FormatCurrentValue();
-
-        if (_node != null && _value != null)
-        {
-            _node.SetValue(_value);
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (_inputField != null)
-        {
-            _inputField.onValueChanged.RemoveListener(UpdateValue);
-            _inputField.onEndEdit.RemoveListener(OnEndEdit);
-        }
-
-        if (_node != null)
-        {
-            _node.OnValueChanged -= OnNodeValueChanged;
+            // Set text without triggering the event to avoid infinite loops
+            _inputField.SetTextWithoutNotify(newValue.ToString());
         }
     }
 }

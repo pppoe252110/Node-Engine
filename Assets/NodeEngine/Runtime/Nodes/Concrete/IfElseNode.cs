@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 using System.Collections.Generic;
 
@@ -8,20 +9,11 @@ public class IfElseNode : BaseNode
     [NodePort("True", false, true)] public void TrueBranch() { }
     [NodePort("False", false, true)] public void FalseBranch() { }
 
-    [NonSerialized] public int TrueExitIndex = -1;
-    [NonSerialized] public int FalseExitIndex = -1;
-
-    public override void AssignFlowIndices(Dictionary<string, int> flowTargets)
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        TrueExitIndex = flowTargets.TryGetValue("True", out var tIdx) ? tIdx : -1;
-        FalseExitIndex = flowTargets.TryGetValue("False", out var fIdx) ? fIdx : -1;
-    }
-
-    public override Func<GraphContext, ExecutionResult> Compile()
-    {
-        int condId = GetInputId("Condition");
-        int trueIdx = TrueExitIndex;
-        int falseIdx = FalseExitIndex;
+        int condId = context.GetInputId("Condition");
+        int trueIdx = context.GetFlowId("True");
+        int falseIdx = context.GetFlowId("False");
 
         return (ctx) => {
             bool cond = Read<bool>(ctx, condId);

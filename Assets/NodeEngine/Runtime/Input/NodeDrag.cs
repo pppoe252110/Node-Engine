@@ -8,7 +8,7 @@ public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
     private RectTransform _rectTransform;
     private bool _canDrag = false;
     private NodeLogic _nodeLogic;
-    private ConnectorDragLogic _connectorDragLogic; // <-- cache this
+    private ConnectorDragLogic _connectorDragLogic;
 
     private CanvasService _canvasService;
     private IMediator _mediator;

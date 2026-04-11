@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 
 [NodePath("Math/Clamp")]
@@ -8,12 +9,12 @@ public class ClampNode : BaseNode
     [NodePort("Max", true)] public float max;
     [NodePort("Result", false)] public float result;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int valId = GetInputId("Value");
-        int minId = GetInputId("Min");
-        int maxId = GetInputId("Max");
-        int resultId = GetOutputId("Result");
+        int valId = context.GetInputId("Value");
+        int minId = context.GetInputId("Min");
+        int maxId = context.GetInputId("Max");
+        int resultId = context.GetOutputId("Result");
 
         return (ctx) => {
             float v = Read<float>(ctx, valId);

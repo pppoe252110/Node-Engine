@@ -15,7 +15,6 @@ public class NodeSpawnerService : MonoBehaviour
     [SerializeField] private Connector _leftConnectorPrefab;
     [SerializeField] private Connector _rightConnectorPrefab;
     [SerializeField] private ConnectorColorDatabase _colorDatabase;
-    [SerializeField] private VariableDatabase _variableDatabase;
 
     private Dictionary<string, NodeLogic> _spawnedNodes = new();
 
@@ -31,9 +30,6 @@ public class NodeSpawnerService : MonoBehaviour
         _connectionManager = connectionManager;
     }
 
-    /// <summary>
-    /// Spawns a visual node for the given node instance.
-    /// </summary>
     public NodeLogic SpawnNode(BaseNode nodeInstance, Vector2 position, string nodeId = null)
     {
         if (nodeInstance == null) return null;
@@ -52,25 +48,19 @@ public class NodeSpawnerService : MonoBehaviour
         return nodeLogic;
     }
 
-    /// <summary>
-    /// Deletes a node and all its connections.
-    /// </summary>
     public void DeleteNode(NodeLogic nodeLogic)
     {
         if (nodeLogic == null) return;
 
-        // Disconnect all connectors on this node
         var allConnectors = nodeLogic.InputConnectors.Concat(nodeLogic.OutputConnectors).ToList();
         foreach (var connector in allConnectors)
         {
-            // Use a copy of the connections list because Disconnect modifies it
             foreach (var other in connector.Connections.ToArray())
             {
                 _connectionManager.Disconnect(connector, other);
             }
         }
 
-        // Remove from dictionary
         var nodeId = _spawnedNodes.FirstOrDefault(x => x.Value == nodeLogic).Key;
         if (nodeId != null) _spawnedNodes.Remove(nodeId);
 
@@ -78,12 +68,7 @@ public class NodeSpawnerService : MonoBehaviour
         _mediator.Publish(new MarkGraphDirtyNotification());
     }
 
-    /// <summary>
-    /// Returns all currently spawned node views.
-    /// </summary>
     public IEnumerable<NodeLogic> GetAllNodes() => _spawnedNodes.Values;
-
-    #region Private Setup Methods
 
     private void SetupNodeVisuals(NodeLogic nodeLogic, BaseNode node)
     {
@@ -94,13 +79,10 @@ public class NodeSpawnerService : MonoBehaviour
 
         GenerateConnectors(nodeLogic, node);
 
-        // Create variable/converter UI if needed
-        if (node is TypeVariableNode converterNode)
-            nodeLogic.UIManager.CreateConverterUI(converterNode, nodeLogic.BackgroundImage);
-        else if (node is VariableNode varNode)
+        // Unified variable UI for any IVariableNode
+        if (node is IVariableNode varNode)
             nodeLogic.UIManager.CreateVariableUI(varNode, nodeLogic.BackgroundImage);
 
-        // Adjust node size based on port count
         int inputCount = node.Ports.Count(p => p.IsInput);
         int outputCount = node.Ports.Count(p => !p.IsInput);
         float height = 57 + Mathf.Max(inputCount, outputCount) * 25;
@@ -142,6 +124,4 @@ public class NodeSpawnerService : MonoBehaviour
         }
         return node.GetType().Name.Replace("Node", "");
     }
-
-    #endregion
 }

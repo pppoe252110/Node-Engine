@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 using UnityEngine;
 
 [NodePath("Math/Lerp")]
@@ -9,12 +10,12 @@ public class LerpNode : BaseNode
     [NodePort("T", true)] public float t;
     [NodePort("Result", false)] public float result;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int aId = GetInputId("A");
-        int bId = GetInputId("B");
-        int tId = GetInputId("T");
-        int resId = GetOutputId("Result");
+        int aId = context.GetInputId("A");
+        int bId = context.GetInputId("B");
+        int tId = context.GetInputId("T");
+        int resId = context.GetOutputId("Result");
 
         return (ctx) => {
             float aVal = Read<float>(ctx, aId);

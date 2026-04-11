@@ -14,7 +14,6 @@ public class NodesList : MonoBehaviour
     [SerializeField] private Transform _nodesListParent;
     [SerializeField] private NodesListItem _nodesListItem;
     [SerializeField] private NodesListGroup _nodesListGroupPrefab;
-    [SerializeField] private NodesDatabase _nodesDatabase;
 
     [Header("Search")]
     [SerializeField] private TMP_InputField _searchInputField;
@@ -27,12 +26,14 @@ public class NodesList : MonoBehaviour
     // Dependencies
     private INodeFactory _nodeFactory;
     private NodeSpawnerService _nodeSpawnerService;
+    private NodesDatabase _nodesDatabase;
 
     [Inject]
-    public void Construct(INodeFactory nodeFactory, NodeSpawnerService nodeSpawner)
+    public void Construct(INodeFactory nodeFactory, NodeSpawnerService nodeSpawner, NodesDatabase nodesDatabase)
     {
         _nodeFactory = nodeFactory;
         _nodeSpawnerService = nodeSpawner;
+        _nodesDatabase = nodesDatabase;
     }
 
     private void Start()

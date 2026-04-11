@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 using UnityEngine;
 
@@ -8,10 +9,10 @@ public class MoveGameObjectNode : BaseNode
     [NodePort("Target", true)] public GameObject target;
     [NodePort("Position", true)] public Vector3 position;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int targetId = GetInputId("Target");
-        int posId = GetInputId("Position");
+        int targetId = context.GetInputId("Target");
+        int posId = context.GetInputId("Position");
 
         return (ctx) => {
             GameObject go = ctx.Memory[targetId] as GameObject;

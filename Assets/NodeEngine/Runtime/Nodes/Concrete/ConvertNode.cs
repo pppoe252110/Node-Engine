@@ -1,3 +1,4 @@
+using NodeEngine.Compilation;
 using System;
 
 [NodePath("Conversion/Convert")]
@@ -12,11 +13,11 @@ public class ConvertNode : BaseNode
         BindDynamicType("TargetType", "Result");
     }
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int inId = GetInputId("Input");
-        int typeId = GetInputId("TargetType");
-        int outId = GetOutputId("Result");
+        int inId = context.GetInputId("Input");
+        int typeId = context.GetInputId("TargetType");
+        int outId = context.GetOutputId("Result");
 
         return (ctx) =>
         {

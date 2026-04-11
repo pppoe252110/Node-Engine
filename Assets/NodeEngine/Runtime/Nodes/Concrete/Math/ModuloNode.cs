@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 
 [NodePath("Math/Modulo")]
 public class ModuloNode : BaseNode
@@ -7,11 +8,11 @@ public class ModuloNode : BaseNode
     [NodePort("B", true)] public float b;
     [NodePort("Result", false)] public float result;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int aId = GetInputId("A");
-        int bId = GetInputId("B");
-        int resId = GetOutputId("Result");
+        int aId = context.GetInputId("A");
+        int bId = context.GetInputId("B");
+        int resId = context.GetOutputId("Result");
 
         return (ctx) => {
             float aVal = Read<float>(ctx, aId);

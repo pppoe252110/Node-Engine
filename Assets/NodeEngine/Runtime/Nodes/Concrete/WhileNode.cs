@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 using System.Collections.Generic;
 
 [NodePath("Flow/While")]
@@ -9,20 +10,12 @@ public class WhileNode : BaseNode
     [NodePort("Body", false, true)] public void LoopBody() { }
     [NodePort("Exit", false, true)] public void Completed() { }
 
-    [NonSerialized] public int BodyFlowIndex = -1;
-    [NonSerialized] public int ExitFlowIndex = -1;
 
-    public override void SetFlowTargets(Dictionary<string, int> flowTargets)
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        BodyFlowIndex = flowTargets.TryGetValue("Body", out var bodyIdx) ? bodyIdx : -1;
-        ExitFlowIndex = flowTargets.TryGetValue("Exit", out var exitIdx) ? exitIdx : -1;
-    }
-
-    public override Func<GraphContext, ExecutionResult> Compile()
-    {
-        int condId = GetInputId("Condition");
-        int bodyFlow = BodyFlowIndex;
-        int exitFlow = ExitFlowIndex;
+        int condId = context.GetInputId("Condition");
+        int bodyFlow = context.GetFlowId("Body");
+        int exitFlow = context.GetFlowId("Exit");
 
         return (ctx) =>
         {

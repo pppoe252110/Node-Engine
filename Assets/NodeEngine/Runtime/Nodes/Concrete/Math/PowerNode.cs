@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 using UnityEngine;
 
 [NodePath("Math/Power")]
@@ -8,11 +9,11 @@ public class PowerNode : BaseNode
     [NodePort("Exponent", true)] public float exponent;
     [NodePort("Result", false)] public float result;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int baseId = GetInputId("Base");
-        int expId = GetInputId("Exponent");
-        int resId = GetOutputId("Result");
+        int baseId = context.GetInputId("Base");
+        int expId = context.GetInputId("Exponent");
+        int resId = context.GetOutputId("Result");
 
         return (ctx) => {
             float b = Read<float>(ctx, baseId);

@@ -9,24 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ecb3567391f2c3e41ac0be2d2d3269ea, type: 3}
+  m_Script: {fileID: 11500000, guid: 26b575abe1a775246b59ad018446836a, type: 3}
   m_Name: VariablesDatabase
   m_EditorClassIdentifier: Assembly-CSharp::VariableData
-  _entries:
-  - Type: 1
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
-  - Type: 2
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
-  - Type: 3
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
-  - Type: 4
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
-  - Type: 5
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
-  - Type: 6
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
-  - Type: 7
-    Prefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
-  - Type: 10
-    Prefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
-  _converterUIPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
+  _mappings:
+  - nodeTypeName: BoolVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
+  - nodeTypeName: ComparisonOperationVariableNode, NodeEngine.Runtime, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
+  - nodeTypeName: FloatVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
+  - nodeTypeName: IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
+  - nodeTypeName: StringVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
+  - nodeTypeName: TypeVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: -8825413606472053026, guid: dc1cafe78c5bcb941841c9c8eec4fa87, type: 3}
+  - nodeTypeName: Vector3VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}

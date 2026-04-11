@@ -1,16 +1,30 @@
+using System;
 using UnityEngine;
 
 public abstract class VariableUIElement : MonoBehaviour
 {
-    protected VariableNode _node;
-    protected VariableType _type;
+    protected IVariableNode TargetNode;
 
-    public virtual void Initialize(VariableNode node, VariableType type)
+    // The registry will ask the UI element if it supports a given Type
+    public abstract bool CanBind(Type valueType);
+
+    public virtual void Bind(IVariableNode node)
     {
-        _node = node;
-        _type = type;
+        TargetNode = node;
+        TargetNode.OnUntypedValueChanged += OnNodeValueChanged;
+
+        // Initialize UI with current value
+        OnNodeValueChanged(TargetNode.GetUntypedValue());
     }
 
-    public abstract object GetValue();
-    public virtual void SetValue(object value) { }
+    protected virtual void OnDestroy()
+    {
+        if (TargetNode != null)
+        {
+            TargetNode.OnUntypedValueChanged -= OnNodeValueChanged;
+        }
+    }
+
+    // Called when the underlying Node logic changes the value
+    protected abstract void OnNodeValueChanged(object newValue);
 }

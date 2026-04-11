@@ -1,6 +1,8 @@
+using System;
+
 public interface IValuePersister
 {
-    bool CanPersist(VariableType variableType);
-    string PersistValue(object value);
-    object RestoreValue(string serializedValue, VariableType variableType);
+    bool CanPersist(Type type);
+    string Serialize(object value);
+    object Deserialize(string data, Type targetType);
 }

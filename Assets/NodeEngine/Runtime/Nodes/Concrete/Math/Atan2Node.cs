@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NodeEngine.Compilation;
+using System;
 using UnityEngine;
 
 [NodePath("Math/Atan2")]
@@ -8,11 +9,11 @@ public class Atan2Node : BaseNode
     [NodePort("X", true)] public float x;
     [NodePort("Result", false)] public float result;
 
-    public override Func<GraphContext, ExecutionResult> Compile()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        int yId = GetInputId("Y");
-        int xId = GetInputId("X");
-        int resId = GetOutputId("Result");
+        int yId = context.GetInputId("Y");
+        int xId = context.GetInputId("X");
+        int resId = context.GetOutputId("Result");
 
         return (ctx) => {
             float yVal = Read<float>(ctx, yId);
