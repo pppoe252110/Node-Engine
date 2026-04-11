@@ -57,6 +57,7 @@ public static class TypeSerializer
             return "Object";
 
         // Return simplified name for UI
+        if (type == typeof(ComparisonOperation)) return "Compare";
         if (type == typeof(float)) return "Float";
         if (type == typeof(int)) return "Integer";
         if (type == typeof(bool)) return "Boolean";

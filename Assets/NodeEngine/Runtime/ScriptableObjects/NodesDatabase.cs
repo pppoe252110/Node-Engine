@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -6,66 +7,37 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NodesDatabase", menuName = "Node Engine/NodesDatabase", order = 1)]
 public class NodesDatabase : ScriptableObject
 {
-    [SerializeField] private SerializableNode[] _serializableNodes = new SerializableNode[0];
+    [SerializeField] private SerializableNode[] _serializableNodes = Array.Empty<SerializableNode>();
 
-    public NodeBase[] GetNodes()
+    /// <summary>Returns all serialized node metadata.</summary>
+    public IEnumerable<SerializableNode> GetAllNodeData() => _serializableNodes;
+
+    /// <summary>Applies the stored name and icon to a node instance.</summary>
+    public void ApplyMetadata(BaseNode node)
     {
-        if (_serializableNodes == null) return new NodeBase[0];
-        var result = new NodeBase[_serializableNodes.Length];
-        for (int i = 0; i < _serializableNodes.Length; i++)
+        var typeName = node.GetType().AssemblyQualifiedName;
+        var data = _serializableNodes.FirstOrDefault(n => n.nodeType == typeName);
+        if (data != null)
         {
-
-            var nodeType = Type.GetType(_serializableNodes[i].nodeType);
-            if (nodeType != null)
-            {
-                result[i] = Activator.CreateInstance(nodeType) as NodeBase;
-                result[i].SetName(_serializableNodes[i].nodeName);
-                result[i].SetIcon(_serializableNodes[i].nodeIcon);
-            }
-            else
-            {
-                Debug.LogError($"Could not create node type: {_serializableNodes[i].nodeType}");
-            }
+            node.SetName(data.nodeName);
+            node.SetIcon(data.nodeIcon);
         }
-        return result;
-    }
-
-    public NodeBase GetClone(NodeBase node)
-    {
-        var clone = Activator.CreateInstance(node.GetType()) as NodeBase;
-
-        var setupNode = _serializableNodes.FirstOrDefault(s => s.nodeType == node.GetType().AssemblyQualifiedName);
-        if (setupNode != null)
-        {
-            clone.SetName(setupNode.nodeName);
-            clone.SetIcon(setupNode.nodeIcon);
-        }
-
-        return clone;
     }
 
     [Button("Auto fill", "AutoFill")]
     public void AutoFill()
     {
-        var subclassTypes = Assembly
-           .GetAssembly(typeof(NodeBase))
-           .GetTypes()
-           .Where(t => t.IsSubclassOf(typeof(NodeBase)) && !t.IsAbstract)
-           .ToArray();
+        var subclassTypes = Assembly.GetAssembly(typeof(BaseNode))
+            .GetTypes()
+            .Where(t => t.IsSubclassOf(typeof(BaseNode)) && !t.IsAbstract)
+            .ToArray();
 
-        var existingNodes = _serializableNodes?.ToList() ?? new System.Collections.Generic.List<SerializableNode>();
+        var existingNodes = _serializableNodes?.ToList() ?? new List<SerializableNode>();
 
         foreach (var type in subclassTypes)
         {
-
-            bool typeAlreadyExists = existingNodes.Any(node =>
-                node != null &&
-                node.nodeType != null &&
-                node.nodeType == type.AssemblyQualifiedName);
-
-            if (!typeAlreadyExists)
+            if (!existingNodes.Any(n => n?.nodeType == type.AssemblyQualifiedName))
             {
-
                 var newNode = new SerializableNode();
                 newNode.Initialize(type, type.Name.Replace("Node", ""));
                 existingNodes.Add(newNode);

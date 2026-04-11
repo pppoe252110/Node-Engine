@@ -1,11 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using VContainer;
 
 public class SaveLoadUI : BasePanel
 {
@@ -29,15 +27,22 @@ public class SaveLoadUI : BasePanel
     private List<SaveFileEntryUI> _saveFileEntries = new List<SaveFileEntryUI>();
     private float _statusDisplayTimer;
     private bool _isPanelOpen = false;
-    private Coroutine _fadeCoroutine;
+
+    private GraphSaveLoadCoordinator _coordinator;
+
+    [Inject]
+    public void Construct(GraphSaveLoadCoordinator coordinator)
+    {
+        _coordinator = coordinator;
+    }
 
     private void Start()
     {
         SetupUI();
-        RefreshSaveFilesList();
 
-        GraphSaveLoadSystem.Instance.OnGraphSaved += OnGraphSaved;
-        GraphSaveLoadSystem.Instance.OnGraphLoaded += OnGraphLoaded;
+        RefreshSaveFilesList();
+        _coordinator.OnGraphSaved += OnGraphSaved;
+        _coordinator.OnGraphLoaded += OnGraphLoaded;
 
         canvasGroup.alpha = 0f;
         canvasGroup.interactable = false;
@@ -48,10 +53,10 @@ public class SaveLoadUI : BasePanel
 
     private void OnDestroy()
     {
-        if (GraphSaveLoadSystem.Instance != null)
+        if (_coordinator != null)
         {
-            GraphSaveLoadSystem.Instance.OnGraphSaved -= OnGraphSaved;
-            GraphSaveLoadSystem.Instance.OnGraphLoaded -= OnGraphLoaded;
+            _coordinator.OnGraphSaved -= OnGraphSaved;
+            _coordinator.OnGraphLoaded -= OnGraphLoaded;
         }
     }
 
@@ -63,7 +68,7 @@ public class SaveLoadUI : BasePanel
 
     protected override void OnPanelOpenedAction()
     {
-        RefreshSaveFilesList();
+            RefreshSaveFilesList();
     }
 
     private void SetupUI()
@@ -80,12 +85,14 @@ public class SaveLoadUI : BasePanel
 
         UpdateSaveStatus("Ready to save");
         UpdateLoadStatus($"{GetSaveFilesCount()} save files");
+        UpdateManagementStatus("");
 
         ClosePanel();
     }
 
     private void HandleHotkeys()
     {
+
         if (Keyboard.current.f5Key.wasReleasedThisFrame) QuickSave();
         else if (Keyboard.current.f9Key.wasReleasedThisFrame) QuickLoad();
         else if (Keyboard.current.escapeKey.wasReleasedThisFrame && _isPanelOpen) ClosePanel();
@@ -100,13 +107,13 @@ public class SaveLoadUI : BasePanel
         }
 
         UpdateSaveStatus("Saving...", 0f);
-        GraphSaveLoadSystem.Instance.SaveGraph(_saveNameInput.text);
+        _coordinator.SaveGraph(_saveNameInput.text);
     }
 
     public void QuickSave()
     {
         UpdateSaveStatus("Quick saving...", 0f);
-        GraphSaveLoadSystem.Instance.QuickSave();
+        _coordinator.QuickSave();
     }
 
     private void OnSaveNameChanged(string newText)
@@ -117,14 +124,14 @@ public class SaveLoadUI : BasePanel
     public void QuickLoad()
     {
         UpdateLoadStatus("Quick loading...", 0f);
-        GraphSaveLoadSystem.Instance.QuickLoad();
+        _coordinator.QuickLoad();
     }
 
     public void RefreshSaveFilesList()
     {
         ClearSaveFilesList();
 
-        var saveFiles = GraphSaveLoadSystem.Instance.GetSaveFiles();
+        var saveFiles = _coordinator.GetSaveFiles();
         if (saveFiles.Count == 0)
         {
             UpdateLoadStatus("No save files found", 3f);
@@ -144,7 +151,6 @@ public class SaveLoadUI : BasePanel
         if (_saveFileEntryPrefab == null) return;
 
         var entryUI = Instantiate(_saveFileEntryPrefab, _saveFilesContainer);
-
         if (entryUI != null)
         {
             entryUI.Initialize(saveName, OnLoadFile, OnDeleteFile);
@@ -164,19 +170,19 @@ public class SaveLoadUI : BasePanel
     private void OnLoadFile(string saveName)
     {
         UpdateLoadStatus($"Loading {saveName}...", 0f);
-        GraphSaveLoadSystem.Instance.LoadGraph(saveName);
+        _coordinator.LoadGraph(saveName);
     }
 
     private void OnDeleteFile(string saveName)
     {
-        GraphSaveLoadSystem.Instance.DeleteSaveFile(saveName);
+        _coordinator.DeleteSaveFile(saveName);
         RefreshSaveFilesList();
         UpdateManagementStatus($"Deleted {saveName}", 3f);
     }
 
     public void DeleteAllSaves()
     {
-        GraphSaveLoadSystem.Instance.DeleteAllSaves();
+        _coordinator.DeleteAllSaves();
         RefreshSaveFilesList();
         UpdateManagementStatus("All saves deleted", 3f);
     }
@@ -194,20 +200,29 @@ public class SaveLoadUI : BasePanel
 
     private void UpdateSaveStatus(string message, float displayTime = 0f)
     {
-        _saveStatusText.text = message;
-        if (displayTime > 0) _statusDisplayTimer = displayTime;
+        if (_saveStatusText != null)
+        {
+            _saveStatusText.text = message;
+            if (displayTime > 0) _statusDisplayTimer = displayTime;
+        }
     }
 
     private void UpdateLoadStatus(string message, float displayTime = 0f)
     {
-        _loadStatusText.text = message;
-        if (displayTime > 0) _statusDisplayTimer = displayTime;
+        if (_loadStatusText != null)
+        {
+            _loadStatusText.text = message;
+            if (displayTime > 0) _statusDisplayTimer = displayTime;
+        }
     }
 
     private void UpdateManagementStatus(string message, float displayTime = 0f)
     {
-        _managementStatusText.text = message;
-        if (displayTime > 0) _statusDisplayTimer = displayTime;
+        if (_managementStatusText != null)
+        {
+            _managementStatusText.text = message;
+            if (displayTime > 0) _statusDisplayTimer = displayTime;
+        }
     }
 
     private void UpdateStatusTimers()
@@ -223,5 +238,9 @@ public class SaveLoadUI : BasePanel
         }
     }
 
-    private int GetSaveFilesCount() => GraphSaveLoadSystem.Instance.GetSaveFiles().Count;
+    private int GetSaveFilesCount()
+    {
+        if (_coordinator == null) return 0;
+        return _coordinator.GetSaveFiles().Count;
+    }
 }

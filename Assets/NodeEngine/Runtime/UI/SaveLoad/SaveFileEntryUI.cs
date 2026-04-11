@@ -1,7 +1,7 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System.IO;
+using VContainer;
 
 public class SaveFileEntryUI : MonoBehaviour
 {
@@ -10,25 +10,21 @@ public class SaveFileEntryUI : MonoBehaviour
     [SerializeField] private Button _deleteButton;
 
     private string _saveName;
+    private GraphSaveLoadCoordinator _coordinator;
+
+    [Inject]
+    public void Construct(GraphSaveLoadCoordinator coordinator)
+    {
+        _coordinator = coordinator;
+    }
 
     public void Initialize(string saveName, System.Action<string> onLoad, System.Action<string> onDelete)
     {
         _saveName = saveName;
 
         _fileNameText.text = saveName;
-        UpdateFileInfo();
 
         _loadButton.onClick.AddListener(() => onLoad?.Invoke(_saveName));
         _deleteButton.onClick.AddListener(() => onDelete?.Invoke(_saveName));
-    }
-
-    private void UpdateFileInfo()
-    {
-        string filePath = Path.Combine(Application.dataPath, $"{_saveName}.json");
-
-        if (!File.Exists(filePath))
-        {
-            _loadButton.interactable = false;
-        }
     }
 }

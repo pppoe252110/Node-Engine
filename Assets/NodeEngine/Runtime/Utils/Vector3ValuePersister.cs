@@ -1,29 +1,24 @@
+using System;
 using UnityEngine;
 
 public class Vector3ValuePersister : IValuePersister
 {
-    public bool CanPersist(VariableType variableType)
-    {
-        return variableType == VariableType.Vector3;
-    }
+    public bool CanPersist(Type type) => type == typeof(Vector3);
 
-    public string PersistValue(object value)
+    public string Serialize(object value)
     {
-        if (value is Vector3 vectorValue)
-        {
-            return JsonUtility.ToJson(vectorValue);
-        }
+        if (value is Vector3 v)
+            return JsonUtility.ToJson(v);
         return JsonUtility.ToJson(Vector3.zero);
     }
 
-    public object RestoreValue(string serializedValue, VariableType variableType)
+    public object Deserialize(string data, Type targetType)
     {
-        if (variableType != VariableType.Vector3)
+        if (string.IsNullOrEmpty(data))
             return Vector3.zero;
-
         try
         {
-            return JsonUtility.FromJson<Vector3>(serializedValue);
+            return JsonUtility.FromJson<Vector3>(data);
         }
         catch
         {

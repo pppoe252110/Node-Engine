@@ -2,30 +2,19 @@ using System;
 
 public class TypeValuePersister : IValuePersister
 {
-    public bool CanPersist(VariableType variableType)
-    {
-        return variableType == VariableType.Type;
-    }
+    public bool CanPersist(Type type) => type == typeof(Type);
 
-    public string PersistValue(object value)
+    public string Serialize(object value)
     {
-        if (value is Type typeValue)
-        {
-            return TypeSerializer.SerializeType(typeValue);
-        }
+        if (value is Type t)
+            return t.AssemblyQualifiedName ?? string.Empty;
         return string.Empty;
     }
 
-    public object RestoreValue(string serializedValue, VariableType variableType)
+    public object Deserialize(string data, Type targetType)
     {
-        if (variableType != VariableType.Type)
-            return GetDefaultValue(variableType);
-
-        return TypeSerializer.DeserializeType(serializedValue);
-    }
-
-    private object GetDefaultValue(VariableType type)
-    {
-        return type == VariableType.Type ? typeof(object) : null;
+        if (string.IsNullOrEmpty(data))
+            return typeof(object);
+        return Type.GetType(data) ?? typeof(object);
     }
 }

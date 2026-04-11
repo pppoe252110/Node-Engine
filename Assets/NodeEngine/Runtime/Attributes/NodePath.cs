@@ -1,12 +1,8 @@
 using System;
 
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class)]
 public class NodePathAttribute : Attribute
 {
-    public string Path { get; private set; }
-
-    public NodePathAttribute(string path)
-    {
-        Path = path;
-    }
+    public string Path { get; }
+    public NodePathAttribute(string path) => Path = path;
 }

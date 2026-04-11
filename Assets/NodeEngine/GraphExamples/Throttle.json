@@ -1,0 +1,90 @@
+{
+    "version": "1.0",
+    "nodes": [
+        {
+            "nodeId": "6a8410a2-10c1-493f-81cd-763f5b68dbf5",
+            "nodeType": "UpdateNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Update",
+            "position": {
+                "x": -76.75211334228516,
+                "y": 323.85394287109377
+            },
+            "variableType": 0,
+            "serializedValue": ""
+        },
+        {
+            "nodeId": "e5d43556-103e-44c3-9157-e18b73bc9c07",
+            "nodeType": "ThrottleNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Throttle",
+            "position": {
+                "x": 189.58616638183595,
+                "y": 303.5914611816406
+            },
+            "variableType": 0,
+            "serializedValue": ""
+        },
+        {
+            "nodeId": "5d53503a-ecd4-42f3-bcd9-9a1c74acaed1",
+            "nodeType": "FloatVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Single",
+            "position": {
+                "x": -69.8162841796875,
+                "y": 231.52024841308595
+            },
+            "variableType": 1,
+            "serializedValue": "0.5"
+        },
+        {
+            "nodeId": "b707968e-306d-415e-98a7-96b2e84ae615",
+            "nodeType": "LogNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Log",
+            "position": {
+                "x": 528.87890625,
+                "y": 240.40591430664063
+            },
+            "variableType": 0,
+            "serializedValue": ""
+        },
+        {
+            "nodeId": "7bcf534c-4579-4570-a9c9-65079e4eead5",
+            "nodeType": "TimeNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Time",
+            "position": {
+                "x": 191.0983428955078,
+                "y": 158.99148559570313
+            },
+            "variableType": 0,
+            "serializedValue": ""
+        }
+    ],
+    "connections": [
+        {
+            "sourceNodeId": "5d53503a-ecd4-42f3-bcd9-9a1c74acaed1",
+            "sourcePortName": "Value",
+            "targetNodeId": "e5d43556-103e-44c3-9157-e18b73bc9c07",
+            "targetPortName": "Interval",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "7bcf534c-4579-4570-a9c9-65079e4eead5",
+            "sourcePortName": "Time",
+            "targetNodeId": "b707968e-306d-415e-98a7-96b2e84ae615",
+            "targetPortName": "Message",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "6a8410a2-10c1-493f-81cd-763f5b68dbf5",
+            "sourcePortName": "Out",
+            "targetNodeId": "e5d43556-103e-44c3-9157-e18b73bc9c07",
+            "targetPortName": "In",
+            "isFlow": true
+        },
+        {
+            "sourceNodeId": "e5d43556-103e-44c3-9157-e18b73bc9c07",
+            "sourcePortName": "Out",
+            "targetNodeId": "b707968e-306d-415e-98a7-96b2e84ae615",
+            "targetPortName": "In",
+            "isFlow": true
+        }
+    ]
+}

@@ -23,9 +23,6 @@ public class ConnectorColorDatabaseEditor : Editor
     private const string CacheKeyAllUsedTypes = "ConnectorColorDatabase_AllUsedTypes";
     private const string CacheKeyHasScanned = "ConnectorColorDatabase_HasScanned";
 
-    private static readonly Color HeaderColor = new Color(0.2f, 0.3f, 0.4f);
-    private static readonly Color SectionColor = new Color(0.8f, 0.9f, 1.0f, 0.1f);
-
     private void OnEnable()
     {
         database = (ConnectorColorDatabase)target;
@@ -382,7 +379,7 @@ public class ConnectorColorDatabaseEditor : Editor
 
     private List<Type> FindAllUsedTypes()
     {
-        var foundTypes = new List<Type>();
+        var foundTypes = new HashSet<Type>();
         var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
         foreach (var assembly in assemblies)
@@ -392,24 +389,35 @@ public class ConnectorColorDatabaseEditor : Editor
                 var types = assembly.GetTypes();
                 foreach (var type in types)
                 {
-                    var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                    foreach (var method in methods)
+                    // Look at fields with NodePortAttribute
+                    foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     {
-                        var attributes = method.GetCustomAttributes(typeof(NodeValueAttribute), true);
-                        foreach (NodeValueAttribute attribute in attributes)
+                        if (field.GetCustomAttribute<NodePortAttribute>() != null)
                         {
-                            if (attribute.type != null && !foundTypes.Contains(attribute.type))
+                            var fieldType = field.FieldType;
+                            // Skip generic parameters (like T) and open generic definitions (like List<>)
+                            if (!fieldType.IsGenericParameter && !fieldType.IsGenericTypeDefinition)
+                                foundTypes.Add(fieldType);
+                        }
+                    }
+
+                    // Check methods with NodePortAttribute (for flow ports)
+                    foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                    {
+                        if (method.GetCustomAttribute<NodePortAttribute>() != null)
+                        {
+                            var parameters = method.GetParameters();
+                            if (parameters.Length > 0)
                             {
-                                foundTypes.Add(attribute.type);
+                                var paramType = parameters[0].ParameterType;
+                                if (!paramType.IsGenericParameter && !paramType.IsGenericTypeDefinition)
+                                    foundTypes.Add(paramType);
                             }
                         }
                     }
                 }
             }
-            catch (ReflectionTypeLoadException)
-            {
-                continue;
-            }
+            catch (ReflectionTypeLoadException) { continue; }
         }
 
         return foundTypes.OrderBy(t => t.Name).ToList();
@@ -427,32 +435,31 @@ public class ConnectorColorDatabaseEditor : Editor
                 var assemblyTypes = assembly.GetTypes();
                 foreach (var type in assemblyTypes)
                 {
-                    var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
-                    foreach (var method in methods)
+                    // Fields with NodePortAttribute
+                    foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                     {
-                        var attributes = method.GetCustomAttributes(typeof(NodeValueAttribute), true);
-                        foreach (NodeValueAttribute attribute in attributes)
+                        if (field.GetCustomAttribute<NodePortAttribute>() != null)
                         {
-                            if (attribute.type != null)
+                            string typeName = field.FieldType.Name;
+                            counts[typeName] = counts.TryGetValue(typeName, out int c) ? c + 1 : 1;
+                        }
+                    }
+                    // Methods with NodePortAttribute
+                    foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                    {
+                        if (method.GetCustomAttribute<NodePortAttribute>() != null)
+                        {
+                            var parameters = method.GetParameters();
+                            if (parameters.Length > 0)
                             {
-                                string typeName = attribute.type.Name;
-                                if (counts.ContainsKey(typeName))
-                                {
-                                    counts[typeName]++;
-                                }
-                                else
-                                {
-                                    counts[typeName] = 1;
-                                }
+                                string typeName = parameters[0].ParameterType.Name;
+                                counts[typeName] = counts.TryGetValue(typeName, out int c) ? c + 1 : 1;
                             }
                         }
                     }
                 }
             }
-            catch (ReflectionTypeLoadException)
-            {
-                continue;
-            }
+            catch (ReflectionTypeLoadException) { continue; }
         }
 
         return counts;
@@ -462,15 +469,16 @@ public class ConnectorColorDatabaseEditor : Editor
     {
         return type.Name switch
         {
-            "Int32" => new Color(1f, 0.2f, 0.2f),
-            "Single" => new Color(0.2f, 0.9f, 0.2f),
-            "Boolean" => new Color(0.1f, 0.5f, 1f),
-            "String" => new Color(1f, 0.8f, 0.1f),
-            "Void" => new Color(0.8f, 0.2f, 0.8f),
-            "Vector3" => new Color(1f, 0.5f, 0f),
-            "GameObject" => new Color(0f, 0.8f, 1f),
-            "Object" => new Color(0.9f, 0.1f, 0.5f),
-            "Type" => new Color(0.8f, 0.4f, 0.6f),
+            "Int32" => new Color(1f, 0.2f, 0.2f),      // Red
+            "Single" => new Color(0.2f, 0.9f, 0.2f),   // Green
+            "Boolean" => new Color(0.1f, 0.5f, 1f),    // Blue
+            "String" => new Color(1f, 0.8f, 0.1f),     // Yellow
+            "Void" => new Color(0.8f, 0.2f, 0.8f),     // Purple
+            "Vector3" => new Color(1f, 0.5f, 0f),      // Orange
+            "GameObject" => new Color(0f, 0.8f, 1f),   // Cyan
+            "Object" => new Color(0.9f, 0.1f, 0.5f),   // Pink
+            "Type" => new Color(0.8f, 0.4f, 0.6f),     // Magenta
+            "ComparisonOperation" => new Color(0.2f, 0.8f, 0.8f), // Teal
             _ => database.FallbackColor
         };
     }

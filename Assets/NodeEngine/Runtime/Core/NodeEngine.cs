@@ -1,10 +1,13 @@
-public static class NodeEngine
+namespace NodeEngine.Core
 {
-    public static  bool IsExecuting => _isExecuting;
-    private static bool _isExecuting;
-
-    public static void SetIsExecuting(bool isExecuting)
+    public static class NodeEngine
     {
-        _isExecuting = isExecuting;
+        private static bool _isExecuting;
+        public static bool IsExecuting => _isExecuting;
+
+        public static void SetIsExecuting(bool isExecuting)
+        {
+            _isExecuting = isExecuting;
+        }
     }
 }

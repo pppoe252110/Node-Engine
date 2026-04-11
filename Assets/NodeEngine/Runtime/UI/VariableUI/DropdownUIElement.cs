@@ -1,157 +1,49 @@
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class DropdownUIElement : VariableUIElement
 {
-    [SerializeField] private TMP_Dropdown _typeDropdown;
+    [SerializeField] protected TMP_Dropdown _dropdown;
 
-    private TypeVariableNode _typeNode;
-    private Dictionary<int, Type> _typeMapping = new Dictionary<int, Type>();
-    private bool _isUpdatingFromUI = false;
+    public override bool CanBind(Type valueType) => valueType.IsEnum;
 
-    public void Initialize(TypeVariableNode typeNode)
+    public override void Bind(IVariableNode node)
     {
-        _typeNode = typeNode;
-        SetupUI();
-        UpdateUIFromNode(); // Use a different method name
+        PopulateDropdown(node);
+        base.Bind(node);
+        _dropdown.onValueChanged.AddListener(OnDropdownValueChanged);
     }
 
-    public override void Initialize(VariableNode node, VariableType type)
+    protected virtual void PopulateDropdown(IVariableNode node)
     {
-        if (node is TypeVariableNode typeNode)
-        {
-            Initialize(typeNode);
-        }
+        _dropdown.ClearOptions();
+        _dropdown.AddOptions(new System.Collections.Generic.List<string>(Enum.GetNames(node.ValueType)));
     }
 
-    private void SetupUI()
+    protected virtual void OnDropdownValueChanged(int index)
     {
-        if (_typeDropdown == null) return;
-
-        // Clear and setup dropdown options
-        _typeDropdown.ClearOptions();
-        _typeMapping.Clear();
-
-        var typeNames = new List<string>();
-
-        // Common types with their display names
-        var commonTypes = new List<(string, Type)>
-        {
-            ("Float", typeof(float)),
-            ("Integer", typeof(int)),
-            ("Boolean", typeof(bool)),
-            ("String", typeof(string)),
-            ("Vector3", typeof(Vector3)),
-            ("GameObject", typeof(GameObject)),
-            ("Object", typeof(object))
-        };
-
-        for (int i = 0; i < commonTypes.Count; i++)
-        {
-            typeNames.Add(commonTypes[i].Item1);
-            _typeMapping[i] = commonTypes[i].Item2;
-        }
-
-        _typeDropdown.AddOptions(typeNames);
-        _typeDropdown.onValueChanged.AddListener(OnTypeSelected);
+        if (TargetNode == null) return;
+        var enumValues = Enum.GetValues(TargetNode.ValueType);
+        TargetNode.SetUntypedValue(enumValues.GetValue(index));
     }
 
-    private void UpdateUIFromNode()
+    protected override void OnNodeValueChanged(object newValue)
     {
-        if (_typeNode == null || _typeDropdown == null) return;
-
-        // Find current type in mapping
-        int currentIndex = 6; // Default to "Object"
-        Type selectedType = _typeNode.SelectedType;
-
-        foreach (var mapping in _typeMapping)
+        if (newValue == null) return;
+        int index = Array.IndexOf(Enum.GetValues(TargetNode.ValueType), newValue);
+        if (index >= 0)
         {
-            if (mapping.Value == selectedType)
-            {
-                currentIndex = mapping.Key;
-                break;
-            }
-        }
-
-        _typeDropdown.SetValueWithoutNotify(currentIndex);
-    }
-
-    private void OnTypeSelected(int index)
-    {
-        if (_typeNode == null || !_typeMapping.ContainsKey(index) || _isUpdatingFromUI)
-            return;
-
-        Type selectedType = _typeMapping[index];
-
-        // Prevent recursion
-        _isUpdatingFromUI = true;
-        try
-        {
-            _typeNode.ChangeSelectedType(selectedType);
-        }
-        finally
-        {
-            _isUpdatingFromUI = false;
+            _dropdown.SetValueWithoutNotify(index);
         }
     }
 
-    public override object GetValue()
+    protected override void OnDestroy()
     {
-        return _typeNode?.SelectedType;
-    }
-
-    // PUBLIC METHODS FOR EXTERNAL ACCESS
-    public override void SetValue(object value)
-    {
-        if (value is Type typeValue)
+        if (_dropdown != null)
         {
-            SetSelectedType(typeValue, false); // Pass false to indicate external call
+            _dropdown.onValueChanged.RemoveAllListeners();
         }
-    }
-
-    public void SetSelectedType(Type type, bool updateNode = true)
-    {
-        if (_typeDropdown == null || _typeMapping == null || _isUpdatingFromUI)
-        {
-            Debug.LogWarning("Dropdown not ready or already updating");
-            return;
-        }
-
-        // Find the index of this type in our mapping
-        int targetIndex = -1;
-        foreach (var mapping in _typeMapping)
-        {
-            if (mapping.Value == type)
-            {
-                targetIndex = mapping.Key;
-                break;
-            }
-        }
-
-        if (targetIndex >= 0 && targetIndex < _typeDropdown.options.Count)
-        {
-            _typeDropdown.SetValueWithoutNotify(targetIndex);
-
-            // Only update the node if requested (prevents recursion)
-            if (updateNode && _typeNode != null)
-            {
-                _isUpdatingFromUI = true;
-                try
-                {
-                    _typeNode.ChangeSelectedType(type);
-                }
-                finally
-                {
-                    _isUpdatingFromUI = false;
-                }
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"Type {type?.Name ?? "null"} not found in dropdown options.");
-        }
+        base.OnDestroy();
     }
 }

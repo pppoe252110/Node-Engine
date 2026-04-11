@@ -39,7 +39,7 @@ public class ContextMenuSystem : MonoBehaviour
 
         if (targetCanvas == null)
         {
-            targetCanvas = GetComponentInParent<Canvas>() ?? FindFirstObjectByType<Canvas>();
+            targetCanvas = GetComponentInParent<Canvas>() ?? FindAnyObjectByType<Canvas>();
         }
 
         if (debugMode) Log("ContextMenuSystem initialized");

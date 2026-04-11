@@ -1,10 +1,14 @@
 public enum VariableType
 {
-    Bool,
-    Int,
+    None,
     Single,
+    Int,
     String,
+    Bool,
+    Vector2,
     Vector3,
+    Color,
     Object,
-    Type
+    Type,
+    ComparisonOperation
 }

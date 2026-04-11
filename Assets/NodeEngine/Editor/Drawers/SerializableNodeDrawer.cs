@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -150,28 +151,27 @@ public class SerializableNodeDrawer : PropertyDrawer
 
     private List<string> GetNodeTypes()
     {
-        if (_cachedNodeTypes != null && EditorApplication.timeSinceStartup - _lastCacheTime < CACHE_DURATION)
+        if (_cachedNodeTypes != null && EditorApplication.timeSinceStartup - _lastCacheTime < 2.0)
             return _cachedNodeTypes;
 
         _cachedNodeTypes = new List<string>();
-        foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+        foreach (var assembly in assemblies)
         {
             try
             {
                 var types = assembly.GetTypes()
-                    .Where(t => t.IsSubclassOf(typeof(NodeBase)) && !t.IsAbstract && !t.IsGenericType)
+                    .Where(t => typeof(BaseNode).IsAssignableFrom(t) && !t.IsAbstract && !t.IsGenericType)
                     .Select(t => t.AssemblyQualifiedName);
                 _cachedNodeTypes.AddRange(types);
             }
-            catch (System.Reflection.ReflectionTypeLoadException)
-            {
-                continue;
-            }
+            catch { continue; }
         }
         _cachedNodeTypes.Sort();
         _lastCacheTime = EditorApplication.timeSinceStartup;
         return _cachedNodeTypes;
     }
+
     private string GetSimpleTypeName(string assemblyQualifiedName)
     {
         if (string.IsNullOrEmpty(assemblyQualifiedName))

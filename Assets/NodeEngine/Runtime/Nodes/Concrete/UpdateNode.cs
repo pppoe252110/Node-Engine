@@ -1,16 +1,15 @@
+using NodeEngine.Compilation;
+using System;
 using System.Collections.Generic;
 
 [NodePath("Events/Update")]
-public class UpdateNode : NodeBase
+public class UpdateNode : BaseNode
 {
-    [NodeValue("Update", typeof(void))]
-    public void UpdateVoid(ConnectorValueVoid value) { }
+    [NodePort("Out", false, true)] public void Out() { }
 
-    public override void Setup()
+    public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
-        outputFields = new()
-        {
-            new NodeFieldTyped<ConnectorValueVoid>().SetHandler(UpdateVoid).SetDefaultValue(new ConnectorValueVoid())
-        };
+        int exitFlow = context.GetFlowId("Out");
+        return (ctx) => ExecutionResult.Continue(exitFlow);
     }
 }
