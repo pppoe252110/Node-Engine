@@ -1,6 +1,6 @@
 {
   "name": "com.parity.nodeengine",
-  "version": "0.3.7",
+  "version": "0.5.0",
   "displayName": "Node Engine",
   "description": "A visual scripting node engine for Unity.",
   "unity": "6000.2",
