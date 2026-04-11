@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.cysharp.unitask": "https://github.com/chikacc/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#0d304f1feb336a8348011c5f8a171f32634b3069",
     "com.pppoe252110.unimediator": "https://github.com/pppoe252110/UniMediator.git?path=Assets/Plugins/UniMediator",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.ai.navigation": "2.0.12",

@@ -5,8 +5,8 @@ public abstract class VariableNode : BaseNode
 {
     [NodePort("Value", false)] public object value;
     public NodeValue CachedValue = new NodeValue();
-    public MonoBehaviour UIElement { get; set; }
     public abstract VariableType VariableType { get; }
+    public event Action<object> OnValueChanged;
 
     public VariableNode() : base()
     {
@@ -27,6 +27,7 @@ public abstract class VariableNode : BaseNode
             VariableType.Vector3 => typeof(Vector3),
             VariableType.Color => typeof(Color),
             VariableType.Type => typeof(Type),
+            VariableType.ComparisonOperation => typeof(ComparisonOperation),
             _ => typeof(object)
         };
     }
@@ -41,24 +42,10 @@ public abstract class VariableNode : BaseNode
         };
     }
 
-    public virtual void SyncCachedValueWithUI()
-    {
-        if (UIElement is VariableUIElement uiElement)
-        {
-            object uiValue = uiElement.GetValue();
-            if (uiValue != null) CachedValue.SetInnerValue(uiValue);
-        }
-    }
-
-    public virtual void SyncUIWithCachedValue()
-    {
-        if (UIElement is VariableUIElement uiElement)
-        {
-            object cached = CachedValue.GetInnerValue();
-            if (cached != null) uiElement.SetValue(cached);
-        }
-    }
-
     public object GetValue() => CachedValue.GetInnerValue();
-    public void SetValue(object newValue) => CachedValue.SetInnerValue(newValue);
+    public void SetValue(object newValue)
+    {
+        CachedValue.SetInnerValue(newValue);
+        OnValueChanged?.Invoke(newValue);
+    }
 }

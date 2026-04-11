@@ -19,33 +19,11 @@ public class ConnectionManager : MonoBehaviour
 
     public bool CreateConnectionWithConnectors(Connector from, Connector to)
     {
-        if (from == null || to == null)
-        {
-            Debug.LogError("[CM] Source or target connector is null.");
-            return false;
-        }
-        if (from.Node == null || to.Node == null)
-        {
-            Debug.LogError($"[CM] Connector '{from.PortName}' or '{to.PortName}' has null Node reference.");
-            return false;
-        }
-        if (from.Node == to.Node)
-        {
-            Debug.LogWarning("[CM] Cannot connect a node to itself.");
-            return false;
-        }
-        if (from.Connections.Contains(to))
-        {
-            Debug.LogWarning("[CM] Connection already exists.");
-            return false;
-        }
+        if (from == null || to == null || from.Node == null || to.Node == null) return false;
+        if (from.Node == to.Node || from.Connections.Contains(to)) return false;
 
         BindLogic(from, to);
-        from.AddVisualConnection(to);
-        to.AddVisualConnection(from);
-        NotifyConnection(from, to);
 
-        // Publish unified notification
         _mediator.Publish(new ConnectionChangedNotification(from, to, wasAdded: true));
         _mediator.Publish(new MarkGraphDirtyNotification());
 
@@ -57,11 +35,7 @@ public class ConnectionManager : MonoBehaviour
         if (from == null || to == null) return;
 
         UnbindLogic(from, to);
-        from.RemoveVisualConnection(to);
-        to.RemoveVisualConnection(from);
-        NotifyDisconnection(from, to);
 
-        // Publish unified notification
         _mediator.Publish(new ConnectionChangedNotification(from, to, wasAdded: false));
         _mediator.Publish(new MarkGraphDirtyNotification());
     }

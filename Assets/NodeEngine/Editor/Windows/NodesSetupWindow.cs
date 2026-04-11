@@ -407,7 +407,7 @@ public class NodesSetupWindow : EditorWindow
             {
                 float progress = copyResources ? 0.7f : 0.8f;
                 EditorUtility.DisplayProgressBar("Node Engine Setup", "Copying GraphExamples...", progress);
-                CopyGraphExamples();
+                CopySampleSaves();
             }
 
             EditorPrefs.SetBool(SETUP_COMPLETE_KEY, true);
@@ -524,38 +524,55 @@ public class NodesSetupWindow : EditorWindow
         Debug.Log("Resource copy and reference fixing complete.");
     }
 
-    private void CopyGraphExamples()
+    private void CopySampleSaves()
     {
-        string sourcePath = FindPackageGraphExamplesPath();
+        string sourcePath = FindPackageSavesPath();
         if (string.IsNullOrEmpty(sourcePath) || !Directory.Exists(sourcePath))
         {
-            Debug.LogWarning($"GraphExamples not found at: {sourcePath}");
+            Debug.LogWarning($"Sample Saves not found at: {sourcePath}");
             return;
         }
 
-        string targetPath = Application.dataPath;
+        // Define target: Application.persistentDataPath + "/NodeGraphs/"
+        string targetPath = Path.Combine(Application.persistentDataPath, "NodeGraphs");
+
+        if (!Directory.Exists(targetPath))
+            Directory.CreateDirectory(targetPath);
 
         string[] sourceFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories)
             .Where(f => !f.EndsWith(".meta")).ToArray();
 
-        if (sourceFiles.Length == 0)
-        {
-            Debug.LogWarning("No files found in GraphExamples folder.");
-            return;
-        }
-
+        int copiedCount = 0;
         foreach (string sourceFile in sourceFiles)
         {
             string relativePath = sourceFile.Substring(sourcePath.Length + 1);
             string targetFile = Path.Combine(targetPath, relativePath);
+
             string targetDir = Path.GetDirectoryName(targetFile);
             if (!Directory.Exists(targetDir))
                 Directory.CreateDirectory(targetDir);
+
             File.Copy(sourceFile, targetFile, true);
-            Debug.Log($"Copied GraphExample: {relativePath}");
+            copiedCount++;
         }
 
-        Debug.Log($"Copied {sourceFiles.Length} GraphExample files to Assets folder.");
+        Debug.Log($"Successfully imported {copiedCount} sample saves to: {targetPath}");
+    }
+
+    private string FindPackageSavesPath()
+    {
+        string packageCacheRoot = Path.Combine(Path.GetDirectoryName(Application.dataPath), "Library", "PackageCache");
+        if (!Directory.Exists(packageCacheRoot)) return null;
+
+        string[] packageFolders = Directory.GetDirectories(packageCacheRoot, "com.parity.nodeengine*");
+
+        if (packageFolders.Length > 0)
+        {
+            string savesPath = Path.Combine(packageFolders[0], "GraphExamples");
+            if (Directory.Exists(savesPath)) return savesPath;
+        }
+
+        return null;
     }
 
     private string FindPackageGraphExamplesPath()

@@ -18,7 +18,12 @@ public class LocalGraphStorage : IGraphStorage
     }
 
     public void Save(string saveName, string data) => File.WriteAllText(GetFilePath(saveName), data);
-    public string Load(string saveName) => File.ReadAllText(GetFilePath(saveName));
+    public string Load(string saveName)
+    {
+        Debug.Log("Loading graph from: " + GetFilePath(saveName));
+        return File.ReadAllText(GetFilePath(saveName));
+
+    }
     public bool Exists(string saveName) => File.Exists(GetFilePath(saveName));
 
     public void Delete(string saveName)

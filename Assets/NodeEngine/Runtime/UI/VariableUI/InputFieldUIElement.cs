@@ -2,7 +2,7 @@ using System.Globalization;
 using TMPro;
 using UnityEngine;
 
-public class InputFieldVariableUI : VariableUIElement
+public class InputFieldUIElement : VariableUIElement
 {
     [SerializeField] private TMP_InputField _inputField;
 
@@ -14,13 +14,27 @@ public class InputFieldVariableUI : VariableUIElement
         base.Initialize(node, type);
 
         _type = type;
-
         _culture = CultureInfo.InvariantCulture;
 
         SetupInputFieldForType();
+
+        // 1. Start with defaults
         SetDefaultValue();
 
+        // 2. Setup listeners
         _inputField.onValueChanged.AddListener(UpdateValue);
+        _inputField.onEndEdit.AddListener(OnEndEdit);
+
+        if (_node != null)
+        {
+            _node.OnValueChanged += OnNodeValueChanged;
+
+            object existingValue = _node.GetValue();
+            if (existingValue != null)
+            {
+                SetValue(existingValue);
+            }
+        }
     }
 
     private void SetupInputFieldForType()
@@ -234,7 +248,9 @@ public class InputFieldVariableUI : VariableUIElement
         {
             case VariableType.Single:
                 if (value is float floatValue)
-                    _inputField.SetTextWithoutNotify(floatValue.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                {
+                    _inputField.SetTextWithoutNotify(floatValue.ToString(System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.'));
+                }
                 else
                     _inputField.SetTextWithoutNotify(value.ToString());
                 break;
@@ -255,6 +271,11 @@ public class InputFieldVariableUI : VariableUIElement
         }
     }
 
+    private void OnNodeValueChanged(object newValue)
+    {
+        SetValue(newValue);
+    }
+
     public override object GetValue() => _value;
 
     private void Start()
@@ -266,7 +287,10 @@ public class InputFieldVariableUI : VariableUIElement
     {
         FormatCurrentValue();
 
-        _node.SyncCachedValueWithUI();
+        if (_node != null && _value != null)
+        {
+            _node.SetValue(_value);
+        }
     }
 
     private void OnDestroy()
@@ -275,6 +299,11 @@ public class InputFieldVariableUI : VariableUIElement
         {
             _inputField.onValueChanged.RemoveListener(UpdateValue);
             _inputField.onEndEdit.RemoveListener(OnEndEdit);
+        }
+
+        if (_node != null)
+        {
+            _node.OnValueChanged -= OnNodeValueChanged;
         }
     }
 }

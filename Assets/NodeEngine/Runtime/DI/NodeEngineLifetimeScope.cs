@@ -15,12 +15,12 @@ public class NodeEngineLifetimeScope : LifetimeScope
     [SerializeField] private LineRenderersController _lineRenderersController;
     [SerializeField] private UIZoomPan _UIZoomPan;
     [SerializeField] private Canvas _mainCanvas;
+    [SerializeField] private ConnectionVisualsHandler _connectionVisualsHandler;
 
     protected override void Configure(IContainerBuilder builder)
     {
         builder.RegisterComponent(_mainCanvas);
 
-        // Register Mediator, ignoring components already registered manually
         builder.RegisterMediator();
 
         builder.Register<CanvasService>(Lifetime.Singleton);
@@ -35,13 +35,15 @@ public class NodeEngineLifetimeScope : LifetimeScope
         RegisterAllNodeTypes(builder);
 
         builder.RegisterComponent(_connectionManager);
-        builder.RegisterComponent(_nodeRunner).AsImplementedInterfaces();
         builder.RegisterComponent(_nodeSpawnerService);
         builder.RegisterComponent(_graphCoordinator);
         builder.RegisterComponent(_saveLoadUI);
         builder.RegisterComponent(_nodesList);
-        builder.RegisterComponent(_lineRenderersController).AsImplementedInterfaces();
         builder.RegisterComponent(_UIZoomPan);
+
+        builder.RegisterComponent(_nodeRunner).AsImplementedInterfaces();
+        builder.RegisterComponent(_connectionVisualsHandler).AsImplementedInterfaces();
+        builder.RegisterComponent(_lineRenderersController).AsImplementedInterfaces();
     }
 
     private void RegisterAllNodeTypes(IContainerBuilder builder)

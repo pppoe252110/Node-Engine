@@ -47,28 +47,28 @@ public class NodeUIManager : MonoBehaviour
     public void CreateVariableUI(VariableNode varNode, Image nodeImage)
     {
         if (varNode == null || _variableDatabase == null) return;
+
         var prefab = _variableDatabase.GetPrefabForType(varNode.VariableType);
         if (prefab == null) return;
 
         var uiElement = Instantiate(prefab, _leftConnectorsParent);
-        uiElement.Initialize(varNode, varNode.VariableType);
-        varNode.UIElement = uiElement;
 
-        varNode.SyncUIWithCachedValue();
+        uiElement.Initialize(varNode, varNode.VariableType);
+
         UpdateNodeSizeForVariableUI(nodeImage);
     }
 
     public void CreateConverterUI(TypeVariableNode converterNode, Image nodeImage)
     {
         if (converterNode == null || _variableDatabase == null) return;
+
         var prefab = _variableDatabase.ConverterUIPrefab;
         if (prefab == null) return;
 
-        var uiElement = Instantiate(prefab, LeftConnectorsParent);
-        uiElement.Initialize(converterNode);
-        converterNode.UIElement = uiElement;
+        var uiElement = Instantiate(prefab, _leftConnectorsParent);
 
-        converterNode.SyncUIWithCachedValue();
+        uiElement.Initialize(converterNode, converterNode.VariableType);
+
         UpdateNodeSizeForVariableUI(nodeImage);
     }
 

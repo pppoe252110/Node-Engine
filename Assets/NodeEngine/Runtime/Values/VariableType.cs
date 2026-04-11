@@ -9,5 +9,6 @@ public enum VariableType
     Vector3,
     Color,
     Object,
-    Type
+    Type,
+    ComparisonOperation
 }

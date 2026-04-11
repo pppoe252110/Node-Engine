@@ -14,11 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NodesDatabase
   _serializableNodes:
   - nodeName: Subtract
-    nodeType: SubtractNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: SubtractNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 4
     nodeIcon: {fileID: 21300000, guid: 64950f4f7df52fc47aa8d9b65ae99e41, type: 3}
   - nodeName: Multiply
-    nodeType: MultiplyNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: MultiplyNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 4
     nodeIcon: {fileID: 21300000, guid: 7e8aa967d9b68064783d566023be54fd, type: 3}
   - nodeName: Clamp
@@ -38,7 +40,8 @@ MonoBehaviour:
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: d3a3174f83596a44491237579a224899, type: 3}
   - nodeName: ToString
-    nodeType: ToStringNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: ToStringNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 2006f918c9e351e449f4008ac84af791, type: 3}
   - nodeName: Update
@@ -46,7 +49,8 @@ MonoBehaviour:
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: f476699faae46174d903d3682f5fdc11, type: 3}
   - nodeName: ForLoop
-    nodeType: ForLoopNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: ForLoopNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 0294a4f548cd51749b151bc7686a053f, type: 3}
   - nodeName: IfElse
@@ -54,35 +58,43 @@ MonoBehaviour:
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 43068265e461b4d45a28a4fe110dbd05, type: 3}
   - nodeName: MoveGameObject
-    nodeType: MoveGameObjectNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: MoveGameObjectNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 552918c18ce4c8f4ebcf83d4fd990c89, type: 3}
   - nodeName: Convert
-    nodeType: ConvertNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: ConvertNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: f476699faae46174d903d3682f5fdc11, type: 3}
   - nodeName: Bool
-    nodeType: BoolVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: BoolVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Int
-    nodeType: IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 1
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: String
-    nodeType: StringVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: StringVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 3
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Single
-    nodeType: FloatVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: FloatVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 2
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Vector3
-    nodeType: Vector3VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: Vector3VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 4
     nodeIcon: {fileID: 21300000, guid: a3a73d935ae17474591d41cea7e461cc, type: 3}
   - nodeName: Type
-    nodeType: TypeVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: TypeVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 8e03a0d1b56d28a4ab5ccfe26c1fdd4a, type: 3}
   - nodeName: Log
@@ -98,11 +110,13 @@ MonoBehaviour:
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 56b4ad2a6381d9545bc4753fb2249396, type: 3}
   - nodeName: SetGlobal
-    nodeType: SetGlobalNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: SetGlobalNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 63eb2535a3c92f84585326fbd1fea345, type: 3}
   - nodeName: GetGlobal
-    nodeType: GetGlobalNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: GetGlobalNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 63eb2535a3c92f84585326fbd1fea345, type: 3}
   - nodeName: While
@@ -110,6 +124,104 @@ MonoBehaviour:
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 2c0755244c2dc524f9c206de2e55dc48, type: 3}
   - nodeName: Throttle
-    nodeType: ThrottleNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    nodeType: ThrottleNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
     variableType: 0
     nodeIcon: {fileID: 21300000, guid: 8fc1b91495e352e48844de114090265b, type: 3}
+  - nodeName: Comparison
+    nodeType: ComparisonNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: ComparisonOperationVariable
+    nodeType: ComparisonOperationVariableNode, NodeEngine.Runtime, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Abs
+    nodeType: AbsNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Acos
+    nodeType: AcosNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Asin
+    nodeType: AsinNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Atan2
+    nodeType: Atan2Node, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Atan
+    nodeType: AtanNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Ceil
+    nodeType: CeilNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Cos
+    nodeType: CosNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: DegToRad
+    nodeType: DegToRadNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Floor
+    nodeType: FloorNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: InverseLerp
+    nodeType: InverseLerpNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Lerp
+    nodeType: LerpNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Max
+    nodeType: MaxNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Min
+    nodeType: MinNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Modulo
+    nodeType: ModuloNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Power
+    nodeType: PowerNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: RadToDeg
+    nodeType: RadToDegNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Round
+    nodeType: RoundNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Sign
+    nodeType: SignNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Sin
+    nodeType: SinNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Sqrt
+    nodeType: SqrtNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}
+  - nodeName: Tan
+    nodeType: TanNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    variableType: 0
+    nodeIcon: {fileID: 0}

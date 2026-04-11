@@ -75,10 +75,12 @@ public class GraphSerializer
 
         return varNode.VariableType switch
         {
-            VariableType.Vector3 => JsonUtility.ToJson((Vector3)value),
+            VariableType.Single => ((float)value).ToString(System.Globalization.CultureInfo.InvariantCulture),
             VariableType.Vector2 => JsonUtility.ToJson((Vector2)value),
+            VariableType.Vector3 => JsonUtility.ToJson((Vector3)value),
             VariableType.Color => JsonUtility.ToJson((Color)value),
             VariableType.Type => ((Type)value).AssemblyQualifiedName,
+            VariableType.ComparisonOperation => ((ComparisonOperation)value).ToString(),
             _ => value.ToString()
         };
     }
@@ -98,6 +100,7 @@ public class GraphSerializer
                 VariableType.Vector2 => JsonUtility.FromJson<Vector2>(serialized),
                 VariableType.Color => JsonUtility.FromJson<Color>(serialized),
                 VariableType.Type => Type.GetType(serialized) ?? typeof(object),
+                VariableType.ComparisonOperation => Enum.Parse<ComparisonOperation>(serialized),
                 _ => null
             };
             varNode.SetValue(value);

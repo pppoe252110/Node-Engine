@@ -1,11 +1,11 @@
 {
   "dependencies": {
     "com.cysharp.unitask": {
-      "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+      "version": "https://github.com/chikacc/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#0d304f1feb336a8348011c5f8a171f32634b3069",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "73a63b7f672b88f7e9992f6917eb458a8cbb6fa9"
+      "hash": "0d304f1feb336a8348011c5f8a171f32634b3069"
     },
     "com.pppoe252110.unimediator": {
       "version": "https://github.com/pppoe252110/UniMediator.git?path=Assets/Plugins/UniMediator",

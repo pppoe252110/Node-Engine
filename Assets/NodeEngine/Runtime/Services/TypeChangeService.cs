@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UnityEngine;
 using VContainer;
 
@@ -10,10 +11,7 @@ public class TypeChangeService
     private bool _isInUpdate = false;
 
     [Inject]
-    public TypeChangeService(
-        ConnectionManager connectionManager,
-        NodeRunner nodeRunner,
-        LineRenderersController lineRenderersController)
+    public TypeChangeService(ConnectionManager connectionManager, NodeRunner nodeRunner, LineRenderersController lineRenderersController)
     {
         _connectionManager = connectionManager;
         _nodeRunner = nodeRunner;
@@ -22,26 +20,19 @@ public class TypeChangeService
 
     public bool TryChangeConnectorType(Connector connector, Type newType)
     {
-        if (_isInUpdate) return false;
-        if (connector == null || connector.ValueType == newType) return false;
+        if (_isInUpdate || connector == null || connector.ValueType == newType) return false;
 
         _isInUpdate = true;
         try
         {
-            // 1. Disconnect incompatible connections
-            TypeChangeLogic.CheckAndDisconnectIncompatible(connector, newType, _connectionManager);
+            CheckAndDisconnectIncompatible(connector, newType);
 
-            // 2. Update the visual connector
             connector.SetValueType(newType);
 
-            // 3. Update the Node's Port definition
             var portInfo = connector.Node.Ports.Find(p => p.Name == connector.PortName && p.IsInput == connector.IsInput);
             if (portInfo != null) portInfo.ValueType = newType;
 
-            // 4. Update line colors using the injected controller
             _lineRenderersController.UpdateConnectionColors(connector);
-
-            // 5. Mark graph dirty
             _nodeRunner?.MarkDirty();
 
             return true;
@@ -54,6 +45,23 @@ public class TypeChangeService
         finally
         {
             _isInUpdate = false;
+        }
+    }
+
+    private void CheckAndDisconnectIncompatible(Connector connector, Type newType)
+    {
+        var connectionsToCheck = connector.Connections.ToList();
+
+        foreach (var connectedConnector in connectionsToCheck)
+        {
+            if (connectedConnector == null) continue;
+
+            bool isCompatible = TypeChangeLogic.IsCompatibleType(newType, connectedConnector.ValueType);
+            if (!isCompatible)
+            {
+                Debug.LogWarning($"Disconnecting incompatible connection: {newType.Name} -> {connectedConnector.ValueType.Name}");
+                _connectionManager.Disconnect(connector, connectedConnector);
+            }
         }
     }
 }
