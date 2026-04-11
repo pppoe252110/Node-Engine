@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using VContainer;
@@ -8,20 +8,20 @@ using NodeEngine.Compilation;
 
 public abstract class BaseNode
 {
-    // --- UI & Editor Properties (unchanged) ---
+    // --- UI & Editor Properties ---
     public string NodeName { get; protected set; }
     public Sprite NodeSprite { get; protected set; }
     public string NodeId { get; protected set; }
     public int RuntimeId { get; internal set; } = -1;
     public NodeLogic LogicView { get; protected set; }
 
-    // Port definition (readonly after construction)
+    // Port definition
     public List<NodePortInfo> Ports { get; private set; }
 
-    // Dynamic type forwarding (still needed for UI/editor interactions)
+    // Dynamic type forwarding
     protected Dictionary<string, List<string>> _dynamicTypes = new();
 
-    // Services (unchanged)
+    // Services
     private TypeChangeService _typeChangeService;
 
     public BaseNode()
@@ -44,7 +44,7 @@ public abstract class BaseNode
     public void SetName(string name) => NodeName = name;
     public void SetIcon(Sprite icon) => NodeSprite = icon;
 
-    // --- Port Discovery (unchanged) ---
+    // --- Port Discovery ---
     private void DiscoverPorts()
     {
         var portsList = new List<NodePortInfo>();
@@ -67,11 +67,15 @@ public abstract class BaseNode
                 Name = attr.Name,
                 IsInput = attr.IsInput,
                 IsFlow = attr.IsFlow,
-                ValueType = portType
+                ValueType = portType,
+                Order = attr.Order
             });
         }
 
-        Ports = portsList.OrderBy(p => p.Name).ToList();
+        Ports = portsList
+            .OrderBy(p => !p.IsInput)
+            .ThenBy(p => p.Order)
+            .ToList();
     }
 
     // Helper to find port index by name
@@ -90,10 +94,10 @@ public abstract class BaseNode
         return false;
     }
 
-    // --- Compilation: Now receives context ---
+    // --- Compilation ---
     public abstract Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context);
 
-    // --- Dynamic Type Binding (UI callbacks remain on BaseNode for now) ---
+    // --- Dynamic Type Binding ---
     protected void BindDynamicType(string sourcePort, string targetPort)
     {
         if (!_dynamicTypes.ContainsKey(sourcePort))
@@ -141,30 +145,13 @@ public abstract class BaseNode
         }
     }
 
-    // --- Static Read/Write Helpers (moved from instance) ---
-    protected static T Read<T>(GraphContext ctx, int memoryId, T fallback = default)
-    {
-        if (memoryId >= 0 && memoryId < ctx.Memory.Length)
-        {
-            var val = ctx.Memory[memoryId];
-            if (val is T castedVal) return castedVal;
-            try { if (val is IConvertible) return (T)Convert.ChangeType(val, typeof(T)); } catch { }
-        }
-        return fallback;
-    }
-
-    protected static void Write(GraphContext ctx, int memoryId, object value)
-    {
-        if (memoryId >= 0 && memoryId < ctx.Memory.Length)
-            ctx.Memory[memoryId] = value;
-    }
-
-    // --- NodePortInfo nested class (unchanged) ---
+    // --- NodePortInfo nested class ---
     public class NodePortInfo
     {
         public string Name;
         public bool IsInput;
         public bool IsFlow;
         public Type ValueType;
+        public int Order;
     }
 }

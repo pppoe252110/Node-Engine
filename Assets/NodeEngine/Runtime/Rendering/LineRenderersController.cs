@@ -8,7 +8,6 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
     [SerializeField] private UILineRenderer _lineRendererPrefab;
     public UILineRenderer LineRendererPrefab => _lineRendererPrefab;
 
-    // Store lines by connector pair and also track which connectors are involved
     private Dictionary<(Connector, Connector), UILineRenderer> _activeLines = new();
     private Dictionary<Connector, List<UILineRenderer>> _connectorToLines = new();
 
@@ -53,18 +52,18 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
     {
         if (from == null || to == null) return;
 
-        var key = GetOrderedKey(from, to);
+        var ordered = OrderByDirection(from, to);
+        var key = GetOrderedKey(ordered.output, ordered.input);
         if (_activeLines.ContainsKey(key)) return;
 
         var lineInstance = Instantiate(_lineRendererPrefab, transform);
-        // Use both colors for gradient
-        lineInstance.material = CreateLineMaterial(from.Color, to.Color);
+        lineInstance.material = CreateLineMaterial(ordered.output.Color, ordered.input.Color);
         _activeLines[key] = lineInstance;
 
-        AddConnectorLineMapping(from, lineInstance);
-        AddConnectorLineMapping(to, lineInstance);
+        AddConnectorLineMapping(ordered.output, lineInstance);
+        AddConnectorLineMapping(ordered.input, lineInstance);
 
-        UpdateLinePoints(lineInstance, from, to);
+        UpdateLinePoints(lineInstance, ordered.output, ordered.input);
     }
 
     public void UpdateConnectionColors(Connector connector)
@@ -99,11 +98,12 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
 
     public float CalculateDynamicCurveIntensity(float pixelDistance)
     {
-        float minIntensity = 0f;   // almost straight for very short lines
-        float maxIntensity = 0.5f;   // pronounced S for long lines
-        float threshold = 400f;      // distance at which intensity reaches max
+        float minIntensity = 0f;
+        float maxIntensity = 0.5f;
+        float threshold = 400f;
 
         float t = Mathf.Clamp01(pixelDistance / threshold);
+
         // Smoothstep for natural easing
         t = t * t * (3f - 2f * t);
         return Mathf.Lerp(minIntensity, maxIntensity, t);
@@ -121,6 +121,14 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
     #endregion
 
     #region Private Helpers
+
+    private (Connector output, Connector input) OrderByDirection(Connector a, Connector b)
+    {
+        if (!a.IsInput && b.IsInput) return (a, b);
+        if (a.IsInput && !b.IsInput) return (b, a);
+        // Fallback for flow connections (both IsFlow true) – preserve original order
+        return (a, b);
+    }
 
     private void AddConnectorLineMapping(Connector connector, UILineRenderer line)
     {
@@ -146,13 +154,12 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
         {
             foreach (var line in lines)
             {
-                // Find the other connector for this line
                 foreach (var kvp in _activeLines)
                 {
                     if (kvp.Value == line)
                     {
-                        var other = kvp.Key.Item1 == connector ? kvp.Key.Item2 : kvp.Key.Item1;
-                        UpdateLinePoints(line, connector, other);
+                        var (output, input) = OrderByDirection(kvp.Key.Item1, kvp.Key.Item2);
+                        UpdateLinePoints(line, output, input);
                         break;
                     }
                 }
@@ -162,22 +169,15 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
 
     private void RemoveLine(Connector from, Connector to)
     {
-        var key = GetOrderedKey(from, to);
+        var ordered = OrderByDirection(from, to);
+        var key = GetOrderedKey(ordered.output, ordered.input);
         if (_activeLines.TryGetValue(key, out var line))
         {
-            RemoveConnectorLineMapping(from, line);
-            RemoveConnectorLineMapping(to, line);
+            RemoveConnectorLineMapping(ordered.output, line);
+            RemoveConnectorLineMapping(ordered.input, line);
             Destroy(line.gameObject);
             _activeLines.Remove(key);
         }
-    }
-
-    private void ClearAllLines()
-    {
-        foreach (var line in _activeLines.Values)
-            Destroy(line.gameObject);
-        _activeLines.Clear();
-        _connectorToLines.Clear();
     }
 
     public void RefreshAllLineColors()
@@ -203,7 +203,7 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
 
     private (Connector, Connector) GetOrderedKey(Connector a, Connector b)
     {
-        return a.GetHashCode() < b.GetHashCode() ? (a, b) : (b, a);
+        return (a, b);
     }
 
     private void UpdateLinePoints(UILineRenderer line, Connector from, Connector to)
@@ -217,7 +217,11 @@ public class LineRenderersController : MonoBehaviour, INotificationHandler<Conne
 
         line.points = BezierFromTwoPoints.GetPoints(startPoint, endPoint, curveIntensity, pointsCount);
 
-        Vector2 screenPoint1 = from.DragPoint;  // already in screen pixels
+        // Update shader colors to current connector colors (in case of dynamic type changes)
+        line.material.SetColor("_Color1", from.Color);
+        line.material.SetColor("_Color2", to.Color);
+
+        Vector2 screenPoint1 = from.DragPoint;
         Vector2 screenPoint2 = to.DragPoint;
         line.material.SetVector("_Point1", new Vector2(screenPoint1.x / Screen.width, screenPoint1.y / Screen.height));
         line.material.SetVector("_Point2", new Vector2(screenPoint2.x / Screen.width, screenPoint2.y / Screen.height));

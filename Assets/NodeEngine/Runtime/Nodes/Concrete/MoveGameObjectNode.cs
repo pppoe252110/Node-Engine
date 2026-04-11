@@ -15,8 +15,8 @@ public class MoveGameObjectNode : BaseNode
         int posId = context.GetInputId("Position");
 
         return (ctx) => {
-            GameObject go = ctx.Memory[targetId] as GameObject;
-            Vector3 pos = (Vector3)(ctx.Memory[posId] ?? Vector3.zero);
+            GameObject go = ctx.Read<GameObject>(targetId);
+            Vector3 pos = ctx.Read<Vector3>(posId);
             if (go != null) go.transform.position = pos;
             return ExecutionResult.Continue(-1);
         };

@@ -1,6 +1,5 @@
 ﻿using NodeEngine.Compilation;
 using System;
-using System.Collections.Generic;
 
 [NodePath("Variables/Get Global")]
 public class GetGlobalNode : BaseNode
@@ -25,14 +24,14 @@ public class GetGlobalNode : BaseNode
 
         return (ctx) =>
         {
-            string name = Read<string>(ctx, nameId);
+            string name = ctx.Read<string>(nameId);
             object rawValue = SetGlobalNode.GetGlobalValue(name);
-            Type targetType = ctx.Memory[typeId] as Type;
+            Type targetType = ctx.Read<Type>(typeId);
 
             if (rawValue != null && targetType != null && targetType.IsInstanceOfType(rawValue))
-                Write(ctx, outId, rawValue);
+                ctx.Write(outId, rawValue);
             else
-                Write(ctx, outId, null);
+                ctx.Write(outId, null);
 
             return ExecutionResult.Continue(exitFlow);
         };

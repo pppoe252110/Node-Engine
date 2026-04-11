@@ -17,10 +17,10 @@ public class ClampNode : BaseNode
         int resultId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float v = Read<float>(ctx, valId);
-            float mn = Read<float>(ctx, minId);
-            float mx = Read<float>(ctx, maxId);
-            Write(ctx, resultId, Math.Clamp(v, mn, mx));
+            float v = ctx.Read<float>(valId);
+            float mn = ctx.Read<float>(minId);
+            float mx = ctx.Read<float>(maxId);
+            ctx.Write(resultId, Math.Clamp(v, mn, mx));
             return ExecutionResult.Continue(-1);
         };
     }

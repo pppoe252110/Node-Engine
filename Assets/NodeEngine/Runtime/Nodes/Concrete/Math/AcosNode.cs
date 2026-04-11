@@ -14,8 +14,8 @@ public class AcosNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float v = Read<float>(ctx, valId);
-            Write(ctx, resId, Mathf.Acos(v));
+            float v = ctx.Read<float>(valId);
+            ctx.Write(resId, Mathf.Acos(v));
             return ExecutionResult.Continue(-1);
         };
     }

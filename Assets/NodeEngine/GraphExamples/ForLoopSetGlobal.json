@@ -1,0 +1,177 @@
+{
+    "version": "1.0",
+    "nodes": [
+        {
+            "nodeId": "1b453e3c-4518-478b-a2c9-2f7015a359ea",
+            "nodeType": "StringVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "String",
+            "position": {
+                "x": -277.68853759765627,
+                "y": 111.39231872558594
+            },
+            "serializedValue": "Val"
+        },
+        {
+            "nodeId": "09166a11-d245-4e07-8931-35b9a7448c8e",
+            "nodeType": "TypeVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Type",
+            "position": {
+                "x": 290.233642578125,
+                "y": -3.1554794311523439
+            },
+            "serializedValue": "System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+        },
+        {
+            "nodeId": "22116757-7aec-43a0-ae5a-d457cbe4d01a",
+            "nodeType": "IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Int",
+            "position": {
+                "x": -275.3147277832031,
+                "y": 2.0014538764953615
+            },
+            "serializedValue": "123"
+        },
+        {
+            "nodeId": "68f8be4f-42ab-44cd-a517-86a2118bf6c0",
+            "nodeType": "GetGlobalNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "GetGlobal",
+            "position": {
+                "x": 587.4857177734375,
+                "y": 194.78590393066407
+            },
+            "serializedValue": ""
+        },
+        {
+            "nodeId": "b7da119c-3158-4f95-b8db-4a8b8057d360",
+            "nodeType": "SetGlobalNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "SetGlobal",
+            "position": {
+                "x": 25.255599975585939,
+                "y": 191.04527282714845
+            },
+            "serializedValue": ""
+        },
+        {
+            "nodeId": "1ab45ba9-32dd-4265-8875-f86ff133e900",
+            "nodeType": "StringVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "String",
+            "position": {
+                "x": 290.8658447265625,
+                "y": 100.15055847167969
+            },
+            "serializedValue": "Val"
+        },
+        {
+            "nodeId": "8134891b-7219-4b3d-a47f-de6dcc8f01eb",
+            "nodeType": "LogNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Log",
+            "position": {
+                "x": 846.4957275390625,
+                "y": 190.10316467285157
+            },
+            "serializedValue": ""
+        },
+        {
+            "nodeId": "ffa5acda-25d0-40a3-941c-b6d17257bf66",
+            "nodeType": "ForLoopNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "ForLoop",
+            "position": {
+                "x": -301.00799560546877,
+                "y": 295.625
+            },
+            "serializedValue": ""
+        },
+        {
+            "nodeId": "952b5fd9-633c-4b92-b1a4-480132bcc2c0",
+            "nodeType": "IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Int",
+            "position": {
+                "x": -615.0990600585938,
+                "y": 235.35899353027345
+            },
+            "serializedValue": "1500"
+        },
+        {
+            "nodeId": "8c828636-6665-4555-be8d-236c7d01561c",
+            "nodeType": "TestNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
+            "nodeName": "Test",
+            "position": {
+                "x": -597.935302734375,
+                "y": 354.5853576660156
+            },
+            "serializedValue": ""
+        }
+    ],
+    "connections": [
+        {
+            "sourceNodeId": "22116757-7aec-43a0-ae5a-d457cbe4d01a",
+            "sourcePortName": "Value",
+            "targetNodeId": "b7da119c-3158-4f95-b8db-4a8b8057d360",
+            "targetPortName": "Value",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "09166a11-d245-4e07-8931-35b9a7448c8e",
+            "sourcePortName": "Value",
+            "targetNodeId": "68f8be4f-42ab-44cd-a517-86a2118bf6c0",
+            "targetPortName": "Type",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "1b453e3c-4518-478b-a2c9-2f7015a359ea",
+            "sourcePortName": "Value",
+            "targetNodeId": "b7da119c-3158-4f95-b8db-4a8b8057d360",
+            "targetPortName": "Name",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "1ab45ba9-32dd-4265-8875-f86ff133e900",
+            "sourcePortName": "Value",
+            "targetNodeId": "68f8be4f-42ab-44cd-a517-86a2118bf6c0",
+            "targetPortName": "Name",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "68f8be4f-42ab-44cd-a517-86a2118bf6c0",
+            "sourcePortName": "Value",
+            "targetNodeId": "8134891b-7219-4b3d-a47f-de6dcc8f01eb",
+            "targetPortName": "Message",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "952b5fd9-633c-4b92-b1a4-480132bcc2c0",
+            "sourcePortName": "Value",
+            "targetNodeId": "ffa5acda-25d0-40a3-941c-b6d17257bf66",
+            "targetPortName": "Count",
+            "isFlow": false
+        },
+        {
+            "sourceNodeId": "68f8be4f-42ab-44cd-a517-86a2118bf6c0",
+            "sourcePortName": "Out",
+            "targetNodeId": "8134891b-7219-4b3d-a47f-de6dcc8f01eb",
+            "targetPortName": "In",
+            "isFlow": true
+        },
+        {
+            "sourceNodeId": "8c828636-6665-4555-be8d-236c7d01561c",
+            "sourcePortName": "Out",
+            "targetNodeId": "ffa5acda-25d0-40a3-941c-b6d17257bf66",
+            "targetPortName": "In",
+            "isFlow": true
+        },
+        {
+            "sourceNodeId": "b7da119c-3158-4f95-b8db-4a8b8057d360",
+            "sourcePortName": "Out",
+            "targetNodeId": "68f8be4f-42ab-44cd-a517-86a2118bf6c0",
+            "targetPortName": "In",
+            "isFlow": true
+        },
+        {
+            "sourceNodeId": "ffa5acda-25d0-40a3-941c-b6d17257bf66",
+            "sourcePortName": "Loop",
+            "targetNodeId": "b7da119c-3158-4f95-b8db-4a8b8057d360",
+            "targetPortName": "In",
+            "isFlow": true
+        }
+    ]
+}

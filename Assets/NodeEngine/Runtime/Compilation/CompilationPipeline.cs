@@ -88,7 +88,7 @@ namespace NodeEngine.Compilation
                         }
                         catch (Exception ex)
                         {
-                            Debug.LogError($"[CompilationPipeline] Runtime error in flow node '{capturedNode.GetType().Name}': {ex.Message}");
+                            Debug.LogError($"[CompilationPipeline] Runtime error in flow node '{capturedNode.GetType().Name}': {ex.Message} \n {ex.StackTrace}");
                             return ExecutionResult.Stop();
                         }
                     };

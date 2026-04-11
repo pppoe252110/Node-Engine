@@ -29,9 +29,9 @@ public class ComparisonNode : BaseNode
 
         return (ctx) =>
         {
-            float valA = Read<float>(ctx, aId);
-            float valB = Read<float>(ctx, bId);
-            ComparisonOperation op = Read<ComparisonOperation>(ctx, opId);
+            float valA = ctx.Read<float>(aId);
+            float valB = ctx.Read<float>(bId);
+            ComparisonOperation op = ctx.Read<ComparisonOperation>(opId);
 
             bool output = op switch
             {
@@ -44,7 +44,7 @@ public class ComparisonNode : BaseNode
                 _ => false
             };
 
-            Write(ctx, resId, output);
+            ctx.Write(resId, output);
             return ExecutionResult.Continue(-1);
         };
     }

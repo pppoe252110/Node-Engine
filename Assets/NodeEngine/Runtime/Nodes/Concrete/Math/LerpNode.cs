@@ -18,10 +18,10 @@ public class LerpNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float aVal = Read<float>(ctx, aId);
-            float bVal = Read<float>(ctx, bId);
-            float tVal = Read<float>(ctx, tId);
-            Write(ctx, resId, Mathf.Lerp(aVal, bVal, tVal));
+            float aVal = ctx.Read<float>(aId);
+            float bVal = ctx.Read<float>(bId);
+            float tVal = ctx.Read<float>(tId);
+            ctx.Write(resId, Mathf.Lerp(aVal, bVal, tVal));
             return ExecutionResult.Continue(-1);
         };
     }

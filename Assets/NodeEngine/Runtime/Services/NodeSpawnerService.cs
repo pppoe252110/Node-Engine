@@ -57,7 +57,10 @@ public class NodeSpawnerService : MonoBehaviour
         {
             foreach (var other in connector.Connections.ToArray())
             {
-                _connectionManager.Disconnect(connector, other);
+                // Determine source (output) and target (input)
+                var source = connector.IsInput ? other : connector;
+                var target = connector.IsInput ? connector : other;
+                _connectionManager.Disconnect(source, target);
             }
         }
 

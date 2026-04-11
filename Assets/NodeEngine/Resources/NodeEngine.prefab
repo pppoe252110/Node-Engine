@@ -239,7 +239,6 @@ Transform:
   - {fileID: 3130186195365749782}
   - {fileID: 5955329475595123891}
   - {fileID: 2046608140001339657}
-  - {fileID: 4858027401457696412}
   - {fileID: 3324605215680891815}
   - {fileID: 708094794029438505}
   - {fileID: 4953284109887381288}
@@ -276,7 +275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2523678ca50b0c5469fd4ee0a08980e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _logExecutionTime: 0
+  _logExecutionTime: 1
 --- !u!114 &4662335473029687767
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -357,51 +356,6 @@ MonoBehaviour:
   _connectionVisualsHandler: {fileID: 7785092641133106204}
   _variableUIRegistry: {fileID: 11400000, guid: 476f0885a49d78143981d5a5dd82a44d, type: 2}
   nodesDatabase: {fileID: 11400000, guid: ead416cb3a8d0ee42b068ab20013e6eb, type: 2}
---- !u!1 &7026269880497142289
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 4858027401457696412}
-  - component: {fileID: 4005809730965324843}
-  m_Layer: 0
-  m_Name: NodesConnector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &4858027401457696412
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7026269880497142289}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8154144855530634116}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4005809730965324843
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7026269880497142289}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c7f9952a02daa7e40a4e31136c115cb9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NodeSpawnerAndConnector
-  _enabled: 1
 --- !u!1001 &4957249776816390371
 PrefabInstance:
   m_ObjectHideFlags: 0

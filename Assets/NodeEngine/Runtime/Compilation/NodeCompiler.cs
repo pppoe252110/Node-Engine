@@ -28,9 +28,8 @@ public static class NodeCompiler
             Dictionary<BaseNode, int> nodeToIndex,
             Dictionary<BaseNode, NodeCompilationContext> nodeContexts)
         {
-            Context = new GraphContext
+            Context = new GraphContext(memorySize)
             {
-                Memory = new object[memorySize],
                 Instructions = instructions
             };
             NodeToIndex = nodeToIndex;
@@ -65,8 +64,8 @@ public static class NodeCompiler
                     continue;
 
                 int memIdx = context.InputMemoryIndices[portIdx];
-                if (memIdx >= 0 && memIdx < Context.Memory.Length)
-                    Context.Memory[memIdx] = value;
+
+                Context.Write(memIdx, value);
             }
         }
     }

@@ -14,8 +14,8 @@ public class CeilNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float v = Read<float>(ctx, valId);
-            Write(ctx, resId, Mathf.Ceil(v));
+            float v = ctx.Read<float>(valId);
+            ctx.Write(resId, Mathf.Ceil(v));
             return ExecutionResult.Continue(-1);
         };
     }

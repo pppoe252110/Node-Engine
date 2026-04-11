@@ -14,8 +14,8 @@ public class RoundNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float v = Read<float>(ctx, valId);
-            Write(ctx, resId, Mathf.Round(v));
+            float v = ctx.Read<float>(valId);
+            ctx.Write(resId, Mathf.Round(v));
             return ExecutionResult.Continue(-1);
         };
     }

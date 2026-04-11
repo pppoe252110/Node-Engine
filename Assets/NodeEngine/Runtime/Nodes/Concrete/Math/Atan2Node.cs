@@ -16,9 +16,9 @@ public class Atan2Node : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float yVal = Read<float>(ctx, yId);
-            float xVal = Read<float>(ctx, xId);
-            Write(ctx, resId, Mathf.Atan2(yVal, xVal));
+            float yVal = ctx.Read<float>(yId);
+            float xVal = ctx.Read<float>(xId);
+            ctx.Write(resId, Mathf.Atan2(yVal, xVal));
             return ExecutionResult.Continue(-1);
         };
     }

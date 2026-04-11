@@ -14,8 +14,8 @@ public class CosNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float a = Read<float>(ctx, angleId);
-            Write(ctx, resId, Mathf.Cos(a));
+            float a = ctx.Read<float>(angleId);
+            ctx.Write(resId, Mathf.Cos(a));
             return ExecutionResult.Continue(-1);
         };
     }

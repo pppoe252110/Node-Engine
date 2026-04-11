@@ -14,8 +14,8 @@ public class FloorNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float v = Read<float>(ctx, valId);
-            Write(ctx, resId, Mathf.Floor(v));
+            float v = ctx.Read<float>(valId);
+            ctx.Write(resId, Mathf.Floor(v));
             return ExecutionResult.Continue(-1);
         };
     }

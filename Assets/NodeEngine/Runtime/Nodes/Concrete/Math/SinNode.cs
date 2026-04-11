@@ -14,8 +14,8 @@ public class SinNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float a = Read<float>(ctx, angleId);
-            Write(ctx, resId, Mathf.Sin(a));
+            float a = ctx.Read<float>(angleId);
+            ctx.Write(resId, Mathf.Sin(a));
             return ExecutionResult.Continue(-1);
         };
     }

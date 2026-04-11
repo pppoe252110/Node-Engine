@@ -1,10 +1,10 @@
 using NodeEngine.Compilation;
 using System;
-using System.Collections.Generic;
 
 [NodePath("Flow/IfElse")]
-public class IfElseNode : BaseNode
+public class BranchNode : BaseNode
 {
+    [NodePort("In", true, true)] public void Enter() { }
     [NodePort("Condition", true)] public bool condition;
     [NodePort("True", false, true)] public void TrueBranch() { }
     [NodePort("False", false, true)] public void FalseBranch() { }
@@ -12,12 +12,12 @@ public class IfElseNode : BaseNode
     public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
         int condId = context.GetInputId("Condition");
-        int trueIdx = context.GetFlowId("True");
-        int falseIdx = context.GetFlowId("False");
+        int trueFlow = context.GetFlowId("True");
+        int falseFlow = context.GetFlowId("False");
 
         return (ctx) => {
-            bool cond = Read<bool>(ctx, condId);
-            return ExecutionResult.Continue(cond ? trueIdx : falseIdx);
+            bool cond = ctx.Read<bool>(condId);
+            return ExecutionResult.Continue(cond ? trueFlow : falseFlow);
         };
     }
 }

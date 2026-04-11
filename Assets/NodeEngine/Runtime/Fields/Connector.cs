@@ -44,7 +44,7 @@ public class Connector : MonoBehaviour
 
         if (_nameText != null)
         {
-            string typeName = isFlow ? "Flow" : type.Name;
+            string typeName = isFlow ? "Flow" : TypeSerializer.GetTypeDisplayName(type);
             _nameText.text = $"{portName}\n<size=8>({typeName})</size>";
         }
 

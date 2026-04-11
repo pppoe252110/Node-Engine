@@ -15,7 +15,7 @@ public class LogNode : BaseNode
         int exitFlow = context.GetFlowId("Out");
 
         return (ctx) => {
-            object msg = ctx.Memory[msgId];
+            object msg = ctx.Read<object>(msgId);
             Debug.Log($"[NodeLog] {msg ?? "null"}");
             return ExecutionResult.Continue(exitFlow);
         };

@@ -24,7 +24,6 @@ public class NodesDatabase : ScriptableObject
         }
     }
 
-    // Editor-only AutoFill remains unchanged
     [Button("Auto fill", "AutoFill")]
     public void AutoFill()
     {

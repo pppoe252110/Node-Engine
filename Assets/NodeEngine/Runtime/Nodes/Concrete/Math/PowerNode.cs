@@ -16,9 +16,9 @@ public class PowerNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float b = Read<float>(ctx, baseId);
-            float e = Read<float>(ctx, expId);
-            Write(ctx, resId, Mathf.Pow(b, e));
+            float b = ctx.Read<float>(baseId);
+            float e = ctx.Read<float>(expId);
+            ctx.Write(resId, Mathf.Pow(b, e));
             return ExecutionResult.Continue(-1);
         };
     }

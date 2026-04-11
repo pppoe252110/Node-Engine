@@ -15,9 +15,9 @@ public class AddNode : BaseNode
         int resultId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float inA = Read<float>(ctx, aId);
-            float inB = Read<float>(ctx, bId);
-            Write(ctx, resultId, inA + inB);
+            float inA = ctx.Read<float>(aId);
+            float inB = ctx.Read<float>(bId);
+            ctx.Write(resultId, inA + inB);
             return ExecutionResult.Continue(-1);
         };
     }

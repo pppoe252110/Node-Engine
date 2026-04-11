@@ -19,7 +19,7 @@ public class ThrottleNode : BaseNode
 
         return (ctx) =>
         {
-            float intervalVal = Read<float>(ctx, intervalId);
+            float intervalVal = ctx.Read<float>(intervalId);
             float now = Time.time;
 
             if (_lastPassTime < 0 || now - _lastPassTime >= intervalVal)

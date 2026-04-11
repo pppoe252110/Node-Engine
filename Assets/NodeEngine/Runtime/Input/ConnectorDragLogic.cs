@@ -26,10 +26,16 @@ public class ConnectorDragLogic : MonoBehaviour
             UpdateDragLine();
     }
 
-    // Called by NodeDrag
     public void HandleDragStarted(PointerEventData eventData, Connector connector)
     {
         if (eventData.button != PointerEventData.InputButton.Left) return;
+
+        if (connector.IsFlow && connector.ConnectionsCount > 0)
+        {
+            // Pop connector with tween
+            return;
+        }
+
         _dragConnector = connector;
         StartDragConnection();
     }
@@ -124,7 +130,9 @@ public class ConnectorDragLogic : MonoBehaviour
             var connectionsToRemove = connector.Connections.ToArray();
             foreach (var connectedConnector in connectionsToRemove)
             {
-                _connectionManager.Disconnect(connector, connectedConnector);
+                var source = connector.IsInput ? connectedConnector : connector;
+                var target = connector.IsInput ? connector : connectedConnector;
+                _connectionManager.Disconnect(source, target);
             }
         }
     }

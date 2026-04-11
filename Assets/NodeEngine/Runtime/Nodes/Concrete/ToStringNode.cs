@@ -13,8 +13,8 @@ public class ToStringNode : BaseNode
         int outId = context.GetOutputId("Result");
 
         return (ctx) => {
-            object val = ctx.Memory[inId];
-            Write(ctx, outId, val?.ToString() ?? "null");
+            object val = ctx.Read<object>(inId);
+            ctx.Write(outId, val?.ToString() ?? "null");
             return ExecutionResult.Continue(-1);
         };
     }

@@ -14,8 +14,8 @@ public class SqrtNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float v = Read<float>(ctx, valId);
-            Write(ctx, resId, Mathf.Sqrt(v));
+            float v = ctx.Read<float>(valId);
+            ctx.Write(resId, Mathf.Sqrt(v));
             return ExecutionResult.Continue(-1);
         };
     }

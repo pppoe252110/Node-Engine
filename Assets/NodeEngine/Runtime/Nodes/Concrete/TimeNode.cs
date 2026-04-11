@@ -16,9 +16,9 @@ public class TimeNode : BaseNode
         int rtId = context.GetOutputId("RealTime");
 
         return (ctx) => {
-            Write(ctx, dtId, Time.deltaTime);
-            Write(ctx, tId, Time.time);
-            Write(ctx, rtId, Time.realtimeSinceStartup);
+            ctx.Write(dtId, Time.deltaTime);
+            ctx.Write(tId, Time.time);
+            ctx.Write(rtId, Time.realtimeSinceStartup);
             return ExecutionResult.Continue(-1);
         };
     }

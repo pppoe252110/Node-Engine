@@ -7,10 +7,10 @@ public class SetGlobalNode : BaseNode
 {
     private static Dictionary<string, object> _globalVariables = new();
 
-    [NodePort("Enter", true, true)] public void Enter() { }
+    [NodePort("In", true, true)] public void Enter() { }
     [NodePort("Name", true)] public string variableName;
     [NodePort("Value", true)] public object value;
-    [NodePort("Exit", false, true)] public void Exit() { }
+    [NodePort("Out", false, true)] public void Exit() { }
 
     public SetGlobalNode() : base()
     {
@@ -21,11 +21,11 @@ public class SetGlobalNode : BaseNode
     {
         int nameId = context.GetInputId("Name");
         int valId = context.GetInputId("Value");
-        int exitFlow = context.GetFlowId("Exit");
+        int exitFlow = context.GetFlowId("Out");
 
         return (ctx) => {
-            string name = Read<string>(ctx, nameId);
-            object val = ctx.Memory[valId];
+            string name = ctx.Read<string>(nameId);
+            object val = ctx.Read<object>(valId);
             if (!string.IsNullOrEmpty(name))
                 _globalVariables[name] = val;
             return ExecutionResult.Continue(exitFlow);

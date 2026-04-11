@@ -18,10 +18,10 @@ public class InverseLerpNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float aVal = Read<float>(ctx, aId);
-            float bVal = Read<float>(ctx, bId);
-            float v = Read<float>(ctx, valId);
-            Write(ctx, resId, Mathf.InverseLerp(aVal, bVal, v));
+            float aVal = ctx.Read<float>(aId);
+            float bVal = ctx.Read<float>(bId);
+            float v = ctx.Read<float>(valId);
+            ctx.Write(resId, Mathf.InverseLerp(aVal, bVal, v));
             return ExecutionResult.Continue(-1);
         };
     }

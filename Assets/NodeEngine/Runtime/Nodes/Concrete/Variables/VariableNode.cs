@@ -32,7 +32,7 @@ public abstract class VariableNode<T> : BaseNode, IVariableNode
         T val = _cachedValue;
         return ctx =>
         {
-            Write(ctx, outId, val);
+            ctx.Write(outId, val);
             return ExecutionResult.Continue(-1);
         };
     }

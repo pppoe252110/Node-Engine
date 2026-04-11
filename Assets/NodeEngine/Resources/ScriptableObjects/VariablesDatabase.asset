@@ -15,7 +15,7 @@ MonoBehaviour:
   _mappings:
   - nodeTypeName: BoolVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-    uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
+    uiPrefab: {fileID: 6966676979821417500, guid: 63d65fc7bc37ed244a167f6b3158553c, type: 3}
   - nodeTypeName: ComparisonOperationVariableNode, NodeEngine.Runtime, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
     uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}

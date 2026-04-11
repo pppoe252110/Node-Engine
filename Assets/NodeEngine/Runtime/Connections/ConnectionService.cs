@@ -15,23 +15,32 @@ public class ConnectionService
         _mediator = mediator;
     }
 
+    // Update these two methods in ConnectionService.cs
+
     public bool CreateConnection(Connector from, Connector to)
     {
         if (from == null || to == null || from.Node == null || to.Node == null)
             return false;
         if (from.Node == to.Node)
             return false;
-        if (AreAlreadyConnected(from, to))
+
+        Connector source = from.IsInput ? to : from;
+        Connector target = from.IsInput ? from : to;
+
+        if (source.IsInput || !target.IsInput)
             return false;
 
-        if (from.IsFlow)
+        if (AreAlreadyConnected(source, target))
+            return false;
+
+        if (source.IsFlow)
         {
             var flowConn = new FlowConnection
             {
-                SourceNode = from.Node,
-                SourcePortName = from.PortName,
-                TargetNode = to.Node,
-                TargetPortName = to.PortName
+                SourceNode = source.Node,
+                SourcePortName = source.PortName,
+                TargetNode = target.Node,
+                TargetPortName = target.PortName
             };
             _graph.AddFlowConnection(flowConn);
         }
@@ -39,15 +48,15 @@ public class ConnectionService
         {
             var dataConn = new DataConnection
             {
-                SourceNode = from.Node,
-                OutputPortName = from.PortName,
-                TargetNode = to.Node,
-                InputPortName = to.PortName
+                SourceNode = source.Node,
+                OutputPortName = source.PortName,
+                TargetNode = target.Node,
+                InputPortName = target.PortName
             };
             _graph.AddDataConnection(dataConn);
         }
 
-        _mediator.Publish(new ConnectionChangedNotification(from, to, wasAdded: true));
+        _mediator.Publish(new ConnectionChangedNotification(source, target, wasAdded: true));
         _mediator.Publish(new MarkGraphDirtyNotification());
         return true;
     }
@@ -56,25 +65,28 @@ public class ConnectionService
     {
         if (from == null || to == null) return;
 
+        Connector source = from.IsInput ? to : from;
+        Connector target = from.IsInput ? from : to;
+
         bool removed = false;
-        if (from.IsFlow)
+        if (source.IsFlow)
         {
-            var conn = _graph.GetFlowConnectionsFrom(from.Node, from.PortName)
-                .FirstOrDefault(c => c.TargetNode == to.Node && c.TargetPortName == to.PortName);
+            var conn = _graph.GetFlowConnectionsFrom(source.Node, source.PortName)
+                .FirstOrDefault(c => c.TargetNode == target.Node && c.TargetPortName == target.PortName);
             if (conn != null)
                 removed = _graph.RemoveFlowConnection(conn);
         }
         else
         {
-            var conn = _graph.GetDataConnectionsFrom(from.Node, from.PortName)
-                .FirstOrDefault(c => c.TargetNode == to.Node && c.InputPortName == to.PortName);
+            var conn = _graph.GetDataConnectionsFrom(source.Node, source.PortName)
+                .FirstOrDefault(c => c.TargetNode == target.Node && c.InputPortName == target.PortName);
             if (conn != null)
                 removed = _graph.RemoveDataConnection(conn);
         }
 
         if (removed)
         {
-            _mediator.Publish(new ConnectionChangedNotification(from, to, wasAdded: false));
+            _mediator.Publish(new ConnectionChangedNotification(source, target, wasAdded: false));
             _mediator.Publish(new MarkGraphDirtyNotification());
         }
     }

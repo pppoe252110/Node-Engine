@@ -16,9 +16,9 @@ public class MaxNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float aVal = Read<float>(ctx, aId);
-            float bVal = Read<float>(ctx, bId);
-            Write(ctx, resId, Mathf.Max(aVal, bVal));
+            float aVal = ctx.Read<float>(aId);
+            float bVal = ctx.Read<float>(bId);
+            ctx.Write(resId, Mathf.Max(aVal, bVal));
             return ExecutionResult.Continue(-1);
         };
     }

@@ -54,7 +54,7 @@ public class NodeUIManager : MonoBehaviour
         var ui = Instantiate(prefab, LeftConnectorsParent);
         ui.Bind(varNode);
 
-        // Adjust node size (you may want to move this logic into the UI element itself)
+        // Adjust node size
         UpdateNodeSizeForVariableUI(nodeImage);
     }
 

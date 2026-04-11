@@ -21,17 +21,24 @@ public class ConvertNode : BaseNode
 
         return (ctx) =>
         {
-            object val = ctx.Memory[inId];
-            Type t = ctx.Memory[typeId] as Type;
+            object val = ctx.Read<object>(inId);
+            Type t = ctx.Read<Type>(typeId);
 
             if (val != null && t != null)
             {
-                try { ctx.Memory[outId] = Convert.ChangeType(val, t); }
-                catch { ctx.Memory[outId] = null; }
+                try
+                {
+                    object converted = Convert.ChangeType(val, t);
+                    ctx.Write(outId, converted);
+                }
+                catch
+                {
+                    ctx.Write(outId, null);
+                }
             }
             else
             {
-                ctx.Memory[outId] = null;
+                ctx.Write(outId, null);
             }
 
             return ExecutionResult.Continue(-1);

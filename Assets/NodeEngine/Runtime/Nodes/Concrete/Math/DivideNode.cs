@@ -15,9 +15,9 @@ public class DivideNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float a = Read<float>(ctx, aId);
-            float b = Read<float>(ctx, bId);
-            Write(ctx, resId, b != 0 ? a / b : 0f);
+            float a = ctx.Read<float>(aId);
+            float b = ctx.Read<float>(bId);
+            ctx.Write(resId, b != 0 ? a / b : 0f);
             return ExecutionResult.Continue(-1);
         };
     }

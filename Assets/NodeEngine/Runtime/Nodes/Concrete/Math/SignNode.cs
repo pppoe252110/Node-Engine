@@ -13,8 +13,8 @@ public class SignNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float v = Read<float>(ctx, valId);
-            Write(ctx, resId, Math.Sign(v));
+            float v = ctx.Read<float>(valId);
+            ctx.Write(resId, Math.Sign(v));
             return ExecutionResult.Continue(-1);
         };
     }

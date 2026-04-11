@@ -34,6 +34,10 @@ namespace NodeEngine.Compilation
                 foreach (var input in inputs)
                 {
                     var source = input.SourceNode;
+
+                    if (IsFlowNode(source))
+                        continue;
+
                     Traverse(source);
                     if (nodeToIndex.TryGetValue(source, out int srcIdx) && !deps.Contains(srcIdx))
                         deps.Add(srcIdx);

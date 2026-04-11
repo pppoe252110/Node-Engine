@@ -16,17 +16,17 @@ public class ForLoopNode : BaseNode
         int indexId = context.GetOutputId("Index");
         int loopFlow = context.GetFlowId("Loop");
         int doneFlow = context.GetFlowId("Done");
-        const int MaxIterations = 10000;
 
         return (ctx) =>
         {
-            int max = Read<int>(ctx, countId);
-            max = Math.Min(max, MaxIterations); // safety clamp
+            int max = ctx.Read<int>(countId);
+
             for (int i = 0; i < max; i++)
             {
-                Write(ctx, indexId, i);
+                ctx.Write(indexId, i);
+
                 if (loopFlow >= 0)
-                    ctx.ExecuteFlow(loopFlow);
+                    ctx.PushFlow(loopFlow);
             }
             return ExecutionResult.Continue(doneFlow);
         };

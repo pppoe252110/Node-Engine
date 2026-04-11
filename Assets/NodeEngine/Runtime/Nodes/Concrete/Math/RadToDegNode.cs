@@ -14,8 +14,8 @@ public class RadToDegNode : BaseNode
         int degId = context.GetOutputId("Degrees");
 
         return (ctx) => {
-            float r = Read<float>(ctx, radId);
-            Write(ctx, degId, r * Mathf.Rad2Deg);
+            float r = ctx.Read<float>(radId);
+            ctx.Write(degId, r * Mathf.Rad2Deg);
             return ExecutionResult.Continue(-1);
         };
     }

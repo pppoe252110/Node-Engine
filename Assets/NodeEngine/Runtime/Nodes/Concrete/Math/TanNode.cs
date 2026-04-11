@@ -14,8 +14,8 @@ public class TanNode : BaseNode
         int resId = context.GetOutputId("Result");
 
         return (ctx) => {
-            float a = Read<float>(ctx, angleId);
-            Write(ctx, resId, Mathf.Tan(a));
+            float a = ctx.Read<float>(angleId);
+            ctx.Write(resId, Mathf.Tan(a));
             return ExecutionResult.Continue(-1);
         };
     }
