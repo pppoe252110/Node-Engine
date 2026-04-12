@@ -340,7 +340,7 @@ public class NodesSetupWindow : EditorWindow
             GUI.backgroundColor = warningColor;
             if (GUILayout.Button("Get Latest Version", GUILayout.Height(30)))
             {
-                Application.OpenURL("https://github.com/pppoe252110/Node-Engine/releases");
+                Application.OpenURL("https://github.com/pppoe252110/Node-Engine");
             }
             GUI.backgroundColor = originalBgColor;
 
