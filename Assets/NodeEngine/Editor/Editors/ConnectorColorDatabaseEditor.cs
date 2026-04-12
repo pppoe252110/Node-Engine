@@ -449,11 +449,16 @@ public class ConnectorColorDatabaseEditor : Editor
                     {
                         if (method.GetCustomAttribute<NodePortAttribute>() != null)
                         {
+                            // 1. Check Return Type (This picks up 'void' or specific return flows)
+                            string returnTypeName = method.ReturnType.Name;
+                            counts[returnTypeName] = counts.TryGetValue(returnTypeName, out int c1) ? c1 + 1 : 1;
+
+                            // 2. Check Parameters (Keep this if you use methods for input ports too)
                             var parameters = method.GetParameters();
-                            if (parameters.Length > 0)
+                            foreach (var param in parameters)
                             {
-                                string typeName = parameters[0].ParameterType.Name;
-                                counts[typeName] = counts.TryGetValue(typeName, out int c) ? c + 1 : 1;
+                                string paramTypeName = param.ParameterType.Name;
+                                counts[paramTypeName] = counts.TryGetValue(paramTypeName, out int c2) ? c2 + 1 : 1;
                             }
                         }
                     }
@@ -479,6 +484,11 @@ public class ConnectorColorDatabaseEditor : Editor
             "Object" => new Color(0.9f, 0.1f, 0.5f),   // Pink
             "Type" => new Color(0.8f, 0.4f, 0.6f),     // Magenta
             "ComparisonOperation" => new Color(0.2f, 0.8f, 0.8f), // Teal
+            "Color" => new Color(1f, 1f, 1f),           // White
+            "Key" => new Color(0.6f, 0.6f, 0.6f),        // Gray
+            "MouseButton" => new Color(0.4f, 0.3f, 0.2f), // Brown
+            "Quaternion" => new Color(0.5f, 0f, 1f),     // Deep Violet
+            "Vector2" => new Color(0.7f, 1f, 0f),        // Lime Green
             _ => database.FallbackColor
         };
     }

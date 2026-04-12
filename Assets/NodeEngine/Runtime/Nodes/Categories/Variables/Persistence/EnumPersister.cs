@@ -6,7 +6,6 @@ public class EnumPersister : IValuePersister
 
     public string Serialize(object value)
     {
-        // 序列化为枚举值的字符串名称，同时保存类型信息
         if (value == null) return string.Empty;
         Type enumType = value.GetType();
         return $"{enumType.AssemblyQualifiedName}|{value}";

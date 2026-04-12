@@ -16,6 +16,9 @@ MonoBehaviour:
   - nodeTypeName: BoolVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     uiPrefab: {fileID: 6966676979821417500, guid: 63d65fc7bc37ed244a167f6b3158553c, type: 3}
+  - nodeTypeName: ColorVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: 3296008566848290920, guid: 92c3f3be80ac0664b80ab4c77a4c5af7, type: 3}
   - nodeTypeName: ComparisonOperationVariableNode, NodeEngine.Runtime, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
     uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
@@ -25,12 +28,24 @@ MonoBehaviour:
   - nodeTypeName: IntVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
+  - nodeTypeName: KeyVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
+  - nodeTypeName: MouseButtonVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
+  - nodeTypeName: QuaternionVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - nodeTypeName: StringVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - nodeTypeName: TypeVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     uiPrefab: {fileID: -8825413606472053026, guid: dc1cafe78c5bcb941841c9c8eec4fa87, type: 3}
+  - nodeTypeName: Vector2VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}
   - nodeTypeName: Vector3VariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}

@@ -5,7 +5,6 @@ public class SerializableNode
 {
     public string nodeName;
     public string nodeType;
-    public VariableType variableType;
     public Sprite nodeIcon;
 
     public void Initialize(System.Type nodeType, string name)

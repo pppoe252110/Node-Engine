@@ -16,6 +16,7 @@ public class NodeUIManager : MonoBehaviour
     [SerializeField] private RectTransform _leftConnectorsParent;
 
     [Inject] private VariableUIRegistry _variableUIRegistry;
+    [Inject] private IObjectResolver _resolver;
 
     public void CreateConnectors(BaseNode node, List<BaseNode.NodePortInfo> inputPorts, List<BaseNode.NodePortInfo> outputPorts,
                                  List<Connector> inputConnectors, List<Connector> outputConnectors)
@@ -52,9 +53,12 @@ public class NodeUIManager : MonoBehaviour
         if (prefab == null) return;
 
         var ui = Instantiate(prefab, LeftConnectorsParent);
+        
+        // Inject dependencies into the instantiated UI element
+        _resolver.Inject(ui);
+        
         ui.Bind(varNode);
 
-        // Adjust node size
         UpdateNodeSizeForVariableUI(nodeImage);
     }
 

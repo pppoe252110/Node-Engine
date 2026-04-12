@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 public class PersistenceService
@@ -8,6 +9,11 @@ public class PersistenceService
     public PersistenceService(IEnumerable<IValuePersister> persisters)
     {
         _persisters = persisters.ToList();
+    }
+
+    public bool CanPersist(Type type)
+    {
+        return _persisters.Any(p => p.CanPersist(type));
     }
 
     public string Serialize(IVariableNode node)

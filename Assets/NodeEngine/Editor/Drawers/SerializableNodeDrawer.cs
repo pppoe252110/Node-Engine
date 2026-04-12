@@ -72,14 +72,6 @@ public class SerializableNodeDrawer : PropertyDrawer
         DrawTypeDropdown(typeFieldRect, nodeTypeProp);
         currentY += LINE_HEIGHT + 2f;
 
-        if (nodeTypeProp.stringValue.Contains("VariableNode"))
-        {
-            var variableTypeProp = property.FindPropertyRelative("variableType");
-            var variableTypeRect = new Rect(fieldStartX, currentY, fieldWidth, LINE_HEIGHT);
-            variableTypeProp.enumValueIndex = EditorGUI.Popup(variableTypeRect, "Variable Type", variableTypeProp.enumValueIndex, variableTypeProp.enumDisplayNames);
-            currentY += LINE_HEIGHT + 2f;
-        }
-
         var iconFieldRect = new Rect(fieldStartX, currentY, fieldWidth, LINE_HEIGHT);
         EditorGUI.PropertyField(iconFieldRect, nodeIconProp, new GUIContent("Icon"));
     }
@@ -147,7 +139,6 @@ public class SerializableNodeDrawer : PropertyDrawer
 
     private List<string> _cachedNodeTypes;
     private double _lastCacheTime;
-    private const double CACHE_DURATION = 2.0;
 
     private List<string> GetNodeTypes()
     {
