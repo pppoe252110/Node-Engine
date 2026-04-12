@@ -6,10 +6,15 @@ public class NodesListGroup : MonoBehaviour
 {
     public RectTransform Container => itemsContainer;
 
+    [Header("UI Elements")]
     [SerializeField] private TextMeshProUGUI groupNameText;
     [SerializeField] private TextMeshProUGUI expandCollapseButtonText;
     [SerializeField] private Button expandCollapseButton;
     [SerializeField] private RectTransform itemsContainer;
+
+    [Header("Indentation")]
+    [SerializeField] private RectTransform _leftSpacer; // Add this to your prefab
+    [SerializeField] private float _indentSize = 20f;
 
     public string GroupName { get; private set; }
     public bool IsExpanded { get; private set; } = false;
@@ -29,7 +34,18 @@ public class NodesListGroup : MonoBehaviour
     public void SetGroupName(string name)
     {
         GroupName = name;
-        UpdateVisuals();
+        if (groupNameText != null)
+        {
+            groupNameText.text = name;
+        }
+    }
+
+    public void SetIndent(int indentLevel)
+    {
+        if (_leftSpacer != null)
+        {
+            _leftSpacer.sizeDelta = new Vector2(indentLevel * _indentSize, _leftSpacer.sizeDelta.y);
+        }
     }
 
     private void ToggleExpanded()
@@ -55,14 +71,14 @@ public class NodesListGroup : MonoBehaviour
 
     private void UpdateButtonText()
     {
-        if (groupNameText != null)
+        if (expandCollapseButtonText != null)
         {
-            
-            string arrow = IsExpanded ? "▼" : "►";
+            expandCollapseButtonText.text = IsExpanded ? "▼" : "►";
+        }
+
+        if (Container != null)
+        {
             Container.gameObject.SetActive(IsExpanded);
-            
-            expandCollapseButtonText.text = arrow;
-            groupNameText.text = GroupName;
         }
     }
 
