@@ -49,6 +49,8 @@ public class UIZoomPan : MonoBehaviour
         _mat = new Material(_mat);
         _background.material = _mat;
         _rectTransform = transform as RectTransform;
+
+        _canvasService.CanvasSize = _rectTransform.localScale;
     }
 
     void Update()

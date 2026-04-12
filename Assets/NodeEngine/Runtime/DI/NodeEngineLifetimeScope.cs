@@ -15,6 +15,7 @@ public class NodeEngineLifetimeScope : LifetimeScope
     [SerializeField] private NodesList _nodesList;
     [SerializeField] private LineRenderersController _lineRenderersController;
     [SerializeField] private UIZoomPan _UIZoomPan;
+    [SerializeField] private BoxSelectionLogic _boxSelectionLogic;
     [SerializeField] private Canvas _mainCanvas;
     [SerializeField] private ConnectionVisualsHandler _connectionVisualsHandler;
     [SerializeField] private VariableUIRegistry _variableUIRegistry;
@@ -29,6 +30,7 @@ public class NodeEngineLifetimeScope : LifetimeScope
 
         builder.RegisterMediator();
 
+        builder.Register<SelectionService>(Lifetime.Singleton);
         builder.Register<CanvasService>(Lifetime.Singleton);
         builder.Register<IGraphStorage>(resolver =>
             new LocalGraphStorage(Application.persistentDataPath + "/NodeGraphs/", ".json"),
@@ -61,6 +63,7 @@ public class NodeEngineLifetimeScope : LifetimeScope
         builder.RegisterComponent(_saveLoadUI);
         builder.RegisterComponent(_nodesList);
         builder.RegisterComponent(_UIZoomPan);
+        builder.RegisterComponent(_boxSelectionLogic);
 
         builder.RegisterComponent(_nodeRunner).AsImplementedInterfaces();
         builder.RegisterComponent(_connectionVisualsHandler).AsImplementedInterfaces();

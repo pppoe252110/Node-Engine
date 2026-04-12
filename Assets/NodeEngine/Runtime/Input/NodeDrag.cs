@@ -1,23 +1,26 @@
+using System.ComponentModel.Design;
 using UniMediator.Runtime;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using VContainer;
 
 public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerClickHandler
 {
-    private RectTransform _rectTransform;
     private bool _canDrag = false;
     private NodeLogic _nodeLogic;
     private ConnectorDragLogic _connectorDragLogic;
 
     private CanvasService _canvasService;
     private IMediator _mediator;
+    private SelectionService _selectionService;
 
     [Inject]
-    public void Construct(CanvasService canvasService, IMediator mediator)
+    public void Construct(CanvasService canvasService, IMediator mediator, SelectionService selectionService)
     {
         _canvasService = canvasService;
         _mediator = mediator;
+        _selectionService = selectionService;
     }
 
     private void Awake()
@@ -25,8 +28,6 @@ public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
         _nodeLogic = GetComponent<NodeLogic>();
         _connectorDragLogic = GetComponent<ConnectorDragLogic>();
     }
-
-    private void Start() => _rectTransform = transform as RectTransform;
 
     public void OnDrag(PointerEventData eventData)
     {
@@ -45,7 +46,17 @@ public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
             _canDrag = false;
             return;
         }
-        if (_canDrag) Move(eventData.delta);
+
+        if (_canDrag)
+        {
+            if (!_selectionService.IsSelected(_nodeLogic))
+            {
+                bool isAdditive = Keyboard.current.leftShiftKey.isPressed || Keyboard.current.leftCtrlKey.isPressed;
+                _selectionService.Select(_nodeLogic, isAdditive);
+            }
+
+            Move(eventData.delta);
+        }
     }
 
     public void OnEndDrag(PointerEventData eventData)
@@ -66,8 +77,11 @@ public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
         {
             _connectorDragLogic?.HandleClicked(eventData, connector);
         }
-        else
+        else if (!eventData.dragging)
         {
+            bool isAdditive = Keyboard.current.leftShiftKey.isPressed || Keyboard.current.leftCtrlKey.isPressed;
+            _selectionService.Select(_nodeLogic, isAdditive);
+
             _mediator.Publish(new UpdateNodeLogicConnectionsNotification(_nodeLogic));
         }
     }
@@ -82,7 +96,13 @@ public class NodeDrag : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDrag
 
     private void Move(Vector2 delta)
     {
-        _rectTransform.anchoredPosition += delta / _canvasService.NodesCanvas.scaleFactor / _canvasService.CanvasSize;
-        _mediator.Publish(new UpdateNodeLogicConnectionsNotification(_nodeLogic));
+        Vector2 adjustedDelta = delta / _canvasService.NodesCanvas.scaleFactor / _canvasService.CanvasSize;
+
+        foreach (var selectedNode in _selectionService.SelectedNodes)
+        {
+            var rt = selectedNode.transform as RectTransform;
+            rt.anchoredPosition += adjustedDelta;
+            _mediator.Publish(new UpdateNodeLogicConnectionsNotification(selectedNode));
+        }
     }
 }

@@ -3,7 +3,6 @@ using VContainer;
 
 /// <summary>
 /// Provides canvas references for node positioning.
-/// Registered as a singleton in the DI container.
 /// </summary>
 public class CanvasService
 {
@@ -14,6 +13,5 @@ public class CanvasService
     public CanvasService(Canvas nodesCanvas)
     {
         NodesCanvas = nodesCanvas;
-        CanvasSize = ((RectTransform)nodesCanvas.transform).sizeDelta;
     }
 }
