@@ -24,6 +24,9 @@ public abstract class BaseNode
     // Services
     private TypeChangeService _typeChangeService;
 
+    //Cache
+    private static readonly Dictionary<Type, List<NodePortInfo>> _portCache = new();
+
     public BaseNode()
     {
         DiscoverPorts();
@@ -47,8 +50,19 @@ public abstract class BaseNode
     // --- Port Discovery ---
     private void DiscoverPorts()
     {
+        Type nodeType = GetType();
+
+        // Quick out: if we already reflected this type, just copy the cached ports
+        if (_portCache.TryGetValue(nodeType, out var cachedPorts))
+        {
+            // Shallow copy is fine if you don't mutate the PortInfo layout at runtime
+            Ports = new List<NodePortInfo>(cachedPorts);
+            return;
+        }
+
         var portsList = new List<NodePortInfo>();
-        var members = GetType().GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+        var members = nodeType.GetMembers(BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic);
+
         foreach (var member in members)
         {
             var attr = (NodePortAttribute)Attribute.GetCustomAttribute(member, typeof(NodePortAttribute));
@@ -72,10 +86,10 @@ public abstract class BaseNode
             });
         }
 
-        Ports = portsList
-            .OrderBy(p => !p.IsInput)
-            .ThenBy(p => p.Order)
-            .ToList();
+        Ports = portsList.OrderBy(p => !p.IsInput).ThenBy(p => p.Order).ToList();
+
+        // Cache it for the next node of this type
+        _portCache[nodeType] = Ports;
     }
 
     // Helper to find port index by name
