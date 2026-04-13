@@ -20,8 +20,8 @@ namespace NodeEngine.Compilation
         private int _nextMemorySlot;
 
         public MemoryLayoutResult BuildMemoryLayout(
-            List<BaseNode> nodes,
-            List<DataConnection> dataConnections)
+            IReadOnlyList<BaseNode> nodes,
+            IReadOnlyList<DataConnection> dataConnections)
         {
             var result = new MemoryLayoutResult();
             _portToMemoryIndex.Clear();

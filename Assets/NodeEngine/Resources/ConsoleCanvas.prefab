@@ -2823,16 +2823,16 @@ MonoBehaviour:
   fadeDuration: 0.3
   canvasGroup: {fileID: 961195301939046686}
   panelObject: {fileID: 4797313663066470550}
-  entriesParent: {fileID: 6732730065308410933}
-  scrollRect: {fileID: 1244542097056227160}
-  searchInput: {fileID: 6791196387635425641}
-  clearButton: {fileID: 3203935919149584902}
-  collapseButton: {fileID: 116486914179124864}
-  collapseButtonText: {fileID: 8630855682793471110}
-  errorToggle: {fileID: 3051301573901528705}
-  warningToggle: {fileID: 2081455362280705073}
-  logToggle: {fileID: 5796228635682910164}
-  entryPrefab: {fileID: 9014254646868665522, guid: 73e151b8715b6bf46bb5f4f2905608bd, type: 3}
-  initialPoolSize: 50
-  maxDisplayedEntries: 100
-  delayedRefreshTime: 0.5
+  _entriesParent: {fileID: 6732730065308410933}
+  _scrollRect: {fileID: 1244542097056227160}
+  _searchInput: {fileID: 6791196387635425641}
+  _clearButton: {fileID: 3203935919149584902}
+  _collapseButton: {fileID: 116486914179124864}
+  _collapseButtonText: {fileID: 8630855682793471110}
+  _errorToggle: {fileID: 3051301573901528705}
+  _warningToggle: {fileID: 2081455362280705073}
+  _logToggle: {fileID: 5796228635682910164}
+  _entryPrefab: {fileID: 9014254646868665522, guid: 73e151b8715b6bf46bb5f4f2905608bd, type: 3}
+  _initialPoolSize: 50
+  _maxDisplayedEntries: 200
+  _delayedRefreshTime: 0.5

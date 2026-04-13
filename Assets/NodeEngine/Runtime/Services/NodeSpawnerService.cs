@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UniMediator.Runtime;
 using UnityEngine;
-using UnityEngine.UI;
 using VContainer;
 using VContainer.Unity;
 
@@ -12,22 +10,18 @@ public class NodeSpawnerService : MonoBehaviour
 {
     [Header("Prefabs")]
     [SerializeField] private NodeLogic _nodeLogicPrefab;
-    [SerializeField] private Connector _leftConnectorPrefab;
-    [SerializeField] private Connector _rightConnectorPrefab;
-    [SerializeField] private ConnectorColorDatabase _colorDatabase;
 
     private Dictionary<string, NodeLogic> _spawnedNodes = new();
-
     private IObjectResolver _objectResolver;
     private IMediator _mediator;
-    private ConnectionManager _connectionManager;
+    private ConnectionService _connectionService;
 
     [Inject]
-    public void Construct(IObjectResolver objectResolver, IMediator mediator, ConnectionManager connectionManager)
+    public void Construct(IObjectResolver objectResolver, IMediator mediator, ConnectionService connectionService)
     {
         _objectResolver = objectResolver;
         _mediator = mediator;
-        _connectionManager = connectionManager;
+        _connectionService = connectionService;
     }
 
     public NodeLogic SpawnNode(BaseNode nodeInstance, Vector2 position, string nodeId = null)
@@ -38,12 +32,12 @@ public class NodeSpawnerService : MonoBehaviour
 
         var nodeLogic = _objectResolver.Instantiate(_nodeLogicPrefab, UIZoomPan.NodesParent);
         nodeLogic.transform.localPosition = position;
-
         nodeLogic.SetNodeBase(nodeInstance, nodeId);
-        SetupNodeVisuals(nodeLogic, nodeInstance);
+
+        // Use the UIManager from the spawned NodeLogic instance
+        nodeLogic.UIManager.SetupNodeVisuals(nodeLogic, nodeInstance);
 
         _spawnedNodes[nodeId] = nodeLogic;
-
         _mediator.Publish(new MarkGraphDirtyNotification());
         return nodeLogic;
     }
@@ -57,10 +51,9 @@ public class NodeSpawnerService : MonoBehaviour
         {
             foreach (var other in connector.Connections.ToArray())
             {
-                // Determine source (output) and target (input)
                 var source = connector.IsInput ? other : connector;
                 var target = connector.IsInput ? connector : other;
-                _connectionManager.Disconnect(source, target);
+                _connectionService.Disconnect(source, target);
             }
         }
 
@@ -72,59 +65,4 @@ public class NodeSpawnerService : MonoBehaviour
     }
 
     public IEnumerable<NodeLogic> GetAllNodes() => _spawnedNodes.Values;
-
-    private void SetupNodeVisuals(NodeLogic nodeLogic, BaseNode node)
-    {
-        nodeLogic.NodeNameText.text = node.NodeName;
-        nodeLogic.NodeTypeText.text = GetNodeTypeFromPath(node);
-        nodeLogic.NodeIcon.sprite = node.NodeSprite;
-        nodeLogic.NodeIcon.color = node.NodeSprite ? Color.white : Color.clear;
-
-        GenerateConnectors(nodeLogic, node);
-
-        // Unified variable UI for any IVariableNode
-        if (node is IVariableNode varNode)
-            nodeLogic.UIManager.CreateVariableUI(varNode, nodeLogic.BackgroundImage);
-
-        int inputCount = node.Ports.Count(p => p.IsInput);
-        int outputCount = node.Ports.Count(p => !p.IsInput);
-        float height = 57 + Mathf.Max(inputCount, outputCount) * 25;
-        nodeLogic.BackgroundImage.rectTransform.sizeDelta =
-            new Vector2(nodeLogic.BackgroundImage.rectTransform.sizeDelta.x, height);
-
-        nodeLogic.BackgroundImage.material = new Material(nodeLogic.BackgroundImage.material);
-        nodeLogic.RecalculateMaterial();
-    }
-
-    private void GenerateConnectors(NodeLogic nodeLogic, BaseNode node)
-    {
-        foreach (var port in node.Ports)
-        {
-            var prefab = port.IsInput ? _leftConnectorPrefab : _rightConnectorPrefab;
-            var parent = port.IsInput ? nodeLogic.LeftConnectorsParent : nodeLogic.RightConnectorsParent;
-
-            var connector = Instantiate(prefab, parent);
-            connector.Setup(port.Name, port.ValueType, port.IsInput, port.IsFlow, node);
-            connector.SetColorDatabase(_colorDatabase);
-
-            if (port.IsInput)
-                nodeLogic.InputConnectors.Add(connector);
-            else
-                nodeLogic.OutputConnectors.Add(connector);
-        }
-
-        LayoutRebuilder.ForceRebuildLayoutImmediate(nodeLogic.LeftConnectorsParent);
-        LayoutRebuilder.ForceRebuildLayoutImmediate(nodeLogic.RightConnectorsParent);
-    }
-
-    private string GetNodeTypeFromPath(BaseNode node)
-    {
-        var pathAttr = node.GetType().GetCustomAttribute<NodePathAttribute>();
-        if (pathAttr != null && !string.IsNullOrEmpty(pathAttr.Path))
-        {
-            int slash = pathAttr.Path.IndexOf('/');
-            return slash >= 0 ? pathAttr.Path.Substring(0, slash) : pathAttr.Path;
-        }
-        return node.GetType().Name.Replace("Node", "");
-    }
 }

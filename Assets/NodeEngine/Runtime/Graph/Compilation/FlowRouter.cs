@@ -3,8 +3,8 @@
 public class FlowRouter
 {
     public Dictionary<BaseNode, Dictionary<string, int>> RouteFlows(
-        List<BaseNode> nodes,
-        List<FlowConnection> flowConnections,
+        IReadOnlyList<BaseNode> nodes,
+        IReadOnlyList<FlowConnection> flowConnections,
         Dictionary<BaseNode, int> nodeToIndex)
     {
         var flowTargets = new Dictionary<BaseNode, Dictionary<string, int>>();

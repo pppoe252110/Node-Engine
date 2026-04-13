@@ -8,7 +8,7 @@ namespace NodeEngine.Compilation
     {
         public List<int> GetDataDependencies(
             BaseNode target,
-            List<DataConnection> dataConnections,
+            IReadOnlyList<DataConnection> dataConnections,
             Dictionary<BaseNode, int> nodeToIndex)
         {
             var deps = new List<int>();

@@ -16,7 +16,7 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
     private GraphRestorer _restorer;
     private IGraphStorage _storage;
     private NodeSpawnerService _nodeSpawner;
-    private ConnectionManager _connectionManager;
+    private ConnectionService _connectionService;
 
     public event Action<string> OnGraphSaved;
     public event Action<string> OnGraphLoaded;
@@ -30,7 +30,7 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
         GraphRestorer restorer,
         IGraphStorage storage,
         NodeSpawnerService nodeSpawner,
-        ConnectionManager connectionManager)
+        ConnectionService connectionService)
     {
         _saveService = saveService;
         _loadService = loadService;
@@ -38,7 +38,7 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
         _restorer = restorer;
         _storage = storage;
         _nodeSpawner = nodeSpawner;
-        _connectionManager = connectionManager;
+        _connectionService = connectionService;
     }
 
     public void SaveGraph(string saveName)
@@ -97,6 +97,6 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
         {
             _nodeSpawner.DeleteNode(nodeLogic);
         }
-        _connectionManager.ClearAllConnections();
+        _connectionService.ClearAllConnections();
     }
 }

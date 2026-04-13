@@ -7,9 +7,9 @@ public static class NodeCompiler
     private static readonly CompilationPipeline _pipeline = new();
 
     public static CompiledGraph Compile(
-        List<BaseNode> nodes,
-        List<DataConnection> dataConnections,
-        List<FlowConnection> flowConnections)
+        IReadOnlyList<BaseNode> nodes,
+        IReadOnlyList<DataConnection> dataConnections,
+        IReadOnlyList<FlowConnection> flowConnections)
     {
         return _pipeline.Compile(nodes, dataConnections, flowConnections);
     }

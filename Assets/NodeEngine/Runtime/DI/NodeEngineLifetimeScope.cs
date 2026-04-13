@@ -7,7 +7,6 @@ using VContainer.Unity;
 
 public class NodeEngineLifetimeScope : LifetimeScope
 {
-    [SerializeField] private ConnectionManager _connectionManager;
     [SerializeField] private NodeRunner _nodeRunner;
     [SerializeField] private NodeSpawnerService _nodeSpawnerService;
     [SerializeField] private GraphSaveLoadCoordinator _graphCoordinator;
@@ -57,7 +56,6 @@ public class NodeEngineLifetimeScope : LifetimeScope
 
         RegisterAllNodeTypes(builder);
 
-        builder.RegisterComponent(_connectionManager);
         builder.RegisterComponent(_nodeSpawnerService);
         builder.RegisterComponent(_graphCoordinator);
         builder.RegisterComponent(_saveLoadUI);

@@ -18,13 +18,13 @@ public class NodeRunner : MonoBehaviour, INotificationHandler<MarkGraphDirtyNoti
     private readonly List<TestNode> _testNodes = new();
 
     private NodeSpawnerService _nodeSpawner;
-    private ConnectionManager _connectionManager;
+    private ConnectionService _connectionService;
 
     [Inject]
-    public void Construct(NodeSpawnerService nodeSpawner, ConnectionManager connectionManager)
+    public void Construct(NodeSpawnerService nodeSpawner, ConnectionService connectionService)
     {
         _nodeSpawner = nodeSpawner;
-        _connectionManager = connectionManager;
+        _connectionService = connectionService;
     }
 
     public void Handle(MarkGraphDirtyNotification notification)
@@ -81,7 +81,7 @@ public class NodeRunner : MonoBehaviour, INotificationHandler<MarkGraphDirtyNoti
 
     private void Recompile()
     {
-        if (_nodeSpawner == null || _connectionManager == null) return;
+        if (_nodeSpawner == null || _connectionService == null) return;
 
         _startNodes.Clear();
         _updateNodes.Clear();
@@ -101,8 +101,8 @@ public class NodeRunner : MonoBehaviour, INotificationHandler<MarkGraphDirtyNoti
             else if (node is TestNode tn) _testNodes.Add(tn);
         }
 
-        var dataConns = _connectionManager.ActiveDataConnections;
-        var flowConns = _connectionManager.ActiveFlowConnections;
+        var dataConns = _connectionService.ActiveDataConnections;
+        var flowConns = _connectionService.ActiveFlowConnections;
 
         _currentGraph = NodeCompiler.Compile(nodes, dataConns, flowConns);
         Debug.Log($"[NodeRunner] Graph compiled with {nodes.Count} nodes.");

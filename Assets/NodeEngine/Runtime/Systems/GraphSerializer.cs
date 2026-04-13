@@ -13,7 +13,7 @@ public class GraphSerializer
         _persistence = persistence;
     }
 
-    public GraphSnapshot SerializeToSnapshot(
+    public GraphSnapshot BuildSnapshot(
         IEnumerable<NodeLogic> nodes,
         IEnumerable<DataConnection> dataConnections,
         IEnumerable<FlowConnection> flowConnections)

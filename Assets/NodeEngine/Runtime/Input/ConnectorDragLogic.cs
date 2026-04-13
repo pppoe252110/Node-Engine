@@ -10,13 +10,13 @@ public class ConnectorDragLogic : MonoBehaviour
     private Connector _dragConnector;
     private bool _isDragging = false;
 
-    private ConnectionManager _connectionManager;
+    private ConnectionService _connectionService;
     private LineRenderersController _lineRenderersController;
 
     [Inject]
-    public void Construct(ConnectionManager connectionManager, LineRenderersController lineRenderersController)
+    public void Construct(ConnectionService connectionService, LineRenderersController lineRenderersController)
     {
-        _connectionManager = connectionManager;
+        _connectionService = connectionService;
         _lineRenderersController = lineRenderersController;
     }
 
@@ -106,10 +106,7 @@ public class ConnectorDragLogic : MonoBehaviour
 
     private void CreateConnection(Connector targetConnector)
     {
-        if (_connectionManager != null)
-        {
-            _connectionManager.CreateConnectionWithConnectors(_dragConnector, targetConnector);
-        }
+        _connectionService.CreateConnection(_dragConnector, targetConnector);
     }
 
     private void CleanupDrag()
@@ -132,7 +129,7 @@ public class ConnectorDragLogic : MonoBehaviour
             {
                 var source = connector.IsInput ? connectedConnector : connector;
                 var target = connector.IsInput ? connector : connectedConnector;
-                _connectionManager.Disconnect(source, target);
+                _connectionService.Disconnect(source, target);
             }
         }
     }

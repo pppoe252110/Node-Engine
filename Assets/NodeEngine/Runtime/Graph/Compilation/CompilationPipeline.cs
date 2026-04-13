@@ -12,9 +12,9 @@ namespace NodeEngine.Compilation
         private readonly DependencyResolver _dependencyResolver = new();
 
         public NodeCompiler.CompiledGraph Compile(
-            List<BaseNode> nodes,
-            List<DataConnection> dataConnections,
-            List<FlowConnection> flowConnections)
+            IReadOnlyList<BaseNode> nodes,
+            IReadOnlyList<DataConnection> dataConnections,
+            IReadOnlyList<FlowConnection> flowConnections)
         {
             if (nodes == null) throw new ArgumentNullException(nameof(nodes));
             if (dataConnections == null) throw new ArgumentNullException(nameof(dataConnections));

@@ -7,9 +7,9 @@ public static class TypeChangeLogic
     public static void CheckAndDisconnectIncompatible(
         Connector connector,
         Type newType,
-        ConnectionManager connectionManager)
+        ConnectionService connectionService)
     {
-        if (connector == null || connectionManager == null) return;
+        if (connector == null || connectionService == null) return;
 
         var connectionsToCheck = connector.Connections.ToList();
 
@@ -20,7 +20,7 @@ public static class TypeChangeLogic
             if (!isCompatible)
             {
                 Debug.LogWarning($"Disconnecting incompatible connection: {newType.Name} -> {connectedConnector.ValueType.Name}");
-                connectionManager.Disconnect(connector, connectedConnector);
+                connectionService.Disconnect(connector, connectedConnector);
             }
         }
     }

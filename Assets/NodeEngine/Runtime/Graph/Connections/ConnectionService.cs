@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UniMediator.Runtime;
 using VContainer;
 
@@ -8,14 +9,14 @@ public class ConnectionService
     private readonly IMediator _mediator;
 
     public ConnectionGraph Graph => _graph;
+    public IReadOnlyList<DataConnection> ActiveDataConnections => _graph.DataConnections;
+    public IReadOnlyList<FlowConnection> ActiveFlowConnections => _graph.FlowConnections;
 
     [Inject]
     public ConnectionService(IMediator mediator)
     {
         _mediator = mediator;
     }
-
-    // Update these two methods in ConnectionService.cs
 
     public bool CreateConnection(Connector from, Connector to)
     {
@@ -93,7 +94,6 @@ public class ConnectionService
 
     public void ClearAllConnections()
     {
-        // Notify disconnection for each existing connection
         foreach (var conn in _graph.DataConnections.ToList())
         {
             var sourceConn = conn.SourceNode.GetConnector(conn.OutputPortName);

@@ -5,15 +5,15 @@ using VContainer;
 
 public class TypeChangeService
 {
-    private readonly ConnectionManager _connectionManager;
+    private readonly ConnectionService _connectionService;
     private readonly NodeRunner _nodeRunner;
     private readonly LineRenderersController _lineRenderersController;
     private bool _isInUpdate = false;
 
     [Inject]
-    public TypeChangeService(ConnectionManager connectionManager, NodeRunner nodeRunner, LineRenderersController lineRenderersController)
+    public TypeChangeService(ConnectionService connectionService, NodeRunner nodeRunner, LineRenderersController lineRenderersController)
     {
-        _connectionManager = connectionManager;
+        _connectionService = connectionService;
         _nodeRunner = nodeRunner;
         _lineRenderersController = lineRenderersController;
     }
@@ -25,7 +25,8 @@ public class TypeChangeService
         _isInUpdate = true;
         try
         {
-            CheckAndDisconnectIncompatible(connector, newType);
+            // Use the static helper instead of duplicated code
+            TypeChangeLogic.CheckAndDisconnectIncompatible(connector, newType, _connectionService);
 
             connector.SetValueType(newType);
 
@@ -45,23 +46,6 @@ public class TypeChangeService
         finally
         {
             _isInUpdate = false;
-        }
-    }
-
-    private void CheckAndDisconnectIncompatible(Connector connector, Type newType)
-    {
-        var connectionsToCheck = connector.Connections.ToList();
-
-        foreach (var connectedConnector in connectionsToCheck)
-        {
-            if (connectedConnector == null) continue;
-
-            bool isCompatible = TypeChangeLogic.IsCompatibleType(newType, connectedConnector.ValueType);
-            if (!isCompatible)
-            {
-                Debug.LogWarning($"Disconnecting incompatible connection: {newType.Name} -> {connectedConnector.ValueType.Name}");
-                _connectionManager.Disconnect(connector, connectedConnector);
-            }
         }
     }
 }

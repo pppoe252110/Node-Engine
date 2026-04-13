@@ -1,7 +1,5 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,43 +7,31 @@ using UnityEngine.UI;
 public class ConsoleUI : BasePanel
 {
     [Header("References")]
-    [SerializeField] private Transform entriesParent;
-    [SerializeField] private ScrollRect scrollRect;
-    [SerializeField] private TMP_InputField searchInput;
-    [SerializeField] private Button clearButton;
-    [SerializeField] private Button collapseButton;
-    [SerializeField] private TextMeshProUGUI collapseButtonText;
-    [SerializeField] private Toggle errorToggle;
-    [SerializeField] private Toggle warningToggle;
-    [SerializeField] private Toggle logToggle;
+    [SerializeField] private Transform _entriesParent;
+    [SerializeField] private ScrollRect _scrollRect;
+    [SerializeField] private TMP_InputField _searchInput;
+    [SerializeField] private Button _clearButton;
+    [SerializeField] private Button _collapseButton;
+    [SerializeField] private TextMeshProUGUI _collapseButtonText;
+    [SerializeField] private Toggle _errorToggle;
+    [SerializeField] private Toggle _warningToggle;
+    [SerializeField] private Toggle _logToggle;
 
     [Header("Prefabs")]
-    [SerializeField] private ConsoleEntryUI entryPrefab;
+    [SerializeField] private ConsoleEntryUI _entryPrefab;
 
     [Header("Pooling")]
-    [SerializeField] private int initialPoolSize = 50;
-    [SerializeField] private int maxDisplayedEntries = 200;
+    [SerializeField] private int _initialPoolSize = 50;
+    [SerializeField] private int _maxDisplayedEntries = 200;
 
     [Header("Refresh Settings")]
-    [SerializeField] private float delayedRefreshTime = 0.5f;
+    [SerializeField] private float _delayedRefreshTime = 0.5f;
 
-    private List<ConsoleEntry> allEntries = new List<ConsoleEntry>();
-    private readonly List<ConsoleEntry> filteredEntries = new List<ConsoleEntry>();
-    private bool isCollapsed = false;
-    private string searchFilter = "";
-    private bool showErrors = true;
-    private bool showWarnings = true;
-    private bool showLogs = true;
-
-    private readonly Queue<ConsoleEntryUI> entryPool = new Queue<ConsoleEntryUI>();
-    private readonly List<ConsoleEntryUI> activeEntries = new List<ConsoleEntryUI>();
-
-    private float lastRefreshTime;
-    private const float refreshInterval = 0.05f;
-
-    private Coroutine delayedRefreshCoroutine;
-
-    private ConsoleEntry lastCollapsedEntry = null;
+    private ConsoleLogManager _logManager;
+    private ConsoleFilter _filter;
+    private readonly Queue<ConsoleEntryUI> _entryPool = new();
+    private readonly List<ConsoleEntryUI> _activeEntries = new();
+    private Coroutine _delayedRefreshCoroutine;
 
     public static ConsoleUI Instance { get; private set; }
 
@@ -58,7 +44,10 @@ public class ConsoleUI : BasePanel
         }
         Instance = this;
 
-        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+        _logManager = new ConsoleLogManager();
+        _filter = new ConsoleFilter();
+
+        _logManager.OnEntriesChanged += ScheduleDelayedRefresh;
 
         Application.logMessageReceived += HandleLog;
         SetupUI();
@@ -66,188 +55,101 @@ public class ConsoleUI : BasePanel
         base.Awake();
     }
 
-    private void Start()
-    {
-        PanelManager.Instance.RegisterPanel(this);
-    }
-
     private void SetupUI()
     {
-        clearButton.onClick.AddListener(Clear);
-        collapseButton.onClick.AddListener(ToggleCollapse);
-        searchInput.onValueChanged.AddListener(OnSearchChanged);
+        _clearButton.onClick.AddListener(() => _logManager.Clear());
+        _collapseButton.onClick.AddListener(ToggleCollapse);
+        _searchInput.onValueChanged.AddListener(OnSearchChanged);
+        _errorToggle.onValueChanged.AddListener(OnFilterChanged);
+        _warningToggle.onValueChanged.AddListener(OnFilterChanged);
+        _logToggle.onValueChanged.AddListener(OnFilterChanged);
 
-        errorToggle.onValueChanged.AddListener(OnFilterChanged);
-        warningToggle.onValueChanged.AddListener(OnFilterChanged);
-        logToggle.onValueChanged.AddListener(OnFilterChanged);
-
-        for (int i = 0; i < initialPoolSize; i++)
+        for (int i = 0; i < _initialPoolSize; i++)
         {
-            ConsoleEntryUI entry = Instantiate(entryPrefab, entriesParent);
+            var entry = Instantiate(_entryPrefab, _entriesParent);
             entry.gameObject.SetActive(false);
-            entryPool.Enqueue(entry);
+            _entryPool.Enqueue(entry);
         }
 
         UpdateCollapseButtonText();
     }
 
-    private void OnFilterChanged(bool _)
-    {
-        showErrors = errorToggle.isOn;
-        showWarnings = warningToggle.isOn;
-        showLogs = logToggle.isOn;
-        ScheduleDelayedRefresh();
-    }
-
-    public void LogMessage(string message, LogType type = LogType.Log)
-    {
-        HandleLog(message, "", type);
-    }
-
-    public void LogWarning(string message)
-    {
-        HandleLog(message, "", LogType.Warning);
-    }
-
-    public void LogError(string message)
-    {
-        HandleLog(message, "", LogType.Error);
-    }
-
     private void HandleLog(string logString, string stackTrace, LogType type)
     {
-        if (isCollapsed && allEntries.Count > 0)
-        {
-
-            if (lastCollapsedEntry != null &&
-                lastCollapsedEntry.message == logString &&
-                lastCollapsedEntry.logType == type)
-            {
-
-                lastCollapsedEntry.timestamps.Add(DateTime.Now);
-                ScheduleDelayedRefresh();
-                return;
-            }
-
-            var lastEntry = allEntries.Last();
-            if (lastEntry.message == logString && lastEntry.logType == type)
-            {
-                lastEntry.timestamps.Add(DateTime.Now);
-                lastCollapsedEntry = lastEntry;
-                ScheduleDelayedRefresh();
-                return;
-            }
-        }
-
-        var newEntry = new ConsoleEntry
-        {
-            message = logString,
-            stackTrace = stackTrace,
-            logType = type
-        };
-        newEntry.timestamps.Add(DateTime.Now);
-
-        allEntries.Add(newEntry);
-        lastCollapsedEntry = newEntry;
-        ScheduleDelayedRefresh();
-
+        _logManager.AddEntry(logString, stackTrace, type);
         StartCoroutine(ScrollToBottom());
     }
 
-    private IEnumerator ScrollToBottom()
+    private void OnFilterChanged(bool _)
     {
-        yield return new WaitForEndOfFrame();
-        scrollRect.verticalNormalizedPosition = 0f;
+        _filter.ShowErrors = _errorToggle.isOn;
+        _filter.ShowWarnings = _warningToggle.isOn;
+        _filter.ShowLogs = _logToggle.isOn;
+        ScheduleDelayedRefresh();
+    }
+
+    private void OnSearchChanged(string text)
+    {
+        _filter.SearchText = text;
+        ScheduleDelayedRefresh();
+    }
+
+    private void ToggleCollapse()
+    {
+        _logManager.SetCollapsed(!_logManager.IsCollapsed);
+        UpdateCollapseButtonText();
+    }
+
+    private void UpdateCollapseButtonText()
+    {
+        _collapseButtonText.text = _logManager.IsCollapsed ? "Collapse: ON" : "Collapse: OFF";
     }
 
     private void ScheduleDelayedRefresh()
     {
-        if (delayedRefreshCoroutine != null)
-        {
-            StopCoroutine(delayedRefreshCoroutine);
-        }
-
-        delayedRefreshCoroutine = StartCoroutine(DelayedRefreshCoroutine());
+        if (_delayedRefreshCoroutine != null)
+            StopCoroutine(_delayedRefreshCoroutine);
+        _delayedRefreshCoroutine = StartCoroutine(DelayedRefreshCoroutine());
     }
 
     private IEnumerator DelayedRefreshCoroutine()
     {
-        yield return new WaitForSeconds(delayedRefreshTime);
-        ForceRefresh();
-    }
-
-    public void ForceRefresh()
-    {
-        lastRefreshTime = 0f;
+        yield return new WaitForSeconds(_delayedRefreshTime);
         RefreshUI();
     }
 
     private void RefreshUI()
     {
-        if (Time.time - lastRefreshTime < refreshInterval) return;
-        lastRefreshTime = Time.time;
-
-        FilterEntries();
-        UpdateEntryUIs();
+        var filteredEntries = _filter.Filter(_logManager.AllEntries, _maxDisplayedEntries);
+        UpdateEntryUIs(filteredEntries);
     }
 
-    private void FilterEntries()
+    private void UpdateEntryUIs(List<ConsoleEntry> filteredEntries)
     {
-        filteredEntries.Clear();
-
-        if (!showErrors && !showWarnings && !showLogs) return;
-
-        foreach (var entry in allEntries)
+        // Return excess entries to pool
+        while (_activeEntries.Count > filteredEntries.Count)
         {
-            bool typeMatches = entry.logType switch
-            {
-                LogType.Error or LogType.Exception => showErrors,
-                LogType.Warning => showWarnings,
-                LogType.Log => showLogs,
-                _ => false
-            };
-
-            if (!typeMatches) continue;
-            if (!string.IsNullOrEmpty(searchFilter) && !entry.message.Contains(searchFilter, StringComparison.OrdinalIgnoreCase)) continue;
-
-            filteredEntries.Add(entry);
+            var entry = _activeEntries[^1];
+            entry.gameObject.SetActive(false);
+            _entryPool.Enqueue(entry);
+            _activeEntries.RemoveAt(_activeEntries.Count - 1);
         }
 
-        if (filteredEntries.Count > maxDisplayedEntries)
-        {
-            filteredEntries.RemoveRange(0, filteredEntries.Count - maxDisplayedEntries);
-        }
-    }
-
-    private void UpdateEntryUIs()
-    {
-        while (activeEntries.Count > filteredEntries.Count)
-        {
-            var entryToReturn = activeEntries[activeEntries.Count - 1];
-            entryToReturn.gameObject.SetActive(false);
-            entryPool.Enqueue(entryToReturn);
-            activeEntries.RemoveAt(activeEntries.Count - 1);
-        }
-
+        // Update or create entries
         for (int i = 0; i < filteredEntries.Count; i++)
         {
             ConsoleEntryUI entryUI;
-            if (i < activeEntries.Count)
+            if (i < _activeEntries.Count)
             {
-                entryUI = activeEntries[i];
+                entryUI = _activeEntries[i];
             }
             else
             {
-                if (entryPool.Count > 0)
-                {
-                    entryUI = entryPool.Dequeue();
-                }
-                else
-                {
-                    entryUI = Instantiate(entryPrefab, entriesParent);
-                }
+                entryUI = _entryPool.Count > 0
+                    ? _entryPool.Dequeue()
+                    : Instantiate(_entryPrefab, _entriesParent);
                 entryUI.gameObject.SetActive(true);
-                activeEntries.Add(entryUI);
+                _activeEntries.Add(entryUI);
             }
 
             entryUI.transform.SetSiblingIndex(i);
@@ -255,110 +157,10 @@ public class ConsoleUI : BasePanel
         }
     }
 
-    private void OnSearchChanged(string searchText)
+    private IEnumerator ScrollToBottom()
     {
-        searchFilter = searchText;
-        ScheduleDelayedRefresh();
-    }
-
-    private void ToggleCollapse()
-    {
-        isCollapsed = !isCollapsed;
-        lastCollapsedEntry = null;
-
-        if (isCollapsed)
-        {
-            GroupCollapsedEntries();
-        }
-        else
-        {
-            ExpandCollapsedEntries();
-        }
-
-        UpdateCollapseButtonText();
-        ForceRefresh();
-    }
-
-    private void UpdateCollapseButtonText()
-    {
-        if (collapseButtonText != null)
-        {
-            collapseButtonText.text = isCollapsed ? "Collapse: ON" : "Collapse: OFF";
-        }
-    }
-
-    private void GroupCollapsedEntries()
-    {
-        var groupedEntries = new Dictionary<int, ConsoleEntry>();
-        var messageToIdMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var entry in allEntries)
-        {
-            string messageKey = $"{entry.logType}|{entry.message}";
-
-            if (messageToIdMap.TryGetValue(messageKey, out int existingId))
-            {
-
-                if (groupedEntries.TryGetValue(existingId, out var existingEntry))
-                {
-
-                    var combinedTimestamps = new List<DateTime>(existingEntry.timestamps);
-                    combinedTimestamps.AddRange(entry.timestamps);
-                    existingEntry.timestamps = combinedTimestamps;
-                }
-            }
-            else
-            {
-
-                var newGroupedEntry = new ConsoleEntry(entry);
-                groupedEntries[entry.id] = newGroupedEntry;
-                messageToIdMap[messageKey] = entry.id;
-            }
-        }
-
-        allEntries = new List<ConsoleEntry>(groupedEntries.Values);
-
-        if (allEntries.Count > 0)
-        {
-            lastCollapsedEntry = allEntries.Last();
-        }
-    }
-
-    private void ExpandCollapsedEntries()
-    {
-        var expandedEntries = new List<ConsoleEntry>();
-
-        foreach (var entry in allEntries)
-        {
-            foreach (var timestamp in entry.timestamps)
-            {
-
-                var newEntry = new ConsoleEntry
-                {
-                    id = entry.id,
-                    message = entry.message,
-                    stackTrace = entry.stackTrace,
-                    logType = entry.logType
-                };
-                newEntry.timestamps.Add(timestamp);
-                expandedEntries.Add(newEntry);
-            }
-        }
-
-        allEntries = expandedEntries;
-
-        if (allEntries.Count > 0)
-        {
-            lastCollapsedEntry = allEntries.Last();
-        }
-    }
-
-    public void Clear()
-    {
-        allEntries.Clear();
-        filteredEntries.Clear();
-        lastCollapsedEntry = null;
-        ForceRefresh();
+        yield return new WaitForEndOfFrame();
+        _scrollRect.verticalNormalizedPosition = 0f;
     }
 
     private void OnDestroy()
@@ -366,11 +168,7 @@ public class ConsoleUI : BasePanel
         if (Instance == this)
         {
             Application.logMessageReceived -= HandleLog;
-
-            if (delayedRefreshCoroutine != null)
-            {
-                StopCoroutine(delayedRefreshCoroutine);
-            }
+            _logManager.OnEntriesChanged -= ScheduleDelayedRefresh;
         }
     }
 }

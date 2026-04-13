@@ -10,7 +10,7 @@ namespace NodeEngine.GraphPersistence
     {
         private readonly INodeFactory _nodeFactory;
         private readonly NodeSpawnerService _nodeSpawner;
-        private readonly ConnectionManager _connectionManager;
+        private readonly ConnectionService _connectionService;
         private readonly GraphSerializer _serializer;
         private readonly NodesDatabase _nodesDatabase;
         private readonly NodeRunner _nodeRunner;
@@ -19,14 +19,14 @@ namespace NodeEngine.GraphPersistence
         public GraphRestorer(
             INodeFactory nodeFactory,
             NodeSpawnerService nodeSpawner,
-            ConnectionManager connectionManager,
+            ConnectionService connectionService,
             GraphSerializer serializer,
             NodesDatabase nodesDatabase,
             NodeRunner nodeRunner)
         {
             _nodeFactory = nodeFactory;
             _nodeSpawner = nodeSpawner;
-            _connectionManager = connectionManager;
+            _connectionService = connectionService;
             _serializer = serializer;
             _nodesDatabase = nodesDatabase;
             _nodeRunner = nodeRunner;
@@ -98,7 +98,7 @@ namespace NodeEngine.GraphPersistence
                     continue;
                 }
 
-                _connectionManager.CreateConnectionWithConnectors(sourceConn, targetConn);
+                _connectionService.CreateConnection(sourceConn, targetConn);
             }
 
             _nodeRunner?.MarkDirty();
