@@ -440,29 +440,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1448166315776574869, guid: 886e162d98616894a82395fa4800100e, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1448166315776574869, guid: 886e162d98616894a82395fa4800100e, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1448166315776574869, guid: 886e162d98616894a82395fa4800100e, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4742852334566858359, guid: 886e162d98616894a82395fa4800100e, type: 3}
       propertyPath: m_Name
       value: NodeEngine
-      objectReference: {fileID: 0}
-    - target: {fileID: 5064400904951847040, guid: 886e162d98616894a82395fa4800100e, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5064400904951847040, guid: 886e162d98616894a82395fa4800100e, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8154144855530634116, guid: 886e162d98616894a82395fa4800100e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -503,14 +483,6 @@ PrefabInstance:
     - target: {fileID: 8154144855530634116, guid: 886e162d98616894a82395fa4800100e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8251886707821778455, guid: 886e162d98616894a82395fa4800100e, type: 3}
-      propertyPath: m_AdditionalShaderChannelsFlag
-      value: 25
-      objectReference: {fileID: 0}
-    - target: {fileID: 8638944233836932706, guid: 886e162d98616894a82395fa4800100e, type: 3}
-      propertyPath: m_Value
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
