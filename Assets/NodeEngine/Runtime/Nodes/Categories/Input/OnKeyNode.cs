@@ -16,9 +16,13 @@ public class OnKeyNode : BaseNode
 
         return ctx =>
         {
-            Key k = ctx.Read<Key>(keyId, Key.None);
+            Key k = ctx.Read(keyId, Key.None);
 
-            if (Keyboard.current == null) return ExecutionResult.Stop();
+            if (k == Key.None)
+                return ExecutionResult.Stop();
+
+            if (Keyboard.current == null) 
+                return ExecutionResult.Stop();
 
             if (Keyboard.current[k].isPressed)
                 return ExecutionResult.Continue(outFlow);

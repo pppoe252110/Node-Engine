@@ -45,37 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: NodeEngine.Runtime::GraphSaveLoadSystem
   _quickSaveSlotName: QuickSave
---- !u!1 &1836765117867198089
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3324605215680891815}
-  m_Layer: 0
-  m_Name: Instances
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3324605215680891815
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1836765117867198089}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8154144855530634116}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2393997287612278385
 GameObject:
   m_ObjectHideFlags: 0
@@ -86,8 +55,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2111227348780418104}
   - component: {fileID: 7785092641133106204}
+  - component: {fileID: 2394218315874155898}
   m_Layer: 0
-  m_Name: ConnectionVisualsHandler
+  m_Name: Connections
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -120,6 +90,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 378a2b7eeef05dc4b9ae2f981eb82ab1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NodeEngine.Runtime::ConnectionVisualsHandler
+--- !u!114 &2394218315874155898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2393997287612278385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31f62cbacee252141a64445b52855f51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NodeEngine.Runtime::ConnectionManager
 --- !u!1 &3663612312892212950
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,7 +195,6 @@ GameObject:
   - component: {fileID: 4662335473029687767}
   - component: {fileID: 2860056924530611628}
   - component: {fileID: 9197445569043198495}
-  - component: {fileID: 433342395729140972}
   - component: {fileID: 7274180256946966886}
   m_Layer: 0
   m_Name: NodeEngine
@@ -239,7 +220,6 @@ Transform:
   - {fileID: 3130186195365749782}
   - {fileID: 5955329475595123891}
   - {fileID: 2046608140001339657}
-  - {fileID: 3324605215680891815}
   - {fileID: 708094794029438505}
   - {fileID: 4953284109887381288}
   - {fileID: 2111227348780418104}
@@ -316,18 +296,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa8a011dd0fec2947ab46db81c48ffa6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NodeEngine.Runtime::UIController
---- !u!114 &433342395729140972
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4742852334566858359}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31f62cbacee252141a64445b52855f51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: NodeEngine.Runtime::ConnectionManager
 --- !u!114 &7274180256946966886
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -344,7 +312,7 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
-  _connectionManager: {fileID: 433342395729140972}
+  _connectionManager: {fileID: 2394218315874155898}
   _nodeRunner: {fileID: 8654043050027066769}
   _nodeSpawnerService: {fileID: 4662335473029687767}
   _graphCoordinator: {fileID: 4826746070640242654}
@@ -352,6 +320,7 @@ MonoBehaviour:
   _nodesList: {fileID: 7393820960370443455}
   _lineRenderersController: {fileID: 2897697948676587032}
   _UIZoomPan: {fileID: 2582477214690006996}
+  _boxSelectionLogic: {fileID: 6717370038085408087}
   _mainCanvas: {fileID: 8251886707821778455}
   _connectionVisualsHandler: {fileID: 7785092641133106204}
   _variableUIRegistry: {fileID: 11400000, guid: 476f0885a49d78143981d5a5dd82a44d, type: 2}
@@ -380,6 +349,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 8654043050027066769}
+    - target: {fileID: 3913389850463213300, guid: e02338bd44c145d47a806b8de829970c, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4736901378495858689, guid: e02338bd44c145d47a806b8de829970c, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -458,18 +431,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4736901378495858689, guid: e02338bd44c145d47a806b8de829970c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5824099894457664886, guid: e02338bd44c145d47a806b8de829970c, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5824099894457664886, guid: e02338bd44c145d47a806b8de829970c, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5824099894457664886, guid: e02338bd44c145d47a806b8de829970c, type: 3}
-      propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6142623753368559927, guid: e02338bd44c145d47a806b8de829970c, type: 3}
@@ -552,6 +513,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_InputField
+--- !u!114 &6717370038085408087 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1869930757760767412, guid: e02338bd44c145d47a806b8de829970c, type: 3}
+  m_PrefabInstance: {fileID: 4957249776816390371}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a5eba8d24f7b684baaba55b66a83eec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NodeEngine.Runtime::BoxSelectionLogic
 --- !u!223 &8251886707821778455 stripped
 Canvas:
   m_CorrespondingSourceObject: {fileID: 3913389850463213300, guid: e02338bd44c145d47a806b8de829970c, type: 3}
@@ -565,6 +537,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 8154144855530634116}
     m_Modifications:
+    - target: {fileID: 3934097819674696756, guid: 9aaebb5f0b3d8d64487dc43cef5684ed, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8485212692727222248, guid: 9aaebb5f0b3d8d64487dc43cef5684ed, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -692,6 +668,10 @@ PrefabInstance:
     - target: {fileID: 2759108207894680732, guid: c2e9f96cf9e75124e9260d0855fcd190, type: 3}
       propertyPath: m_Name
       value: SaveLoadCanvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 6219906729434868693, guid: c2e9f96cf9e75124e9260d0855fcd190, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8552722916477585961, guid: c2e9f96cf9e75124e9260d0855fcd190, type: 3}
       propertyPath: m_Pivot.x
@@ -908,6 +888,10 @@ PrefabInstance:
     - target: {fileID: 3257884443577041861, guid: f06cbf7caf642d5419fd25ac7665b17f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7957695892756320281, guid: f06cbf7caf642d5419fd25ac7665b17f, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -20,7 +20,6 @@
   <Project Path="Unity.Burst.Editor.csproj" />
   <Project Path="VContainer.Editor.csproj" />
   <Project Path="Unity.AI.Navigation.Updater.csproj" />
-  <Project Path="Assembly-CSharp-firstpass.csproj" />
   <Project Path="NodeEngine.Editor.csproj" />
   <Project Path="Unity.InputSystem.DocCodeSamples.csproj" />
   <Project Path="Unity.InputSystem.ForUI.csproj" />
@@ -30,6 +29,7 @@
   <Project Path="Unity.PlasticSCM.Editor.Entities.csproj" />
   <Project Path="UniTask.Addressables.csproj" />
   <Project Path="UniTask.Editor.csproj" />
+  <Project Path="PrimeTween.Installer.csproj" />
   <Project Path="UniTask.DOTween.csproj" />
   <Project Path="Domain_Reload.csproj" />
 </Solution>

@@ -7,6 +7,12 @@
       "dependencies": {},
       "hash": "0d304f1feb336a8348011c5f8a171f32634b3069"
     },
+    "com.kyrylokuzyk.primetween": {
+      "version": "file:../Assets/Plugins/PrimeTween/internal/com.kyrylokuzyk.primetween.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {}
+    },
     "com.pppoe252110.unimediator": {
       "version": "https://github.com/pppoe252110/UniMediator.git?path=Assets/Plugins/UniMediator",
       "depth": 0,

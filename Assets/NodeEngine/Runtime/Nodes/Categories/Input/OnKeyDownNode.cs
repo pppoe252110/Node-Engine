@@ -1,12 +1,11 @@
 ﻿using NodeEngine.Compilation;
 using System;
-using UnityEngine;
 using UnityEngine.InputSystem;
 
 [NodePath("Input/On Key Down")]
 public class OnKeyDownNode : BaseNode
 {
-    [NodePort("In", true, true)] public void In() { }  // Add this flow input
+    [NodePort("In", true, true)] public void In() { }
     [NodePort("Key", true)] public Key key;
     [NodePort("Out", false, true)] public void Out() { }
 
@@ -17,19 +16,16 @@ public class OnKeyDownNode : BaseNode
 
         return ctx =>
         {
-            Key k = ctx.Read<Key>(keyId, Key.None);
+            Key k = ctx.Read(keyId, Key.None);
+
+            if (k == Key.None)
+                return ExecutionResult.Stop();
 
             if (Keyboard.current == null)
-            {
-                Debug.LogWarning("[OnKeyDownNode] Keyboard.current is null");
                 return ExecutionResult.Stop();
-            }
 
             if (Keyboard.current[k].wasPressedThisFrame)
-            {
-                Debug.Log($"[OnKeyDownNode] Key {k} pressed!");
                 return ExecutionResult.Continue(outFlow);
-            }
 
             return ExecutionResult.Stop();
         };
