@@ -267,6 +267,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 055050a8664bbeb4281dee8dd79a4821, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NodeEngine.Runtime::PanelManager
+  _nodesPanel: {fileID: 7593809546495228581}
 --- !u!114 &9197445569043198495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,8 +435,16 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7505246974764094492, guid: e02338bd44c145d47a806b8de829970c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7593809546495228581}
   m_SourcePrefab: {fileID: 100100000, guid: e02338bd44c145d47a806b8de829970c, type: 3}
+--- !u!225 &35645763512271463 stripped
+CanvasGroup:
+  m_CorrespondingSourceObject: {fileID: 4950885124840555140, guid: e02338bd44c145d47a806b8de829970c, type: 3}
+  m_PrefabInstance: {fileID: 4957249776816390371}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &228432788389565850 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5179207747321042297, guid: e02338bd44c145d47a806b8de829970c, type: 3}
@@ -462,7 +471,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7436741737411136530, guid: e02338bd44c145d47a806b8de829970c, type: 3}
   m_PrefabInstance: {fileID: 4957249776816390371}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 3237048215813821695}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
@@ -484,6 +493,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0b91d042eae96440b65717cbc466ec4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &3237048215813821695 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7505246974764094492, guid: e02338bd44c145d47a806b8de829970c, type: 3}
+  m_PrefabInstance: {fileID: 4957249776816390371}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7593809546495228581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3237048215813821695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14421775f84ba974aa06bca2658f659f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NodeEngine.Runtime::NodesUI
+  fadeDuration: 0.3
+  canvasGroup: {fileID: 35645763512271463}
+  panelObject: {fileID: 5115385232973201013}
+  isOpenOnStart: 1
+--- !u!1 &5115385232973201013 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 159543174973619862, guid: e02338bd44c145d47a806b8de829970c, type: 3}
+  m_PrefabInstance: {fileID: 4957249776816390371}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &5214714785893123960 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 906862967136815003, guid: e02338bd44c145d47a806b8de829970c, type: 3}

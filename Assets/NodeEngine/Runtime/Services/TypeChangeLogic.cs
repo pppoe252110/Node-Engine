@@ -19,7 +19,7 @@ public static class TypeChangeLogic
             bool isCompatible = IsCompatibleType(newType, connectedConnector.ValueType);
             if (!isCompatible)
             {
-                Debug.LogWarning($"Disconnecting incompatible connection: {newType.Name} -> {connectedConnector.ValueType.Name}");
+                Debug.LogWarning($"Disconnecting incompatible connection: {connector.Node.NodeName} - {connector.PortName} ({newType.Name}) -> {connectedConnector.Node.NodeName} - {connectedConnector.PortName} ({connectedConnector.ValueType.Name})");
                 connectionService.Disconnect(connector, connectedConnector);
             }
         }

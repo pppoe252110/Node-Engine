@@ -21,7 +21,9 @@ public class WhileNode : BaseNode
             while (ctx.Read<bool>(condId))
             {
                 if (bodyFlow >= 0)
-                    ctx.PushFlow(bodyFlow);
+                {
+                    ctx.ExecuteSubFlow(bodyFlow);
+                }
             }
             return ExecutionResult.Continue(exitFlow);
         };

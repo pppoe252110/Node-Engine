@@ -6,6 +6,8 @@ public class PanelManager : MonoBehaviour
 {
     public static PanelManager Instance { get; private set; }
 
+    [SerializeField] private BasePanel _nodesPanel;
+
     private Dictionary<Type, BasePanel> panels = new Dictionary<Type, BasePanel>();
     private Stack<BasePanel> panelStack = new Stack<BasePanel>();
 
@@ -126,5 +128,10 @@ public class PanelManager : MonoBehaviour
         }
 
         panelStack = newStack;
+    }
+
+    public void SwitchNodeWindow()
+    {
+        _nodesPanel.TogglePanel();
     }
 }

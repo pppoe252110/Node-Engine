@@ -19,7 +19,6 @@ namespace NodeEngine.GraphPersistence
         {
             public string nodeId;
             public string nodeType;
-            public string nodeName;
             public Vector2 position;
             public string serializedValue;
         }

@@ -9,7 +9,7 @@ public abstract class BasePanel : MonoBehaviour
     [SerializeField] protected float fadeDuration = 0.3f;
     [SerializeField] protected CanvasGroup canvasGroup;
     [SerializeField] protected GameObject panelObject;
-
+    [SerializeField] protected bool isOpenOnStart = false;
     protected bool isPanelOpen = false;
     protected Coroutine fadeCoroutine;
 
@@ -21,7 +21,14 @@ public abstract class BasePanel : MonoBehaviour
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
         if (panelObject == null) panelObject = gameObject;
 
-        ClosePanelImmediate();
+        if (isOpenOnStart)
+        {
+            OpenPanelImmediate();
+        }
+        else
+        {
+            ClosePanelImmediate();
+        }
     }
 
     public virtual void TogglePanel()
@@ -49,6 +56,25 @@ public abstract class BasePanel : MonoBehaviour
         fadeCoroutine = StartCoroutine(FadePanel(true));
         isPanelOpen = true;
 
+        OnPanelOpened?.Invoke(this);
+        OnPanelOpenedAction();
+    }
+
+    public virtual void OpenPanelImmediate()
+    {
+        if (fadeCoroutine != null)
+        {
+            StopCoroutine(fadeCoroutine);
+            fadeCoroutine = null;
+        }
+
+        canvasGroup.alpha = 1f;
+        canvasGroup.interactable = true;
+        canvasGroup.blocksRaycasts = true;
+        panelObject.SetActive(true);
+        isPanelOpen = true;
+
+        // Optionally fire the opened event (depends on desired behavior)
         OnPanelOpened?.Invoke(this);
         OnPanelOpenedAction();
     }

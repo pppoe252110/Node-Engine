@@ -24,7 +24,7 @@ public class SetGlobalNode : BaseNode
         int exitFlow = context.GetFlowId("Out");
 
         return (ctx) => {
-            string name = ctx.Read<string>(nameId);
+            string name = ctx.Read(nameId, string.Empty);
             object val = ctx.Read<object>(valId);
             if (!string.IsNullOrEmpty(name))
                 _globalVariables[name] = val;

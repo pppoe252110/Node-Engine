@@ -20,13 +20,14 @@ public class ForLoopNode : BaseNode
         return (ctx) =>
         {
             int max = ctx.Read<int>(countId);
-
             for (int i = 0; i < max; i++)
             {
                 ctx.Write(indexId, i);
 
                 if (loopFlow >= 0)
-                    ctx.PushFlow(loopFlow);
+                {
+                    ctx.ExecuteSubFlow(loopFlow);
+                }
             }
             return ExecutionResult.Continue(doneFlow);
         };

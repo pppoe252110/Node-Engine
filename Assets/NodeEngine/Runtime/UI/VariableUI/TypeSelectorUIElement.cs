@@ -51,7 +51,15 @@ public class TypeSelectorUIElement : DropdownUIElement
     {
         if (TargetNode == null || index >= _allowedTypes.Count) return;
         _currentType = _allowedTypes[index];
-        TargetNode.SetUntypedValue(_currentType);
+
+        if (TargetNode is TypeVariableNode typeVarNode)
+        {
+            typeVarNode.ChangeSelectedType(_currentType);
+        }
+        else
+        {
+            TargetNode.SetUntypedValue(_currentType);
+        }
     }
 
     protected override void OnNodeValueChanged(object newValue)

@@ -62,7 +62,7 @@ namespace NodeEngine.GraphPersistence
                     continue;
                 }
 
-                ApplyNodeMetadata(nodeInstance, nodeType, nodeData.nodeName);
+                ApplyNodeMetadata(nodeInstance);
 
                 // Restore variable value if applicable
                 if (nodeInstance is IVariableNode varNode && !string.IsNullOrEmpty(nodeData.serializedValue))
@@ -105,14 +105,9 @@ namespace NodeEngine.GraphPersistence
             Debug.Log("[GraphRestorer] Restore complete.");
         }
 
-        private void ApplyNodeMetadata(BaseNode node, Type nodeType, string savedName)
+        private void ApplyNodeMetadata(BaseNode node)
         {
             _nodesDatabase?.ApplyMetadata(node);
-
-            if (!string.IsNullOrEmpty(savedName))
-                node.SetName(savedName);
-            else if (string.IsNullOrEmpty(node.NodeName))
-                node.SetName(nodeType.Name.Replace("Node", ""));
         }
 
         private Connector FindConnector(BaseNode node, string portName, bool isOutput)

@@ -22,6 +22,9 @@ MonoBehaviour:
   - nodeTypeName: ComparisonOperationVariableNode, NodeEngine.Runtime, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
     uiPrefab: {fileID: 3559216011463411766, guid: 21a4dac4b53e0a94eba86eb14c8d4925, type: 3}
+  - nodeTypeName: EntityRefVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    uiPrefab: {fileID: 6017014031079654869, guid: c1a47936a6bcc3d42b0a897e1834b038, type: 3}
   - nodeTypeName: FloatVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     uiPrefab: {fileID: -1273753356434355924, guid: 5b2aa050b4d03554188a273620a1d463, type: 3}

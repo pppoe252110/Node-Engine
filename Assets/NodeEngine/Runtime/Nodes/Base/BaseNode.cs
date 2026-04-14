@@ -120,6 +120,17 @@ public abstract class BaseNode
             _dynamicTypes[sourcePort].Add(targetPort);
     }
 
+    internal bool TryGetDynamicBindingTargets(string inputPortName, out IReadOnlyList<string> targetOutputPorts)
+    {
+        if (_dynamicTypes != null && _dynamicTypes.TryGetValue(inputPortName, out var list))
+        {
+            targetOutputPorts = list;
+            return true;
+        }
+        targetOutputPorts = null;
+        return false;
+    }
+
     public virtual void OnConnected(Connector myConnector, Connector otherConnector)
     {
         if (_dynamicTypes == null) return;
@@ -137,6 +148,11 @@ public abstract class BaseNode
 
     public virtual void OnDisconnected(Connector myConnector, Connector otherConnector)
     {
+        if (NodeEngine.Core.NodeEngine.IsClearingGraph)
+            return;
+
+        if (_dynamicTypes == null) return;
+
         if (_dynamicTypes.TryGetValue(myConnector.PortName, out var targets))
         {
             foreach (var target in targets)
@@ -144,7 +160,7 @@ public abstract class BaseNode
         }
     }
 
-    protected void UpdatePortType(string portName, Type newType)
+    public void UpdatePortType(string portName, Type newType)
     {
         Type resolvedType = newType ?? typeof(object);
         var connector = LogicView?.OutputConnectors.Find(c => c.PortName == portName);

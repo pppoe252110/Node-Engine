@@ -27,8 +27,7 @@ public class GraphSerializer
             {
                 nodeId = node.NodeId,
                 nodeType = node.GetType().AssemblyQualifiedName,
-                position = nodeLogic.transform.localPosition,
-                nodeName = node.NodeName
+                position = nodeLogic.transform.localPosition
             };
 
             if (node is IVariableNode varNode)

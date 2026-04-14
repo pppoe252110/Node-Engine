@@ -10,5 +10,10 @@ public class UIController : MonoBehaviour
         {
             PanelManager.Instance.CloseLastPanel();
         }
+
+        if (Keyboard.current.rKey.wasReleasedThisFrame)
+        {
+            PanelManager.Instance.SwitchNodeWindow();
+        }
     }
 }

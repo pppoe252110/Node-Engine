@@ -92,11 +92,17 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
 
     private void ClearCurrentGraph()
     {
-        var nodes = _nodeSpawner.GetAllNodes().ToList();
-        foreach (var nodeLogic in nodes)
+        NodeEngine.Core.NodeEngine.SetIsClearingGraph(true);
+        try
         {
-            _nodeSpawner.DeleteNode(nodeLogic);
+            var nodes = _nodeSpawner.GetAllNodes().ToList();
+            foreach (var nodeLogic in nodes)
+                _nodeSpawner.DeleteNode(nodeLogic);
+            _connectionService.ClearAllConnections();
         }
-        _connectionService.ClearAllConnections();
+        finally
+        {
+            NodeEngine.Core.NodeEngine.SetIsClearingGraph(false);
+        }
     }
 }

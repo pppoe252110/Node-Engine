@@ -25,7 +25,6 @@ public class TypeChangeService
         _isInUpdate = true;
         try
         {
-            // Use the static helper instead of duplicated code
             TypeChangeLogic.CheckAndDisconnectIncompatible(connector, newType, _connectionService);
 
             connector.SetValueType(newType);
@@ -34,8 +33,10 @@ public class TypeChangeService
             if (portInfo != null) portInfo.ValueType = newType;
 
             _lineRenderersController.UpdateConnectionColors(connector);
-            _nodeRunner?.MarkDirty();
 
+            PropagateDynamicTypeChange(connector);
+
+            _nodeRunner?.MarkDirty();
             return true;
         }
         catch (Exception e)
@@ -46,6 +47,23 @@ public class TypeChangeService
         finally
         {
             _isInUpdate = false;
+        }
+    }
+
+    private void PropagateDynamicTypeChange(Connector changedConnector)
+    {
+        if (changedConnector.IsInput) return;
+
+        foreach (var targetConnector in changedConnector.Connections)
+        {
+            BaseNode targetNode = targetConnector.Node;
+            if (targetNode.TryGetDynamicBindingTargets(targetConnector.PortName, out var boundOutputs))
+            {
+                foreach (string outputPortName in boundOutputs)
+                {
+                    targetNode.UpdatePortType(outputPortName, changedConnector.ValueType);
+                }
+            }
         }
     }
 }

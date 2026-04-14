@@ -544,6 +544,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1448166315776574869, guid: 886e162d98616894a82395fa4800100e, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1448166315776574869, guid: 886e162d98616894a82395fa4800100e, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1448166315776574869, guid: 886e162d98616894a82395fa4800100e, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4742852334566858359, guid: 886e162d98616894a82395fa4800100e, type: 3}
       propertyPath: m_Name
       value: NodeEngine

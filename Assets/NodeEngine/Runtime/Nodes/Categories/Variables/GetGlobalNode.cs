@@ -1,5 +1,6 @@
 ﻿using NodeEngine.Compilation;
 using System;
+using UnityEngine;
 
 [NodePath("Variables/Get Global")]
 public class GetGlobalNode : BaseNode
@@ -24,7 +25,7 @@ public class GetGlobalNode : BaseNode
 
         return (ctx) =>
         {
-            string name = ctx.Read<string>(nameId);
+            string name = ctx.Read(nameId, string.Empty);
             object rawValue = SetGlobalNode.GetGlobalValue(name);
             Type targetType = ctx.Read<Type>(typeId);
 
@@ -35,5 +36,11 @@ public class GetGlobalNode : BaseNode
 
             return ExecutionResult.Continue(exitFlow);
         };
+    }
+
+    public new void UpdatePortType(string portName, Type newType)
+    {
+        Debug.Log($"[GetGlobalNode] UpdatePortType called: {portName} -> {newType?.Name}");
+        base.UpdatePortType(portName, newType);
     }
 }
