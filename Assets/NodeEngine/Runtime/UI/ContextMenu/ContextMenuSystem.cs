@@ -1,8 +1,11 @@
 using Cysharp.Threading.Tasks;
+using System.ComponentModel.Design;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using VContainer;
 
 public class ContextMenuSystem : MonoBehaviour
 {
@@ -25,6 +28,9 @@ public class ContextMenuSystem : MonoBehaviour
 
     public bool IsContextMenuOpen => currentContextMenu != null;
     public bool IsDialogOpen => currentDialog != null;
+
+    [Inject] private SelectionService _selectionService;
+    [Inject] private NodeSpawnerService _nodeSpawner;
 
     private void Awake()
     {
@@ -140,6 +146,7 @@ public class ContextMenuSystem : MonoBehaviour
         {
             contextMenuUI.onDeleteClicked = () => OnDeleteClicked(targetNode);
             contextMenuUI.onCancelClicked = HideContextMenu;
+            contextMenuUI.onDuplicateClicked = () => OnDuplicateClicked(targetNode);
         }
         else
         {
@@ -183,6 +190,7 @@ public class ContextMenuSystem : MonoBehaviour
         if (currentContextMenu == null) return;
         SetupButton("DeleteButton", () => OnDeleteClicked(targetNode));
         SetupButton("CancelButton", HideContextMenu);
+        SetupButton("Duplicate", () => OnDuplicateClicked(targetNode));
     }
 
     private void SetupButton(string buttonName, System.Action action)
@@ -261,22 +269,35 @@ public class ContextMenuSystem : MonoBehaviour
         }
     }
 
+    private void OnDuplicateClicked(NodeLogic targetNode)
+    {
+        HideContextMenu();
+        var selected = _selectionService.SelectedNodes.ToList();
+        Vector2 offset = new Vector2(30, -30);
+        var clones = _nodeSpawner.DuplicateNodes(selected, offset);
+
+        _selectionService.Clear();
+        foreach (var clone in clones)
+            _selectionService.Select(clone, additive: true);
+    }
+
     private void OnDeleteClicked(NodeLogic targetNode)
     {
-        if (targetNode == null) return;
+        // If the clicked node is part of a multi‑selection, delete all selected nodes.
+        if (_selectionService.SelectedNodes.Count > 1 && _selectionService.IsSelected(targetNode))
+        {
+            foreach (var node in _selectionService.SelectedNodes.ToList())
+            {
+                node.DeleteNode();
+            }
+            _selectionService.Clear();
+        }
+        else
+        {
+            targetNode.DeleteNode();
+        }
 
         HideContextMenu();
-
-        try
-        {
-            
-            targetNode.DeleteNode();
-            
-        }
-        catch (System.Exception e)
-        {
-            LogError($"Error in delete operation: {e.Message}");
-        }
     }
 
     private bool ValidatePrerequisites(GameObject prefab, NodeLogic targetNode)

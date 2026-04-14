@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 public class UIController : MonoBehaviour
 {
@@ -9,11 +8,6 @@ public class UIController : MonoBehaviour
         if (Keyboard.current.escapeKey.wasReleasedThisFrame)
         {
             PanelManager.Instance.CloseLastPanel();
-        }
-
-        if (Keyboard.current.rKey.wasReleasedThisFrame)
-        {
-            PanelManager.Instance.SwitchNodeWindow();
         }
     }
 }

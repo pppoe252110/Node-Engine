@@ -18,11 +18,13 @@ public class NodeEngineLifetimeScope : LifetimeScope
     [SerializeField] private Canvas _mainCanvas;
     [SerializeField] private ConnectionVisualsHandler _connectionVisualsHandler;
     [SerializeField] private VariableUIRegistry _variableUIRegistry;
-    [SerializeField] private NodesDatabase nodesDatabase;
+    [SerializeField] private NodeKeyboardShortcuts _nodeKeyboardShortcuts;
+    [SerializeField] private ContextMenuSystem _contextMenuSystem;
+    [SerializeField] private NodesDatabase _nodesDatabase;
 
     protected override void Configure(IContainerBuilder builder)
     {
-        builder.RegisterInstance(nodesDatabase);
+        builder.RegisterInstance(_nodesDatabase);
         builder.RegisterInstance(_variableUIRegistry);
 
         builder.RegisterComponent(_mainCanvas);
@@ -62,6 +64,8 @@ public class NodeEngineLifetimeScope : LifetimeScope
         builder.RegisterComponent(_nodesList);
         builder.RegisterComponent(_UIZoomPan);
         builder.RegisterComponent(_boxSelectionLogic);
+        builder.RegisterComponent(_nodeKeyboardShortcuts);
+        builder.RegisterComponent(_contextMenuSystem);
 
         builder.RegisterComponent(_nodeRunner).AsImplementedInterfaces();
         builder.RegisterComponent(_connectionVisualsHandler).AsImplementedInterfaces();

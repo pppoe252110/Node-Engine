@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class NodeTreeBuilder
 {
@@ -11,7 +12,7 @@ public class NodeTreeBuilder
         public NodeGroup Parent;
         public Dictionary<string, NodeGroup> Children = new();
         public List<(NodesListItem item, int originalIndex)> Items = new();
-        public Transform UIContainer;
+        public RectTransform UIContainer;
         public NodesListGroup UIHeader;
 
         public string GetFullPath()
@@ -26,10 +27,10 @@ public class NodeTreeBuilder
     private Dictionary<string, NodesListGroup> _groupUIElements = new();
     private NodesListGroup _groupPrefab;
     private NodesListItem _itemPrefab;
-    private Transform _parent;
+    private RectTransform _parent;
     private NodesDatabase _database;
 
-    public NodeTreeBuilder(NodesListGroup groupPrefab, NodesListItem itemPrefab, Transform parent, NodesDatabase database)
+    public NodeTreeBuilder(NodesListGroup groupPrefab, NodesListItem itemPrefab, RectTransform parent, NodesDatabase database)
     {
         _groupPrefab = groupPrefab;
         _itemPrefab = itemPrefab;
@@ -155,14 +156,18 @@ public class NodeTreeBuilder
         return current;
     }
 
-    private void CreateGroupUI(NodeGroup group, Transform parent, int indentLevel)
+    private void CreateGroupUI(NodeGroup group, RectTransform parent, int indentLevel)
     {
         if (group != _rootGroup)
         {
             var groupUI = UnityEngine.Object.Instantiate(_groupPrefab, parent);
             groupUI.SetGroupName(group.Name);
             groupUI.SetIndent(indentLevel);
-            groupUI.OnExpansionChanged += (g, expanded) => { /* handle if needed */ };
+            groupUI.OnExpansionChanged += (g, expanded) =>
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(parent);
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_parent);
+            };
 
             group.UIContainer = groupUI.Container;
             group.UIHeader = groupUI;
