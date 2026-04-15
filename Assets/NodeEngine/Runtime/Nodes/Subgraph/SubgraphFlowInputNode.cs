@@ -1,6 +1,8 @@
 ﻿using NodeEngine.Compilation;
 using System;
 
+[HideInNodeList]
+[NodePath("Subgraph/Internal/Flow Input")]
 public class SubgraphFlowInputNode : SubgraphInputNodeBase
 {
     [NodePort("Out", false, true)] public void Out() { }

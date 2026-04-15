@@ -12,6 +12,7 @@ public class SubgraphEditorManager : MonoBehaviour
     [Inject] private SubgraphLibraryService _library;
     [Inject] private IObjectResolver _resolver;
     [Inject] private PersistenceService _persistence;
+    [Inject] private NodesDatabase _nodesDatabase;
 
     private SubgraphDefinition _currentDefinition;
     private bool _isEditing;
@@ -82,8 +83,11 @@ public class SubgraphEditorManager : MonoBehaviour
 
     private void SaveCurrentGraphToDefinition()
     {
+        if (_currentDefinition == null) return;
+
         var nodeLogics = _spawner.GetAllNodes().ToList();
 
+        // --- Save nodes ---
         _currentDefinition.nodes.Clear();
         foreach (var logic in nodeLogics)
         {
@@ -101,7 +105,9 @@ public class SubgraphEditorManager : MonoBehaviour
             });
         }
 
+        // --- Save connections ---
         _currentDefinition.connections.Clear();
+
         foreach (var dc in _connectionService.ActiveDataConnections)
         {
             _currentDefinition.connections.Add(new SubgraphDefinition.SerializedConnection
@@ -113,6 +119,7 @@ public class SubgraphEditorManager : MonoBehaviour
                 isFlow = false
             });
         }
+
         foreach (var fc in _connectionService.ActiveFlowConnections)
         {
             _currentDefinition.connections.Add(new SubgraphDefinition.SerializedConnection
@@ -125,8 +132,10 @@ public class SubgraphEditorManager : MonoBehaviour
             });
         }
 
-        _currentDefinition.MarkDirty();
+        // --- Sync port definitions with input/output nodes ---
         SyncPortDefinitionsFromNodes();
+
+        _currentDefinition.MarkDirty();
     }
 
     private void SyncPortDefinitionsFromNodes()
@@ -187,6 +196,8 @@ public class SubgraphEditorManager : MonoBehaviour
             if (instance is IVariableNode varNode && !string.IsNullOrEmpty(nodeData.serializedValue))
                 _persistence.Deserialize(varNode, nodeData.serializedValue);
 
+            _nodesDatabase?.ApplyMetadata(instance);
+
             var logic = _spawner.SpawnNode(instance, nodeData.position, nodeData.nodeId);
             if (logic != null) nodeLookup[nodeData.nodeId] = instance;
         }
@@ -222,12 +233,14 @@ public class SubgraphEditorManager : MonoBehaviour
             if (portDef.isFlow)
             {
                 node = new SubgraphFlowInputNode();
+                node.SetName("Flow In");
             }
             else
             {
                 Type valueType = Type.GetType(portDef.typeName) ?? typeof(object);
                 Type inputNodeType = typeof(SubgraphInputNode<>).MakeGenericType(valueType);
                 node = (SubgraphInputNodeBase)Activator.CreateInstance(inputNodeType);
+                node.SetName(portDef.name);
             }
             var logic = _spawner.SpawnNode(node, new Vector2(-300, definition.inputPorts.IndexOf(portDef) * 100));
             portDef.boundNodeId = node.NodeId;
@@ -240,12 +253,14 @@ public class SubgraphEditorManager : MonoBehaviour
             if (portDef.isFlow)
             {
                 node = new SubgraphFlowOutputNode();
+                node.SetName("Flow Out");
             }
             else
             {
                 Type valueType = Type.GetType(portDef.typeName) ?? typeof(object);
                 Type outputNodeType = typeof(SubgraphOutputNode<>).MakeGenericType(valueType);
                 node = (SubgraphOutputNodeBase)Activator.CreateInstance(outputNodeType);
+                node.SetName(portDef.name);
             }
             var logic = _spawner.SpawnNode(node, new Vector2(300, definition.outputPorts.IndexOf(portDef) * 100));
             portDef.boundNodeId = node.NodeId;
@@ -262,11 +277,13 @@ public class SubgraphEditorManager : MonoBehaviour
         if (isFlow)
         {
             node = new SubgraphFlowInputNode();
+            node.SetName("Flow In");
         }
         else
         {
             Type nodeType = typeof(SubgraphInputNode<>).MakeGenericType(type);
             node = (SubgraphInputNodeBase)Activator.CreateInstance(nodeType);
+            node.SetName(name);
         }
 
         var logic = _spawner.SpawnNode(node, new Vector2(-300, _currentDefinition.inputPorts.Count * 100));
@@ -284,11 +301,13 @@ public class SubgraphEditorManager : MonoBehaviour
         if (isFlow)
         {
             node = new SubgraphFlowOutputNode();
+            node.SetName("Flow Out");
         }
         else
         {
             Type nodeType = typeof(SubgraphOutputNode<>).MakeGenericType(type);
             node = (SubgraphOutputNodeBase)Activator.CreateInstance(nodeType);
+            node.SetName(name);
         }
 
         var logic = _spawner.SpawnNode(node, new Vector2(300, _currentDefinition.outputPorts.Count * 100));

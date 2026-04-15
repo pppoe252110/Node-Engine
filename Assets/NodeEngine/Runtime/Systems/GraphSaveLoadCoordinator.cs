@@ -16,6 +16,7 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
     private GraphRestorer _restorer;
     private IGraphStorage _storage;
     private NodeSpawnerService _nodeSpawner;
+    private SubgraphLibraryService _subgraphLibrary;
     private ConnectionService _connectionService;
 
     public event Action<string> OnGraphSaved;
@@ -30,6 +31,7 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
         GraphRestorer restorer,
         IGraphStorage storage,
         NodeSpawnerService nodeSpawner,
+        SubgraphLibraryService subgraphLibrary,
         ConnectionService connectionService)
     {
         _saveService = saveService;
@@ -38,6 +40,7 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
         _restorer = restorer;
         _storage = storage;
         _nodeSpawner = nodeSpawner;
+        _subgraphLibrary = subgraphLibrary;
         _connectionService = connectionService;
     }
 
@@ -63,6 +66,8 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
 
         try
         {
+            _subgraphLibrary.RefreshLibrary();
+
             var snapshot = _loadService.Load(saveName);
             ClearCurrentGraph();
             _restorer.Restore(snapshot);

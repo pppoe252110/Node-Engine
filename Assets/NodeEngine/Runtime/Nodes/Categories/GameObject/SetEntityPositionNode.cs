@@ -2,8 +2,8 @@ using NodeEngine.Compilation;
 using System;
 using UnityEngine;
 
-[NodePath("Transform/Move")]
-public class MoveEntityNode : BaseNode
+[NodePath("Transform/Set Position")]
+public class SetEntityPositionNode : BaseNode
 {
     [NodePort("In", true, true)] public void In() { }
 

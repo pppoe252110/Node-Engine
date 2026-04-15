@@ -393,8 +393,8 @@ MonoBehaviour:
     nodeType: MouseButtonVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     nodeIcon: {fileID: 21300000, guid: 1c9da40e6378bc54a8ab714151a01894, type: 3}
-  - nodeName: Move Entity
-    nodeType: MoveEntityNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+  - nodeName: Add Entity Position
+    nodeType: EntityAddPositionNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     nodeIcon: {fileID: 21300000, guid: 552918c18ce4c8f4ebcf83d4fd990c89, type: 3}
   - nodeName: EntityRef Variable
@@ -437,3 +437,7 @@ MonoBehaviour:
     nodeType: WasMouseButtonReleasedThisFrameNode, NodeEngine.Runtime, Version=0.0.0.0,
       Culture=neutral, PublicKeyToken=null
     nodeIcon: {fileID: 21300000, guid: 1c9da40e6378bc54a8ab714151a01894, type: 3}
+  - nodeName: Set Entity Position
+    nodeType: SetEntityPositionNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    nodeIcon: {fileID: 21300000, guid: 552918c18ce4c8f4ebcf83d4fd990c89, type: 3}

@@ -64,10 +64,21 @@ namespace NodeEngine.GraphPersistence
 
                 ApplyNodeMetadata(nodeInstance);
 
-                // Restore variable value if applicable
+                // Restore variable value (existing)
                 if (nodeInstance is IVariableNode varNode && !string.IsNullOrEmpty(nodeData.serializedValue))
                 {
                     _serializer.DeserializeVariable(varNode, nodeData.serializedValue);
+                }
+
+                else if (nodeInstance is IGraphSerializable serializable && !string.IsNullOrEmpty(nodeData.serializedValue))
+                {
+                    serializable.DeserializeCustomData(nodeData.serializedValue);
+                }
+
+                if (nodeInstance is SubgraphNode subgraphNode)
+                {
+                    // Force initialization of definition from loaded ID
+                    subgraphNode.ResolveDefinition();
                 }
 
                 Vector2 position = nodeData.position;

@@ -26,14 +26,13 @@ public class NodesDatabase : ScriptableObject
     [ContextMenu("Auto Fill")]
     public void AutoFill()
     {
-        // Optimized to search across all loaded assemblies safely (supports Assembly Definitions)
         var subclassTypes = AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(a =>
-            {
+            .SelectMany(a => {
                 try { return a.GetTypes(); }
                 catch { return Type.EmptyTypes; }
             })
-            .Where(t => t.IsSubclassOf(typeof(BaseNode)) && !t.IsAbstract)
+            .Where(t => t.IsSubclassOf(typeof(BaseNode)) && !t.IsAbstract
+                        && !Attribute.IsDefined(t, typeof(HideInNodeListAttribute)))
             .ToArray();
 
         var existingNodes = _serializableNodes?.ToList() ?? new List<SerializableNode>();

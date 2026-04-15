@@ -34,6 +34,10 @@ public class GraphSerializer
             {
                 nodeData.serializedValue = SerializeVariable(varNode);
             }
+            else if (node is IGraphSerializable serializable)
+            {
+                nodeData.serializedValue = serializable.SerializeCustomData();
+            }
 
             snapshot.nodes.Add(nodeData);
         }

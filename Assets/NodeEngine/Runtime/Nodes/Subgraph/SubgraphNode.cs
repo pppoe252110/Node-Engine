@@ -5,8 +5,9 @@ using System.Linq;
 using UnityEngine;
 using VContainer;
 
+[HideInNodeList]
 [NodePath("Subgraph/Subgraph Instance")]
-public class SubgraphNode : BaseNode
+public class SubgraphNode : BaseNode, IGraphSerializable
 {
     [SerializeField] private string _subgraphId;
 
@@ -24,6 +25,7 @@ public class SubgraphNode : BaseNode
             _definition = value;
             _subgraphId = value?.subgraphId;
             RebuildPorts();
+            UpdateDisplayName();
         }
     }
 
@@ -35,13 +37,67 @@ public class SubgraphNode : BaseNode
         _persistence = persistence;
     }
 
-    public override void Initialize(NodeLogic logic, string guid)
+    public void ResolveDefinition()
     {
-        base.Initialize(logic, guid);
         if (_definition == null && !string.IsNullOrEmpty(_subgraphId))
         {
             _definition = _library?.GetDefinition(_subgraphId);
-            RebuildPorts();
+            if (_definition != null)
+            {
+                RebuildPorts();
+            }
+        }
+        UpdateDisplayName();
+        ApplyMissingVisuals();
+    }
+
+    public override void Initialize(NodeLogic logic, string guid)
+    {
+        base.Initialize(logic, guid);
+        
+        ResolveDefinition();
+
+        if (_definition == null && !string.IsNullOrEmpty(_subgraphId))
+        {
+            _definition = _library?.GetDefinition(_subgraphId);
+            if (_definition != null)
+            {
+                RebuildPorts();
+            }
+            else
+            {
+                Debug.LogWarning($"[SubgraphNode] Subgraph with ID '{_subgraphId}' not found.");
+            }
+        }
+
+        UpdateDisplayName();
+        ApplyMissingVisuals();
+    }
+
+    private void UpdateDisplayName()
+    {
+        if (_definition != null)
+        {
+            NodeName = _definition.subgraphName;
+            if (LogicView != null && LogicView.NodeNameText != null)
+                LogicView.NodeNameText.text = _definition.subgraphName;
+        }
+        else
+        {
+            NodeName = "⚠ Missing Subgraph";
+            if (LogicView != null && LogicView.NodeNameText != null)
+                LogicView.NodeNameText.text = NodeName;
+        }
+    }
+
+    private void ApplyMissingVisuals()
+    {
+        if (LogicView == null) return;
+
+        // Optionally tint the node red or add an icon
+        if (_definition == null)
+        {
+            LogicView.BackgroundImage.color = new Color(1f, 0.3f, 0.3f, 1f);
         }
     }
 
@@ -77,6 +133,12 @@ public class SubgraphNode : BaseNode
 
     public override Func<GraphContext, ExecutionResult> Compile(NodeCompilationContext context)
     {
+        if (_definition == null)
+        {
+            Debug.LogError($"[SubgraphNode] Cannot compile – subgraph ID '{_subgraphId}' not found.");
+            return _ => ExecutionResult.Halt();
+        }
+
         if (_definition == null) return _ => ExecutionResult.Stop();
 
         if (_definition.CompiledGraph == null)
@@ -164,5 +226,31 @@ public class SubgraphNode : BaseNode
         var flowPort = portDefs.FirstOrDefault(p => p.isFlow);
         if (flowPort == null) return -1;
         return isInput ? context.GetFlowId(flowPort.name) : context.GetFlowId(flowPort.name);
+    }
+
+    public string SerializeCustomData()
+    {
+        var data = new SubgraphNodeData { subgraphId = _subgraphId };
+        return JsonUtility.ToJson(data);
+    }
+
+    public void DeserializeCustomData(string data)
+    {
+        if (string.IsNullOrEmpty(data)) return;
+        try
+        {
+            var loaded = JsonUtility.FromJson<SubgraphNodeData>(data);
+            _subgraphId = loaded.subgraphId;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[SubgraphNode] Failed to deserialize custom data: {e.Message}");
+        }
+    }
+
+    [Serializable]
+    private class SubgraphNodeData
+    {
+        public string subgraphId;
     }
 }

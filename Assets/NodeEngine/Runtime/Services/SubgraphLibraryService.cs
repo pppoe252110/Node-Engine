@@ -92,9 +92,13 @@ public class SubgraphLibraryService
 
     public void SaveDefinition(SubgraphDefinition definition)
     {
+        if (definition == null) return;
+
         string json = JsonUtility.ToJson(definition, true);
         string filePath = Path.Combine(_libraryPath, $"{definition.subgraphId}.subgraph");
         File.WriteAllText(filePath, json);
+
+        _loadedDefinitions[definition.subgraphId] = definition;
     }
 
     public void DeleteDefinition(string subgraphId)
