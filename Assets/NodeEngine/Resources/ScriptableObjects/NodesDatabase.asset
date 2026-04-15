@@ -413,7 +413,27 @@ MonoBehaviour:
     nodeType: SetEntityActiveNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
     nodeIcon: {fileID: 21300000, guid: 5a059c94269fb6544871df66c7d5b763, type: 3}
-  - nodeName: Enitity Variable
-    nodeType: EnitityVariableNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+  - nodeName: IsKeyPressed
+    nodeType: IsKeyPressedNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
-    nodeIcon: {fileID: 21300000, guid: 5a059c94269fb6544871df66c7d5b763, type: 3}
+    nodeIcon: {fileID: 21300000, guid: 0aae0d5a9e18f464b9fe2bed020de618, type: 3}
+  - nodeName: IsMouseButtonPressed
+    nodeType: IsMouseButtonPressedNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    nodeIcon: {fileID: 21300000, guid: 1c9da40e6378bc54a8ab714151a01894, type: 3}
+  - nodeName: WasKeyPressedThisFrame
+    nodeType: WasKeyPressedThisFrameNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    nodeIcon: {fileID: 21300000, guid: 0aae0d5a9e18f464b9fe2bed020de618, type: 3}
+  - nodeName: WasKeyReleasedThisFrame
+    nodeType: WasKeyReleasedThisFrameNode, NodeEngine.Runtime, Version=0.0.0.0, Culture=neutral,
+      PublicKeyToken=null
+    nodeIcon: {fileID: 21300000, guid: 0aae0d5a9e18f464b9fe2bed020de618, type: 3}
+  - nodeName: WasMouseButtonPressedThisFrame
+    nodeType: WasMouseButtonPressedThisFrameNode, NodeEngine.Runtime, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    nodeIcon: {fileID: 21300000, guid: 1c9da40e6378bc54a8ab714151a01894, type: 3}
+  - nodeName: WasMouseButtonReleasedThisFrame
+    nodeType: WasMouseButtonReleasedThisFrameNode, NodeEngine.Runtime, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+    nodeIcon: {fileID: 21300000, guid: 1c9da40e6378bc54a8ab714151a01894, type: 3}

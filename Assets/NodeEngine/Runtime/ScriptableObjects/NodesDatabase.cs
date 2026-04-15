@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NodesDatabase", menuName = "Node Engine/NodesDatabase", order = 1)]
@@ -24,11 +23,16 @@ public class NodesDatabase : ScriptableObject
         }
     }
 
-    [Button("Auto fill", "AutoFill")]
+    [ContextMenu("Auto Fill")]
     public void AutoFill()
     {
-        var subclassTypes = Assembly.GetAssembly(typeof(BaseNode))
-            .GetTypes()
+        // Optimized to search across all loaded assemblies safely (supports Assembly Definitions)
+        var subclassTypes = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(a =>
+            {
+                try { return a.GetTypes(); }
+                catch { return Type.EmptyTypes; }
+            })
             .Where(t => t.IsSubclassOf(typeof(BaseNode)) && !t.IsAbstract)
             .ToArray();
 

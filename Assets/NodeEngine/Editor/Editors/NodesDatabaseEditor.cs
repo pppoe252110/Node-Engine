@@ -8,13 +8,19 @@ public class NodesDatabaseEditor : Editor
 {
     public override void OnInspectorGUI()
     {
+        NodesDatabase database = (NodesDatabase)target;
         
+        // --- New button to open the editor window ---
+        if (GUILayout.Button("Open Editor Window"))
+        {
+            NodesDatabaseWindow.Open(database);
+        }
+
         DrawDefaultInspector();
 
         EditorGUILayout.Space();
 
-        NodesDatabase database = (NodesDatabase)target;
-
+        // --- Existing button logic for methods marked with [Button] ---
         var methods = database.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(m => m.GetCustomAttributes(typeof(ButtonAttribute), true).Length > 0)
@@ -27,7 +33,6 @@ public class NodesDatabaseEditor : Editor
 
             if (GUILayout.Button(buttonName))
             {
-                
                 method.Invoke(database, null);
             }
         }

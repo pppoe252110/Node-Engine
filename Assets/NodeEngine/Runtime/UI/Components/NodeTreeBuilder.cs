@@ -22,6 +22,12 @@ public class NodeTreeBuilder
             return string.IsNullOrEmpty(parentPath) ? Name : $"{parentPath}/{Name}";
         }
     }
+    public class ExternalNodeEntry
+    {
+        public string CategoryPath;
+        public string DisplayName;
+        public object UserData;
+    }
 
     private NodeGroup _rootGroup = new() { Name = "Root" };
     private Dictionary<string, NodesListGroup> _groupUIElements = new();
@@ -38,11 +44,15 @@ public class NodeTreeBuilder
         _database = database;
     }
 
-    public void BuildTree(Action<NodesListItem, int> onItemCreated)
+    public void BuildTree(
+        Action<NodesListItem, int> onDatabaseItemCreated,
+        IEnumerable<ExternalNodeEntry> externalEntries = null,
+        Action<NodesListItem, object> onExternalItemCreated = null)
     {
         Clear();
-        var allNodeData = _database.GetAllNodeData().ToList();
 
+        // Process database nodes
+        var allNodeData = _database.GetAllNodeData().ToList();
         for (int i = 0; i < allNodeData.Count; i++)
         {
             var nodeData = allNodeData[i];
@@ -51,12 +61,36 @@ public class NodeTreeBuilder
 
             var item = UnityEngine.Object.Instantiate(_itemPrefab, group.UIContainer ?? _parent);
             item.SetNodeName(itemName);
-            onItemCreated?.Invoke(item, i);
-
+            onDatabaseItemCreated?.Invoke(item, i);
             group.Items.Add((item, i));
         }
 
+        // Process external entries (subgraphs)
+        if (externalEntries != null)
+        {
+            foreach (var entry in externalEntries)
+            {
+                var group = EnsureGroupExists(entry.CategoryPath);
+                var item = UnityEngine.Object.Instantiate(_itemPrefab, group.UIContainer ?? _parent);
+                item.SetNodeName(entry.DisplayName);
+                onExternalItemCreated?.Invoke(item, entry.UserData);
+                group.Items.Add((item, -1)); // -1 marker
+            }
+        }
+
         CreateGroupUI(_rootGroup, _parent, 0);
+    }
+
+    public void AddExternalItems(IEnumerable<(string categoryPath, string displayName, object userData)> items, Action<NodesListItem, object> onItemCreated)
+    {
+        foreach (var (path, name, userData) in items)
+        {
+            var group = EnsureGroupExists(path);
+            var item = UnityEngine.Object.Instantiate(_itemPrefab, group.UIContainer ?? _parent);
+            item.SetNodeName(name);
+            onItemCreated?.Invoke(item, userData);
+            group.Items.Add((item, -1)); // -1 indicates not from database
+        }
     }
 
     public void Clear()

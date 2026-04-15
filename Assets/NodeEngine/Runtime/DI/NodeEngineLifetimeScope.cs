@@ -21,6 +21,8 @@ public class NodeEngineLifetimeScope : LifetimeScope
     [SerializeField] private NodeKeyboardShortcuts _nodeKeyboardShortcuts;
     [SerializeField] private ContextMenuSystem _contextMenuSystem;
     [SerializeField] private NodesDatabase _nodesDatabase;
+    [SerializeField] private SubgraphPanel _subgraphPanel;
+    [SerializeField] private SubgraphEditorManager _subgraphEditorManager;
 
     protected override void Configure(IContainerBuilder builder)
     {
@@ -51,6 +53,7 @@ public class NodeEngineLifetimeScope : LifetimeScope
         builder.Register<GraphSnapshotBuilder>(Lifetime.Singleton);
         builder.Register<GraphRestorer>(Lifetime.Singleton);
         builder.Register<GraphSerializer>(Lifetime.Singleton);
+        builder.Register<SubgraphLibraryService>(Lifetime.Singleton);
 
         builder.Register<TypeChangeService>(Lifetime.Singleton);
         builder.Register<INodeFactory, NodeFactory>(Lifetime.Singleton);
@@ -66,6 +69,8 @@ public class NodeEngineLifetimeScope : LifetimeScope
         builder.RegisterComponent(_boxSelectionLogic);
         builder.RegisterComponent(_nodeKeyboardShortcuts);
         builder.RegisterComponent(_contextMenuSystem);
+        builder.RegisterComponent(_subgraphEditorManager);
+        builder.RegisterComponent(_subgraphPanel);
 
         builder.RegisterComponent(_nodeRunner).AsImplementedInterfaces();
         builder.RegisterComponent(_connectionVisualsHandler).AsImplementedInterfaces();

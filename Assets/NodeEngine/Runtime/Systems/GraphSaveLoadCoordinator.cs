@@ -90,7 +90,7 @@ public class GraphSaveLoadCoordinator : MonoBehaviour
         OnSaveDeleted?.Invoke(null);
     }
 
-    private void ClearCurrentGraph()
+    public void ClearCurrentGraph()
     {
         NodeEngine.Core.NodeEngine.SetIsClearingGraph(true);
         try

@@ -13,6 +13,8 @@ public class NodesListItem : MonoBehaviour
 
     private NodesList _nodesList;
     private int _originalIndex;
+    private string _subgraphId;
+    private bool _isSubgraph;
 
     private void Awake()
     {
@@ -26,6 +28,14 @@ public class NodesListItem : MonoBehaviour
     {
         _nodesList = nodesList;
         _originalIndex = originalIndex;
+        _isSubgraph = false;
+    }
+
+    public void SetUpForSubgraph(NodesList nodesList, string subgraphId)
+    {
+        _nodesList = nodesList;
+        _subgraphId = subgraphId;
+        _isSubgraph = true;
     }
 
     public void SetNodeName(string name)
@@ -43,7 +53,10 @@ public class NodesListItem : MonoBehaviour
 
     private void AddNode()
     {
-        _nodesList?.SpawnNodeFromOriginalIndex(_originalIndex);
+        if (_isSubgraph)
+            _nodesList?.SpawnSubgraphNode(_subgraphId);
+        else
+            _nodesList?.SpawnNodeFromOriginalIndex(_originalIndex);
     }
 
     private void OnDestroy()
